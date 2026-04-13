@@ -228,7 +228,7 @@
                 "utxosSpent": [
                     {
                         "scriptPubKey": "512053a1f6e454df1aa2776a2814a721372d6258050de330b3c6d10ee8f4e0dda343",
-                        "amountSats": 460000000
+                        "amountSats": 420000000
                     },
                     {
                         "scriptPubKey": "5120147c9c57132f6e7ecddba9800bb0c4449251c92a1e60371ee77557b6620f3ea3",
