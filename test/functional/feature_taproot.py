@@ -1743,7 +1743,7 @@ class TaprootTest(BitcoinTestFramework):
         lasttxid = coinbase.txid_int
         amount = 5000000000
         for i, spk in enumerate(old_spks + tap_spks):
-            val = 42000000 * (i + 7)
+            val = 46000000 * (i + 7)
             tx = CTransaction()
             tx.version = 1
             tx.vin = [CTxIn(COutPoint(lasttxid, i & 1), CScript([]), SEQUENCE_FINAL)]
