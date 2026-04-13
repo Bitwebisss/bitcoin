@@ -394,7 +394,7 @@ public:
         vSeeds.clear();
 
         if (!options.challenge) {
-            bin = "51210376819ab15b8b7ee7238f8d04184c948ee624fbb90c2956741deca17f76281b1051ae"_hex_v_u8;
+            bin = "512103206dbfb2c1e729d2ff82126b37e3f965ff580969ee3b681cb6fff152a2c58aa551ae"_hex_v_u8;
             vFixedSeeds = std::vector<uint8_t>(std::begin(chainparams_seed_signet), std::end(chainparams_seed_signet));
             vSeeds.emplace_back("signetseed.bitwebcore.net.");
 
