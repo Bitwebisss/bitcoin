@@ -383,7 +383,7 @@ def do_generate(args):
         logging.info("Treating negative block time as current time (%d)" % (args.set_block_time))
 
     if args.min_nbits:
-        args.nbits = "1e0377ae"
+        args.nbits = "1f377ae0"
         logging.info("Using nbits=%s" % (args.nbits))
 
     if args.set_block_time is None:
