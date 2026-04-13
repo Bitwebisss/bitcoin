@@ -248,7 +248,7 @@ def trivial_challenge(spkhex):
     return False
 
 class Generate:
-    INTERVAL = 300.0
+    INTERVAL = 600.0*2016/2015 # 10 minutes, adjusted for the off-by-one bug
 
 
     def __init__(self, multiminer=None, ultimate_target=None, poisson=False, max_interval=1800,
@@ -383,7 +383,7 @@ def do_generate(args):
         logging.info("Treating negative block time as current time (%d)" % (args.set_block_time))
 
     if args.min_nbits:
-        args.nbits = "1f377ae0"
+        args.nbits = "1e0377ae"
         logging.info("Using nbits=%s" % (args.nbits))
 
     if args.set_block_time is None:
