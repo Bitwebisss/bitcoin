@@ -98,7 +98,7 @@ MAGIC_BYTES = {
     "testnet3": b"\x1b\xcc\x08\x05", # // Checkpoints restored
     "testnet4": b"\x2c\x22\x3c\xad",
     "regtest": b"\xea\xb1\xa5\xde",
-    "signet": b"\x0a\x03\xcf\x40",
+    "signet": b"\x5f\x5d\xdd\xe1",
 }
 
 def sha256(s):
