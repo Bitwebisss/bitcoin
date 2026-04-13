@@ -48,10 +48,10 @@ class MaxTipAgeTest(BitcoinTestFramework):
         node_miner.setmocktime(0)
 
     def run_test(self):
-        self.log.info("Test IBD with maximum tip age of 24 hours (default).")
+        self.log.info("Test IBD with maximum tip age of 12 hours (default).")
         self.test_maxtipage(DEFAULT_MAX_TIP_AGE, set_parameter=False)
 
-        for hours in [20, 10, 5, 2, 1]:
+        for hours in [24, 18, 6, 3, 1]:
             maxtipage = hours * 60 * 60
             self.log.info(f"Test IBD with maximum tip age of {hours} hours (-maxtipage={maxtipage}).")
             self.test_maxtipage(maxtipage)
