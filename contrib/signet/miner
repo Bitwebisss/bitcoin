@@ -248,7 +248,7 @@ def trivial_challenge(spkhex):
     return False
 
 class Generate:
-    INTERVAL = 300.0*2016/2015 # 10 minutes, adjusted for the off-by-one bug
+    INTERVAL = 300.0
 
 
     def __init__(self, multiminer=None, ultimate_target=None, poisson=False, max_interval=1800,
