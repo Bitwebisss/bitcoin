@@ -6,31 +6,30 @@
 
 GENERATOR MODE
 --------------
-Run with --mine to mine the test blocks and write JSON to stdout:
+Run with --mine to mine the test blocks and write data/testnet3_headers.json:
 
-    python3 p2p_dos_header_tree.py --mine > data/testnet3_headers.json
+    sudo ./build/test/functional/test_runner.py p2p_dos_header_tree --mine
 
-The generator starts the testnet3 node, mines 546 main-chain blocks and
-2 fork blocks (branching from genesis) using Argon2id PoW, then prints
-the resulting JSON.
+The generator starts the testnet3 node, mines CHECKPOINT_HEIGHT main-chain
+blocks and 2 fork blocks (branching from genesis) using Argon2id PoW, then
+writes the resulting JSON to data/testnet3_headers.json automatically.
 
 After mining:
-  1. Save the printed JSON to test/functional/data/testnet3_headers.json
-  2. Update CHECKPOINT_HASH and FORK_TIP_HASH constants below
-  3. Add the checkpoint to chainparams.cpp CTestNetParams::checkpointData
+  1. Update CHECKPOINT_HEIGHT below if you changed it
+  2. Add the checkpoint to chainparams.cpp CTestNetParams::checkpointData:
+     {CHECKPOINT_HEIGHT, uint256{"<main[-1].hash from JSON>"}},
+  3. Rebuild and run the test without --mine
 """
 
 # ---------------------------------------------------------------------------
-# UPDATE THESE two constants after running --mine once and updating chainparams
+# Only this constant needs updating if you want more/fewer blocks.
+# Hashes are read directly from the JSON — no manual copying needed.
 # ---------------------------------------------------------------------------
 CHECKPOINT_HEIGHT = 100
-CHECKPOINT_HASH   = 'REPLACE_ME_AFTER_MINE'   # main[-1]['hash'] from JSON
-FORK_TIP_HASH     = 'REPLACE_ME_AFTER_MINE'   # fork[-1]['hash'] from JSON
 # ---------------------------------------------------------------------------
 
 import json
 import os
-import sys
 import time as _time
 
 
@@ -68,22 +67,17 @@ from test_framework.util import assert_equal
 def _header_from_record(rec):
     """Reconstruct a CBlockHeader from a JSON record."""
     hdr = CBlockHeader()
-    hdr.nVersion      = rec['version']
-    hdr.hashPrevBlock = int(rec['prev_hash'], 16)
+    hdr.nVersion       = rec['version']
+    hdr.hashPrevBlock  = int(rec['prev_hash'], 16)
     hdr.hashMerkleRoot = int(rec['merkle_root'], 16)
-    hdr.nTime         = rec['time']
-    hdr.nBits         = rec['bits']
-    hdr.nNonce        = rec['nonce']
+    hdr.nTime          = rec['time']
+    hdr.nBits          = rec['bits']
+    hdr.nNonce         = rec['nonce']
     return hdr
 
 
 def _meets_target(hdr):
-    """Return True if hdr.argon2id satisfies hdr.nBits.
-
-    argon2id property returns uint256_from_str(digest) which uses
-    little-endian byte order, matching UintToArith256 in C++.
-    uint256_from_compact returns the target in the same LE convention.
-    """
+    """Return True if hdr.argon2id satisfies hdr.nBits."""
     return hdr.argon2id <= uint256_from_compact(hdr.nBits)
 
 
@@ -92,7 +86,7 @@ def _meets_target(hdr):
 # ---------------------------------------------------------------------------
 
 def _run_generator(node, log, datafile_path):
-    """Mine 546 main-chain headers + 2 fork headers, write JSON to stdout."""
+    """Mine CHECKPOINT_HEIGHT main-chain headers + 2 fork headers, write JSON."""
 
     assert_equal(node.getblockcount(), 0)
     genesis_hash = node.getbestblockhash()
@@ -103,7 +97,7 @@ def _run_generator(node, log, datafile_path):
     )
 
     records_main = []
-    records_fork = []  # initialised here so the incremental write inside the main loop can reference it
+    records_fork = []  # initialised early so incremental writes work from block 1
 
     _progress("")
     _progress("=" * 64)
@@ -116,7 +110,6 @@ def _run_generator(node, log, datafile_path):
     for height in range(1, CHECKPOINT_HEIGHT + 1):
         t_block = _time.monotonic()
 
-        # getblocktemplate gives us the correct nBits (LWMA-adjusted) and curtime
         tmpl = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
 
         block = CBlock()
@@ -135,7 +128,6 @@ def _run_generator(node, log, datafile_path):
         block.vtx = [cb]
         block.hashMerkleRoot = block.calc_merkle_root()
 
-        # Brute-force nonce until Argon2id PoW is satisfied
         found = False
         for nonce in range(0x1_0000_0000):
             block.nNonce = nonce
@@ -176,8 +168,7 @@ def _run_generator(node, log, datafile_path):
         with open(datafile_path, 'w', encoding='utf-8') as f:
             json.dump({'main': records_main, 'fork': records_fork}, f, indent=2)
 
-    # Mine 2 fork blocks branching from genesis.
-    # Genesis nBits is used (no retargeting at depth 1-2).
+    # Mine 2 fork blocks branching from genesis
     genesis_block_info = node.getblock(genesis_hash)
     fork_nbits = int(genesis_block_info['bits'], 16)
 
@@ -190,10 +181,8 @@ def _run_generator(node, log, datafile_path):
     for height in range(1, 3):
         t_block = _time.monotonic()
 
-        # Use a timestamp offset that differs from main chain to ensure a
-        # different hash, while staying within the 2-hour future-time window.
         base_time = records_main[height - 1]['time']
-        fork_time = base_time + 3600  # +1 h offset guarantees distinct hash
+        fork_time = base_time + 3600  # +1h offset guarantees distinct hash
 
         block = CBlock()
         block.nVersion      = 0x20000000
@@ -237,27 +226,22 @@ def _run_generator(node, log, datafile_path):
         })
         prev_fork_int = block.hash_int
 
-        # Write after every block so progress survives a crash
         with open(datafile_path, 'w', encoding='utf-8') as f:
             json.dump({'main': records_main, 'fork': records_fork}, f, indent=2)
 
     total_min, total_sec = divmod(int(_time.monotonic() - t_start), 60)
     checkpoint_hash = records_main[-1]['hash']
-    fork_tip_hash   = records_fork[-1]['hash']
 
     _progress("")
     _progress("=" * 64)
     _progress(f"  DONE in {total_min}m{total_sec:02d}s")
     _progress("")
-    _progress("  1. JSON is on stdout — redirect it:")
-    _progress("     python3 p2p_dos_header_tree.py --mine > data/testnet3_headers.json")
+    _progress(f"  JSON written to: {datafile_path}")
     _progress("")
-    _progress("  2. Update constants in p2p_dos_header_tree.py:")
-    _progress(f"     CHECKPOINT_HASH = '{checkpoint_hash}'")
-    _progress(f"     FORK_TIP_HASH   = '{fork_tip_hash}'")
-    _progress("")
-    _progress("  3. Add to chainparams.cpp CTestNetParams::checkpointData:")
+    _progress("  Add to chainparams.cpp CTestNetParams::checkpointData:")
     _progress(f"     {{{CHECKPOINT_HEIGHT}, uint256{{\"{checkpoint_hash}\"}}}},")
+    _progress("")
+    _progress("  Then rebuild and run without --mine.")
     _progress("=" * 64)
 
 
@@ -304,12 +288,21 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         headers      = [_header_from_record(r) for r in data['main']]
         headers_fork = [_header_from_record(r) for r in data['fork']]
 
+        # Hashes come from the JSON — no hardcoded constants to keep in sync
+        checkpoint_hash = data['main'][-1]['hash']
+        fork_tip_hash   = data['fork'][-1]['hash']
+
+        assert len(headers) == CHECKPOINT_HEIGHT, (
+            f"JSON has {len(headers)} main blocks but CHECKPOINT_HEIGHT={CHECKPOINT_HEIGHT}. "
+            f"Re-run with --mine or update CHECKPOINT_HEIGHT."
+        )
+
         self.log.info("Feed all non-fork headers, including and up to the first checkpoint")
         peer_checkpoint = self.nodes[0].add_p2p_connection(P2PInterface())
         peer_checkpoint.send_and_ping(msg_headers(headers))
         assert {
             'height':    CHECKPOINT_HEIGHT,
-            'hash':      CHECKPOINT_HASH,
+            'hash':      checkpoint_hash,
             'branchlen': CHECKPOINT_HEIGHT,
             'status':    'headers-only',
         } in self.nodes[0].getchaintips()
@@ -325,16 +318,17 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         peer_no_checkpoint.send_and_ping(msg_headers(headers_fork))
         assert {
             'height':    len(headers_fork),
-            'hash':      FORK_TIP_HASH,
+            'hash':      fork_tip_hash,
             'branchlen': len(headers_fork),
             'status':    'headers-only',
         } in self.nodes[0].getchaintips()
 
+        self.log.info("Feed fork headers to node[1] (no checkpoint reached yet — should accept)")
         peer_before_checkpoint = self.nodes[1].add_p2p_connection(P2PInterface())
         peer_before_checkpoint.send_and_ping(msg_headers(headers_fork))
         assert {
             'height':    len(headers_fork),
-            'hash':      FORK_TIP_HASH,
+            'hash':      fork_tip_hash,
             'branchlen': len(headers_fork),
             'status':    'headers-only',
         } in self.nodes[1].getchaintips()
