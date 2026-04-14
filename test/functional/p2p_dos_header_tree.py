@@ -171,6 +171,10 @@ def _run_generator(node, log, datafile_path):
             'hash':        block.hash_hex,
         })
 
+        # Write after every block so progress survives a crash
+        with open(datafile_path, 'w', encoding='utf-8') as f:
+            json.dump({'main': records_main, 'fork': records_fork}, f, indent=2)
+
     # Mine 2 fork blocks branching from genesis.
     # Genesis nBits is used (no retargeting at depth 1-2).
     genesis_block_info = node.getblock(genesis_hash)
@@ -232,6 +236,10 @@ def _run_generator(node, log, datafile_path):
         })
         prev_fork_int = block.hash_int
 
+        # Write after every block so progress survives a crash
+        with open(datafile_path, 'w', encoding='utf-8') as f:
+            json.dump({'main': records_main, 'fork': records_fork}, f, indent=2)
+
     total_min, total_sec = divmod(int(_time.monotonic() - t_start), 60)
     checkpoint_hash = records_main[-1]['hash']
     fork_tip_hash   = records_fork[-1]['hash']
@@ -250,10 +258,6 @@ def _run_generator(node, log, datafile_path):
     _progress("  3. Add to chainparams.cpp CTestNetParams::checkpointData:")
     _progress(f"     {{{CHECKPOINT_HEIGHT}, uint256{{\"{checkpoint_hash}\"}}}},")
     _progress("=" * 64)
-
-    with open(datafile_path, 'w', encoding='utf-8') as f:
-        json.dump({'main': records_main, 'fork': records_fork}, f, indent=2)
-    _progress(f"  JSON written to {datafile_path}")
 
 
 # ---------------------------------------------------------------------------
