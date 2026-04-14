@@ -161,8 +161,7 @@ void initialize()
         MakeNoLogFileContext<HeadersSyncSetup>(ChainType::MAIN,
                                                {
                                                    .extra_args = {"-checkpoints=0"},  // Checkpoints restored
-                                                   .setup_validation_interface = false,
-                                                   
+                                                   .setup_validation_interface = false,                                        
                                                }),
     };
     g_testing_setup = setup.get();

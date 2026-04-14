@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(testnet4_lwma3_bootstrap)
     BOOST_REQUIRE_EQUAL(N, 288);
 
     const int L = static_cast<int>(N + 1); // 289
-    auto blocks = BuildTestnet4Chain(L + 1, genesisBits, 1775674814, T);
+    auto blocks = BuildTestnet4Chain(L + 1, genesisBits, 1775999890, T);
 
     // Boundary: height L=289 still on bootstrap path.
     BOOST_CHECK_EQUAL(GetNextWorkRequired(&blocks[L], nullptr, consensus), genesisBits);
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(testnet4_lwma3_stable_hashrate)
     const arith_uint256 powLimit   = UintToArith256(consensus.powLimit);
 
     const int lwma_height = static_cast<int>(N + 2); // 290
-    auto blocks = BuildTestnet4Chain(lwma_height + 1, genesisBits, 1775674814, T);
+    auto blocks = BuildTestnet4Chain(lwma_height + 1, genesisBits, 1775999890, T);
 
     const unsigned int expected_nbits = 0x1f0ffffeU;
     unsigned int result = GetNextWorkRequired(&blocks[lwma_height], nullptr, consensus);
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(testnet4_lwma3_no_drift)
 
     const int EXTRA     = 8;
     const int chain_len = static_cast<int>(N + 3 + EXTRA); // 299
-    auto blocks = BuildTestnet4Chain(chain_len, genesisBits, 1775674814, T);
+    auto blocks = BuildTestnet4Chain(chain_len, genesisBits, 1775999890, T);
 
     for (int h = static_cast<int>(N + 3); h < chain_len; h++) {
         blocks[h].nBits = GetNextWorkRequired(&blocks[h - 1], nullptr, consensus);
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(testnet4_lwma3_powlimit_cap)
     const unsigned int powLimitBits = UintToArith256(consensus.powLimit).GetCompact();
 
     const int lwma_height = static_cast<int>(N + 2);
-    auto blocks = BuildTestnet4Chain(lwma_height + 1, genesisBits, 1775674814, 6 * T);
+    auto blocks = BuildTestnet4Chain(lwma_height + 1, genesisBits, 1775999890, 6 * T);
 
     unsigned int result = GetNextWorkRequired(&blocks[lwma_height], nullptr, consensus);
     BOOST_CHECK_EQUAL(result, 0x1f0fffffU);
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(testnet4_lwma3_double_hashrate)
     const arith_uint256 powLimit   = UintToArith256(consensus.powLimit);
 
     const int lwma_height = static_cast<int>(N + 2);
-    auto blocks = BuildTestnet4Chain(lwma_height + 1, genesisBits, 1775674814, T / 2);
+    auto blocks = BuildTestnet4Chain(lwma_height + 1, genesisBits, 1775999890, T / 2);
 
     unsigned int result = GetNextWorkRequired(&blocks[lwma_height], nullptr, consensus);
     BOOST_CHECK_EQUAL(result, 0x1f07ffffU);
@@ -263,8 +263,8 @@ BOOST_AUTO_TEST_CASE(testnet4_lwma3_monotone_difficulty)
     const unsigned int genesisBits = chainParams->GenesisBlock().nBits;
     const int lwma_height = static_cast<int>(N + 2);
 
-    auto blocks_2x = BuildTestnet4Chain(lwma_height + 1, genesisBits, 1775674814, T / 2);
-    auto blocks_3x = BuildTestnet4Chain(lwma_height + 1, genesisBits, 1775674814, T / 3);
+    auto blocks_2x = BuildTestnet4Chain(lwma_height + 1, genesisBits, 1775999890, T / 2);
+    auto blocks_3x = BuildTestnet4Chain(lwma_height + 1, genesisBits, 1775999890, T / 3);
 
     unsigned int result_2x = GetNextWorkRequired(&blocks_2x[lwma_height], nullptr, consensus);
     unsigned int result_3x = GetNextWorkRequired(&blocks_3x[lwma_height], nullptr, consensus);
@@ -299,7 +299,7 @@ BOOST_AUTO_TEST_CASE(testnet4_lwma3_mixed_solvetimes_determinism)
     const int chain_len = static_cast<int>(N + 3); // 291
     std::vector<CBlockIndex> blocks(chain_len);
 
-    int64_t ts = 1775674814;
+    int64_t ts = 1775999890;
     for (int i = 0; i < chain_len; i++) {
         blocks[i].pprev      = i ? &blocks[i - 1] : nullptr;
         blocks[i].nHeight    = i;

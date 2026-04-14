@@ -21,7 +21,7 @@ UTXO_DUMP_MAGIC = b'utxo\xff'
 UTXO_DUMP_VERSION = 2
 NET_MAGIC_BYTES = {
     b"\xfe\xae\xd5\xca": "Mainnet",
-    b"\x0a\x03\xcf\x40": "Signet",
+    b"\x5f\x5d\xdd\xe1": "Signet",
     b"\x1b\xcc\x08\x05": "Testnet3",
     b"\x2c\x22\x3c\xad": "Testnet4",
     b"\xea\xb1\xa5\xde": "Regtest",
