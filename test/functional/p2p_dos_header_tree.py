@@ -103,6 +103,7 @@ def _run_generator(node, log, datafile_path):
     )
 
     records_main = []
+    records_fork = []  # initialised here so the incremental write inside the main loop can reference it
 
     _progress("")
     _progress("=" * 64)
