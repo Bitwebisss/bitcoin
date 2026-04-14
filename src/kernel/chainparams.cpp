@@ -101,7 +101,7 @@ public:
         consensus.SegwitHeight = 112;
         consensus.MinBIP9WarningHeight = 4134; // segwit activation height + miner confirmation window
         consensus.powLimit = uint256{"000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
-        consensus.nPowTargetTimespan = 5 * 60; // 5m
+//        consensus.nPowTargetTimespan = 5 * 60; // 5m
         consensus.nPowTargetSpacing = 5 * 60;
         consensus.lwmaAveragingWindow = 576;
         consensus.fPowAllowMinDifficultyBlocks = false;
@@ -206,7 +206,7 @@ public:
         consensus.SegwitHeight = 2;
         consensus.MinBIP9WarningHeight = 4134; // segwit activation height + miner confirmation window
         consensus.powLimit = uint256{"000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
-        consensus.nPowTargetTimespan = 5 * 60; // 5m
+//        consensus.nPowTargetTimespan = 5 * 60; // 5m
         consensus.nPowTargetSpacing = 5 * 60;
         consensus.lwmaAveragingWindow = 576;
         consensus.fPowAllowMinDifficultyBlocks = false;
@@ -299,7 +299,7 @@ public:
         consensus.SegwitHeight = 1;
         consensus.MinBIP9WarningHeight = 0;
         consensus.powLimit = uint256{"000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
-        consensus.nPowTargetTimespan = 5 * 60; // 5m
+//        consensus.nPowTargetTimespan = 5 * 60; // 5m
         consensus.nPowTargetSpacing = 5 * 60;
         consensus.lwmaAveragingWindow = 288;
         consensus.fPowAllowMinDifficultyBlocks = false;
@@ -436,7 +436,7 @@ public:
         consensus.BIP66Height = 1;
         consensus.CSVHeight = 1;
         consensus.SegwitHeight = 1;
-        consensus.nPowTargetTimespan = 5 * 60; // 5m
+//        consensus.nPowTargetTimespan = 5 * 60; // 5m
         consensus.nPowTargetSpacing = 5 * 60;
         consensus.lwmaAveragingWindow = 576;
         consensus.fPowAllowMinDifficultyBlocks = false;
@@ -509,7 +509,7 @@ public:
         consensus.SegwitHeight = 0; // Always active unless overridden
         consensus.MinBIP9WarningHeight = 0;
         consensus.powLimit = uint256{"7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
-        consensus.nPowTargetTimespan = 5 * 60; // 5m
+//        consensus.nPowTargetTimespan = 5 * 60; // 5m
         consensus.nPowTargetSpacing = 5 * 60;
         consensus.lwmaAveragingWindow = 144;
         consensus.fPowAllowMinDifficultyBlocks = true;

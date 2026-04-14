@@ -142,10 +142,8 @@ FUZZ_TARGET(pow_transition, .init = initialize_pow)
         nbits = pow_limit.GetCompact();
     }
 
-    // N=576, L=N+1=577. Нужен height > 577 для реального расчёта LWMA3.
-    // Последний блок имеет height = num_blocks-1 = N+2 = 578 > L=577. ✓
     const int64_t N = consensus_params.lwmaAveragingWindow;
-    const int num_blocks = static_cast<int>(N + 3); // 579 блоков, heights 0..578
+    const int num_blocks = static_cast<int>(N + 3);
 
     for (int height = 0; height < num_blocks; ++height) {
         CBlockHeader header;
@@ -162,7 +160,6 @@ FUZZ_TARGET(pow_transition, .init = initialize_pow)
     auto last_block{blocks.back().get()};
     unsigned int new_nbits{GetNextWorkRequired(last_block, nullptr, consensus_params)};
 
-    // Результат не выходит за powLimit
     arith_uint256 new_target;
     new_target.SetCompact(new_nbits);
     Assert(new_target <= pow_limit);
