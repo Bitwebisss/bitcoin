@@ -31,6 +31,12 @@ FORK_TIP_HASH     = 'REPLACE_ME_AFTER_MINE'   # fork[-1]['hash'] from JSON
 import json
 import os
 import sys
+import time as _time
+
+
+def _progress(msg, **kwargs):
+    """Print directly to stderr so it's visible even when stdout is redirected to JSON file."""
+    print(msg, file=sys.stderr, flush=True, **kwargs)
 
 from test_framework.messages import (
     CBlock,
@@ -93,10 +99,17 @@ def _run_generator(node, log, datafile_path):
 
     records_main = []
 
-    log.info(f"Generator: mining {CHECKPOINT_HEIGHT} main-chain blocks on testnet3")
-    log.info(f"  genesis = {genesis_hash}")
+    _progress("")
+    _progress("=" * 64)
+    _progress(f"  GENERATOR MODE — mining {CHECKPOINT_HEIGHT} testnet3 blocks")
+    _progress(f"  genesis = {genesis_hash}")
+    _progress("=" * 64)
+
+    t_start = _time.monotonic()
 
     for height in range(1, CHECKPOINT_HEIGHT + 1):
+        t_block = _time.monotonic()
+
         # getblocktemplate gives us the correct nBits (LWMA-adjusted) and curtime
         tmpl = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
 
@@ -129,7 +142,18 @@ def _run_generator(node, log, datafile_path):
         result = node.submitblock(block_hex)
         assert result is None, f"submitblock failed at height {height}: {result}"
 
-        log.info(f"  [{height}/{CHECKPOINT_HEIGHT}] nonce={nonce} hash={block.hash_hex}")
+        elapsed_block = _time.monotonic() - t_block
+        elapsed_total = _time.monotonic() - t_start
+        avg_per_block = elapsed_total / height
+        remaining     = avg_per_block * (CHECKPOINT_HEIGHT - height)
+        eta_min, eta_sec = divmod(int(remaining), 60)
+
+        _progress(
+            f"  [{height:>3}/{CHECKPOINT_HEIGHT}]  "
+            f"nonce={nonce:<8}  bits={block.nBits:#010x}  "
+            f"hash={block.hash_hex[:16]}...  "
+            f"{elapsed_block:4.1f}s/block  ETA {eta_min}m{eta_sec:02d}s"
+        )
 
         records_main.append({
             'height':      height,
@@ -147,12 +171,15 @@ def _run_generator(node, log, datafile_path):
     genesis_block_info = node.getblock(genesis_hash)
     fork_nbits = int(genesis_block_info['bits'], 16)
 
-    log.info(f"Generator: mining 2 fork headers at genesis difficulty (nBits={fork_nbits:#010x})")
+    _progress("")
+    _progress(f"  Mining 2 fork headers at genesis nBits={fork_nbits:#010x}")
 
     records_fork = []
     prev_fork_int = genesis_hash_int
 
     for height in range(1, 3):
+        t_block = _time.monotonic()
+
         # Use a timestamp offset that differs from main chain to ensure a
         # different hash, while staying within the 2-hour future-time window.
         base_time = records_main[height - 1]['time']
@@ -182,7 +209,11 @@ def _run_generator(node, log, datafile_path):
                 break
         assert found, f"Exhausted nonce space for fork block at height {height}"
 
-        log.info(f"  fork [{height}/2] nonce={nonce} hash={block.hash_hex}")
+        elapsed_block = _time.monotonic() - t_block
+        _progress(
+            f"  fork [{height}/2]  nonce={nonce:<8}  "
+            f"hash={block.hash_hex[:16]}...  {elapsed_block:.1f}s"
+        )
 
         records_fork.append({
             'height':      height,
@@ -196,20 +227,26 @@ def _run_generator(node, log, datafile_path):
         })
         prev_fork_int = block.hash_int
 
-    result = {'main': records_main, 'fork': records_fork}
-
+    total_min, total_sec = divmod(int(_time.monotonic() - t_start), 60)
     checkpoint_hash = records_main[-1]['hash']
     fork_tip_hash   = records_fork[-1]['hash']
 
-    log.info("=" * 60)
-    log.info("Generator done. Copy the JSON below into data/testnet3_headers.json")
-    log.info(f"CHECKPOINT_HASH = '{checkpoint_hash}'")
-    log.info(f"FORK_TIP_HASH   = '{fork_tip_hash}'")
-    log.info("Also add to chainparams.cpp CTestNetParams::checkpointData:")
-    log.info(f"  {{{CHECKPOINT_HEIGHT}, uint256{{\"{checkpoint_hash}\"}}}},")
-    log.info("=" * 60)
+    _progress("")
+    _progress("=" * 64)
+    _progress(f"  DONE in {total_min}m{total_sec:02d}s")
+    _progress("")
+    _progress("  1. JSON is on stdout — redirect it:")
+    _progress("     python3 p2p_dos_header_tree.py --mine > data/testnet3_headers.json")
+    _progress("")
+    _progress("  2. Update constants in p2p_dos_header_tree.py:")
+    _progress(f"     CHECKPOINT_HASH = '{checkpoint_hash}'")
+    _progress(f"     FORK_TIP_HASH   = '{fork_tip_hash}'")
+    _progress("")
+    _progress("  3. Add to chainparams.cpp CTestNetParams::checkpointData:")
+    _progress(f"     {{{CHECKPOINT_HEIGHT}, uint256{{\"{checkpoint_hash}\"}}}},")
+    _progress("=" * 64)
 
-    print(json.dumps(result, indent=2))
+    print(json.dumps({'main': records_main, 'fork': records_fork}, indent=2))
 
 
 # ---------------------------------------------------------------------------
