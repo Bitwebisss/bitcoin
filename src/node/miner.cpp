@@ -48,11 +48,6 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
         pblock->nTime = nNewTime;
     }
 
-    // Updating time can change work required on testnet:
-    if (consensusParams.fPowAllowMinDifficultyBlocks) {
-        pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, consensusParams);
-    }
-
     return nNewTime - nOldTime;
 }
 
@@ -470,7 +465,6 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
     auto now{NodeClock::now()};
     const auto deadline = now + options.timeout;
     const MillisecondsDouble tick{1000};
-    const bool allow_min_difficulty{chainman.GetParams().GetConsensus().fPowAllowMinDifficultyBlocks};
 
     do {
         bool tip_changed{false};
@@ -498,14 +492,6 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
 
         // Must release m_tip_block_mutex before locking cs_main, to avoid deadlocks.
         LOCK(::cs_main);
-
-        // On test networks return a minimum difficulty block after 20 minutes
-        if (!tip_changed && allow_min_difficulty) {
-            const NodeClock::time_point tip_time{std::chrono::seconds{chainman.ActiveChain().Tip()->GetBlockTime()}};
-            if (now > tip_time + 20min) {
-                tip_changed = true;
-            }
-        }
 
         /**
          * We determine if fees increased compared to the previous template by generating

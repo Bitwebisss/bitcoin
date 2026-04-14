@@ -140,10 +140,9 @@ BOOST_AUTO_TEST_CASE(get_next_work_upper_limit_actual)
 //
 // ── Which chain types run LWMA-3? ────────────────────────────────────────
 //
-//   GetNextWorkRequired() routes through three branches in order:
+//   GetNextWorkRequired() routes through two branches in order:
 //     1. fPowNoRetargeting == true  → return pindexLast->nBits   (REGTEST)
-//     2. fPowAllowMinDifficultyBlocks == true → return powLimit  (unused)
-//     3. Lwma3CalculateNextWorkRequired()     (MAIN, SIGNET, TESTNET, TESTNET4)
+//     2. Lwma3CalculateNextWorkRequired()     (MAIN, SIGNET, TESTNET, TESTNET4)
 //
 // ── Hardcoded expected values (verified by Python arith_uint256 simulation)
 //
@@ -436,10 +435,9 @@ BOOST_AUTO_TEST_CASE(lwma3_no_retargeting)
 
 // ---------------------------------------------------------------------------
 // Test 9: LWMA-3 runs on TESTNET and TESTNET4.
-//   fPowAllowMinDifficultyBlocks is disabled on both testnets so real
-//   difficulty adjustment runs exactly as on mainnet.
+//   Real difficulty adjustment runs exactly as on mainnet.
 //   Verifies:
-//     - both flags are in the correct state (no-retargeting off, min-diff off)
+//     - fPowNoRetargeting is off (LWMA-3 is the active path)
 //     - GetNextWorkRequired returns a real LWMA result (not powLimit)
 //     - result is a valid target at or below powLimit
 //     - bootstrap path still works on testnets (height <= L returns genesis nBits)
@@ -450,8 +448,7 @@ BOOST_AUTO_TEST_CASE(lwma3_testnet_runs_lwma)
         const auto chainParams = CreateChainParams(*m_node.args, ct);
         const auto& consensus  = chainParams->GetConsensus();
 
-        // Pre-conditions: LWMA must be the active path on testnets.
-        BOOST_REQUIRE(!consensus.fPowAllowMinDifficultyBlocks);
+        // Pre-condition: LWMA must be the active path on testnets.
         BOOST_REQUIRE(!consensus.fPowNoRetargeting);
 
         const int64_t N        = consensus.lwmaAveragingWindow;
@@ -636,13 +633,13 @@ BOOST_AUTO_TEST_CASE(GetBlockProofEquivalentTime_test)
 // the PoW routing mode for each chain so that any accidental change to
 // chainparams.cpp that flips a difficulty flag is caught immediately.
 //
-//   Chain     | fPowNoRetargeting | fPowAllowMinDifficultyBlocks | LWMA runs?
-//   ----------+-------------------+------------------------------+-----------
-//   MAIN      | false             | false                        | yes
-//   TESTNET   | false             | false                        | yes
-//   TESTNET4  | false             | false                        | yes
-//   SIGNET    | false             | false                        | yes
-//   REGTEST   | true              | —                            | no (branch 1)
+//   Chain     | fPowNoRetargeting | LWMA runs?
+//   ----------+-------------------+-----------
+//   MAIN      | false             | yes
+//   TESTNET   | false             | yes
+//   TESTNET4  | false             | yes
+//   SIGNET    | false             | yes
+//   REGTEST   | true              | no (branch 1)
 // ---------------------------------------------------------------------------
 void sanity_check_chainparams(const ArgsManager& args, ChainType chain_type)
 {
@@ -682,22 +679,17 @@ void sanity_check_chainparams(const ArgsManager& args, ChainType chain_type)
     // These checks catch accidental flag changes in chainparams.cpp.
     switch (chain_type) {
     case ChainType::MAIN:
-        // Full LWMA-3 path: neither shortcut must be active.
+        // Full LWMA-3 path: no-retargeting shortcut must not be active.
         BOOST_CHECK(!consensus.fPowNoRetargeting);
-        BOOST_CHECK(!consensus.fPowAllowMinDifficultyBlocks);
         break;
     case ChainType::TESTNET:
     case ChainType::TESTNET4:
         // Full LWMA-3 path: same routing as mainnet.
-        // fPowAllowMinDifficultyBlocks is disabled — real difficulty
-        // adjustment runs on testnets instead of always returning powLimit.
         BOOST_CHECK(!consensus.fPowNoRetargeting);
-        BOOST_CHECK(!consensus.fPowAllowMinDifficultyBlocks);
         break;
     case ChainType::SIGNET:
         // Full LWMA-3 path: same routing as mainnet (no shortcuts).
         BOOST_CHECK(!consensus.fPowNoRetargeting);
-        BOOST_CHECK(!consensus.fPowAllowMinDifficultyBlocks);
         break;
     case ChainType::REGTEST:
         // No-retargeting shortcut: nBits never changes, fastest for testing.
