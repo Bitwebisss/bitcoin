@@ -25,7 +25,7 @@ After mining:
 # Only this constant needs updating if you want more/fewer blocks.
 # Hashes are read directly from the JSON — no manual copying needed.
 # ---------------------------------------------------------------------------
-CHECKPOINT_HEIGHT = 600
+CHECKPOINT_HEIGHT = 580
 # ---------------------------------------------------------------------------
 
 import json
