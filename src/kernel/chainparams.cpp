@@ -598,7 +598,7 @@ public:
                 .height = 110,
                 .hash_serialized = AssumeutxoHash{uint256{"b952555c8ab81fec46f3d4253b7af256d766ceb39fb7752b9d18cdf4a0141327"}},
                 .m_chain_tx_count = 111,
-                .blockhash = consteval_ctor(uint256{"3e891cac39e9d1ba8646414caa6d138dbdefda114f5bda751d360e232ca947b6"}),
+                .blockhash = consteval_ctor(uint256{"7972426e93174a03b6ead1d7ca13e2b5980a333be9849ef392e57dd4491a8fe6"}),
             },
             {
                 // For use by fuzz target src/test/fuzz/utxo_snapshot.cpp
