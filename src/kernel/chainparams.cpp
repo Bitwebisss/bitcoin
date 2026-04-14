@@ -198,12 +198,12 @@ public:
         consensus.script_flag_exceptions.emplace( // BIP16 exception
             uint256{"00000000dd30457c001f4095d208cc1296b0eed002427aa599874af7a432b105"}, SCRIPT_VERIFY_NONE);
         */
-        consensus.BIP34Height = 112;
+        consensus.BIP34Height = 2;
         consensus.BIP34Hash = uint256{};
-        consensus.BIP65Height = 112;
-        consensus.BIP66Height = 112;
-        consensus.CSVHeight = 112;
-        consensus.SegwitHeight = 112;
+        consensus.BIP65Height = 2;
+        consensus.BIP66Height = 2;
+        consensus.CSVHeight = 2;
+        consensus.SegwitHeight = 2;
         consensus.MinBIP9WarningHeight = 4134; // segwit activation height + miner confirmation window
         consensus.powLimit = uint256{"000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
         consensus.nPowTargetTimespan = 5 * 60; // 5m
