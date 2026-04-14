@@ -34,9 +34,14 @@ import sys
 import time as _time
 
 
-def _progress(msg, **kwargs):
-    """Print directly to stderr so it's visible even when stdout is redirected to JSON file."""
-    print(msg, file=sys.stderr, flush=True, **kwargs)
+def _progress(msg):
+    """Write directly to /dev/tty, bypassing all test framework output capture."""
+    try:
+        with open('/dev/tty', 'w') as tty:
+            tty.write(msg + '\n')
+            tty.flush()
+    except OSError:
+        os.write(2, (msg + '\n').encode())
 
 from test_framework.messages import (
     CBlock,
