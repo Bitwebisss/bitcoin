@@ -337,13 +337,13 @@ public:
         genesis = CreateGenesisBlock(testnet4_genesis_msg,
                 testnet4_genesis_script,
                 1775999890,
-                66882165,
+                99880088,
                 0x1f0fffff,
                 1,
                 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256{"5c07ed084794383df4ae3d2519e1e96b77b0a7bc875f4285d7fe82088ee5ccec"});
-        assert(genesis.hashMerkleRoot == uint256{"5ad274902eb6da00c6389ce8e102560b8f79cc575db61cca0c66e32af29b63f4"});
+        assert(consensus.hashGenesisBlock == uint256{"b80f3f587edbe596c082d4f28a2b3590c10723822b6ff100726e37eac83510a3"});
+        assert(genesis.hashMerkleRoot == uint256{"45dc81c6f9bd42e76a06fa810a9704e9a0e0415c50850b68d55a0648f6880616"});
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -365,7 +365,7 @@ public:
         // Checkpoints restored
         checkpointData = {
             {
-                {0, uint256{"5c07ed084794383df4ae3d2519e1e96b77b0a7bc875f4285d7fe82088ee5ccec"}},
+                {0, uint256{"b80f3f587edbe596c082d4f28a2b3590c10723822b6ff100726e37eac83510a3"}},
             }
         };
         // Checkpoints restored
