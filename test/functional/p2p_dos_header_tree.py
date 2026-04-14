@@ -23,7 +23,7 @@ After mining:
 # ---------------------------------------------------------------------------
 # UPDATE THESE two constants after running --mine once and updating chainparams
 # ---------------------------------------------------------------------------
-CHECKPOINT_HEIGHT = 546
+CHECKPOINT_HEIGHT = 100
 CHECKPOINT_HASH   = 'REPLACE_ME_AFTER_MINE'   # main[-1]['hash'] from JSON
 FORK_TIP_HASH     = 'REPLACE_ME_AFTER_MINE'   # fork[-1]['hash'] from JSON
 # ---------------------------------------------------------------------------
