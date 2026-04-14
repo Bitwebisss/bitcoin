@@ -251,7 +251,9 @@ def _run_generator(node, log, datafile_path):
     _progress(f"     {{{CHECKPOINT_HEIGHT}, uint256{{\"{checkpoint_hash}\"}}}},")
     _progress("=" * 64)
 
-    print(json.dumps({'main': records_main, 'fork': records_fork}, indent=2))
+    with open(datafile_path, 'w', encoding='utf-8') as f:
+        json.dump({'main': records_main, 'fork': records_fork}, f, indent=2)
+    _progress(f"  JSON written to {datafile_path}")
 
 
 # ---------------------------------------------------------------------------
@@ -268,33 +270,29 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
 
     def add_options(self, parser):
         parser.add_argument(
-            '--datafile',
-            default='data/testnet3_headers.json',
-            help='Header data file (default: %(default)s)',
-        )
-        parser.add_argument(
             '--mine',
             action='store_true',
             default=False,
-            help='Generator mode: mine test blocks and write JSON to stdout, then exit',
+            help='Generator mode: mine test blocks and write data/testnet3_headers.json, then exit',
         )
 
     def run_test(self):
+        datafile_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            'data', 'testnet3_headers.json',
+        )
+
         # ----------------------------------------------------------------
         # Generator mode
         # ----------------------------------------------------------------
         if self.options.mine:
-            _run_generator(self.nodes[0], self.log, self.options.datafile)
+            _run_generator(self.nodes[0], self.log, datafile_path)
             return
 
         # ----------------------------------------------------------------
         # Normal test mode
         # ----------------------------------------------------------------
         self.log.info("Load header data from JSON")
-        datafile_path = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
-            self.options.datafile,
-        )
         with open(datafile_path, encoding='utf-8') as f:
             data = json.load(f)
 
