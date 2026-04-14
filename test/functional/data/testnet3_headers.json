@@ -989,16 +989,6 @@
       "bits": 521142271,
       "nonce": 1594,
       "hash": "4cce60577a4de79e7e4b2de7f446c576598fc5e21f3edeb576fa9e3d7dd70ff8"
-    },
-    {
-      "height": 100,
-      "version": 536870912,
-      "prev_hash": "4cce60577a4de79e7e4b2de7f446c576598fc5e21f3edeb576fa9e3d7dd70ff8",
-      "merkle_root": "e9d18dcd9f5e1ebb1dd11a8e6e390b4dab8e816f33c8420ecf1b764f9d7be00f",
-      "time": 1776150277,
-      "bits": 521142271,
-      "nonce": 930,
-      "hash": "6b26672e7213d7e78d92e73d078573a3bdee038b3dab54d90b05e975d43d6d41"
     }
   ],
   "fork": [
