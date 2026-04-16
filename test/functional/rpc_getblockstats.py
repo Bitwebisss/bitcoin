@@ -83,6 +83,7 @@ class GetblockstatsTest(BitcoinTestFramework):
         }
         with open(filename, 'w', encoding="utf8") as f:
             json.dump(to_dump, f, sort_keys=True, indent=2)
+            f.write('\n')
 
     def load_test_data(self, filename):
         with open(filename, 'r', encoding="utf8") as f:

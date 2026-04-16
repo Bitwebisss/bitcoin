@@ -167,6 +167,7 @@ def _run_generator(node, log, datafile_path):
         # Write after every block so progress survives a crash
         with open(datafile_path, 'w', encoding='utf-8') as f:
             json.dump({'main': records_main, 'fork': records_fork}, f, indent=2)
+            f.write('\n')
 
     # Mine 2 fork blocks branching from genesis
     genesis_block_info = node.getblock(genesis_hash)
@@ -228,6 +229,7 @@ def _run_generator(node, log, datafile_path):
 
         with open(datafile_path, 'w', encoding='utf-8') as f:
             json.dump({'main': records_main, 'fork': records_fork}, f, indent=2)
+            f.write('\n')
 
     total_min, total_sec = divmod(int(_time.monotonic() - t_start), 60)
     checkpoint_hash = records_main[-1]['hash']
