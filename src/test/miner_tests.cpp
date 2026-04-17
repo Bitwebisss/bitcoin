@@ -489,22 +489,19 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     std::vector<int> prevheights;
 
     // --- relative height locked ---
-    // BIP68 is active from block 1 in Bitweb. This tx has nSequence = tip->nHeight + 1 = 111,
-    // requiring the spending block to be at height prevheight(1) + 111 = 112.
-    // At current tip 110, next block is 111 < 112, so BIP68 sequence locks FAIL here.
+    // BIP68 is active from block 1 in Bitweb (not a soft-fork, always enforced).
+    // nSequence = tip->nHeight + 1 = 111 means the spending block must be at height
+    // prevheight(txFirst[0]=1) + 111 = 112. Next block is 111, so BIP68 fails here.
     //
-    // We do NOT add this tx to the mempool yet. The test helper always uses default
-    // LockPoints (lp.height=0, lp.time=0). BlockAssembler evaluates
-    // TestLockPointValidity(lp.height=0 <= tip=110) = true and would include the tx
-    // in the template without re-checking, causing TestBlockValidity to throw
-    // bad-txns-nonfinal. Instead, we save the tx and add it after the height advance
-    // when it is genuinely BIP68-final. We still verify all sequence-lock assertions
-    // below — TestSequenceLocks/SequenceLocks do not require the tx to be in the mempool;
-    // they resolve inputs through CCoinsViewMemPool against confirmed coins.
-    //
-    // Also update entry state here (without AddToMempool) so that the subsequent
-    // absolute-locked AddToMempool calls inherit the correct fee and spendsCoinbase,
-    // matching the original test intent.
+    // We still add this tx to the mempool exactly as the original test did.
+    // BlockAssembler uses cached LockPoints (lp.height=0, lp.time=0) and evaluates
+    // TestLockPointValidity(0 <= 110) = true, so it includes the tx in the template
+    // without re-checking BIP68. TestBlockValidity then correctly rejects the block
+    // with bad-txns-nonfinal. This dual behaviour is explicitly verified below:
+    //   1. createNewBlock throws bad-txns-nonfinal  -> BIP68 enforcement is working
+    //   2. After height/time advance the same tx becomes final -> correct mineability
+    // If BIP68 enforcement were ever broken, the first check would stop throwing and
+    // the test would fail, giving us a regression signal.
     tx.version = 2;
     tx.vin.resize(1);
     prevheights.resize(1);
@@ -517,9 +514,10 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     tx.vout[0].nValue = BLOCKSUBSIDY-HIGHFEE;
     tx.vout[0].scriptPubKey = CScript() << OP_1;
     tx.nLockTime = 0;
-    CMutableTransaction txRelativeHeight = tx; // saved for re-adding after height/time advance
     hash = tx.GetHash();
-    entry.Fee(HIGHFEE).Time(Now<NodeSeconds>()).SpendsCoinbase(true); // update entry state without adding
+    // Add to mempool exactly as the original test: stale LockPoints will make
+    // BlockAssembler include this tx, but TestBlockValidity must reject it.
+    AddToMempool(tx_mempool, entry.Fee(HIGHFEE).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
     BOOST_CHECK(CheckFinalTxAtTip(*Assert(m_node.chainman->ActiveChain().Tip()), CTransaction{tx})); // Locktime passes
     BOOST_CHECK(!TestSequenceLocks(CTransaction{tx}, tx_mempool)); // Sequence locks fail
 
@@ -529,16 +527,16 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     }
 
     // --- relative time locked ---
-    // Same rationale as relative height locked above: BIP68 active from block 1,
-    // the time-based sequence lock is not yet satisfied at the current MTP.
-    // Saved for adding to mempool after MTP advance. Entry state updated in-place
-    // without AddToMempool so downstream calls remain consistent.
+    // Same rationale as relative height locked above. The time-based sequence lock
+    // is not satisfied at the current MTP. After MTP advance it will be satisfied.
+    // Added to mempool now so the stale-LockPoints + BIP68-enforcement path is
+    // covered together with the relative height locked tx in the exception check below.
     tx.vin[0].prevout.hash = txFirst[1]->GetHash();
     tx.vin[0].nSequence = CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | (((m_node.chainman->ActiveChain().Tip()->GetMedianTimePast()+1-m_node.chainman->ActiveChain()[1]->GetMedianTimePast()) >> CTxIn::SEQUENCE_LOCKTIME_GRANULARITY) + 1); // txFirst[1] is the 3rd block
     prevheights[0] = baseheight + 2;
-    CMutableTransaction txRelativeTime = tx; // saved for re-adding after height/time advance
     hash = tx.GetHash();
-    entry.Time(Now<NodeSeconds>()); // update entry state without adding
+    // Add to mempool as the original test did; same stale-LockPoints reasoning applies.
+    AddToMempool(tx_mempool, entry.Time(Now<NodeSeconds>()).FromTx(tx));
     BOOST_CHECK(CheckFinalTxAtTip(*Assert(m_node.chainman->ActiveChain().Tip()), CTransaction{tx})); // Locktime passes
     BOOST_CHECK(!TestSequenceLocks(CTransaction{tx}, tx_mempool)); // Sequence locks fail
 
@@ -595,21 +593,18 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     tx.vin[0].nSequence = CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | 1;
     BOOST_CHECK(!TestSequenceLocks(CTransaction{tx}, tx_mempool)); // Sequence locks fail
 
-    auto block_template = mining->createNewBlock(options);
-    BOOST_REQUIRE(block_template);
+    // --- BIP68 enforcement regression check (coverage 1 of 2) ---
+    // All four locked txs are now in the mempool. BlockAssembler picks up the two
+    // relative-locked txs via stale LockPoints (lp.height=0 <= tip=110, passes
+    // TestLockPointValidity), but TestBlockValidity must detect that those txs are
+    // BIP68-non-final at the current height and reject the block. If this exception
+    // ever stops being thrown it means BIP68 enforcement has been broken.
+    // The two absolute-locked txs are excluded earlier by IsFinalTx (nLockTime checks).
+    BOOST_CHECK_EXCEPTION(mining->createNewBlock(options), std::runtime_error, HasReason("bad-txns-nonfinal"));
 
-    // With BIP68 active from block 1, relative-locked txs were intentionally not added
-    // to the mempool above (they are BIP68-non-final at this height and stale LockPoints
-    // would cause BlockAssembler to include them, then TestBlockValidity would throw).
-    // The two absolute-locked txs are excluded by IsFinalTx as before.
-    // Result: only the coinbase survives into the template.
-    CBlock block{block_template->getBlock()};
-    BOOST_CHECK_EQUAL(block.vtx.size(), 1U);
-
-    // Advance height by 1 and time by SEQUENCE_LOCK_TIME so all four locked txs become
-    // mineable. Then add the two relative-locked txs to the mempool — at the new height
-    // (tip=111, next block=112) they satisfy BIP68: relHeight needs 1+111=112 <=112,
-    // relTime needs MTP satisfied after the +512s trick below.
+    // Advance height by 1 and MTP by SEQUENCE_LOCK_TIME so that all four locked txs
+    // become mineable. The two relative-locked txs are already in the mempool from
+    // the AddToMempool calls above and do not need to be re-added.
     for (int i = 0; i < CBlockIndex::nMedianTimeSpan; ++i) {
         CBlockIndex* ancestor{Assert(m_node.chainman->ActiveChain().Tip()->GetAncestor(m_node.chainman->ActiveChain().Tip()->nHeight - i))};
         ancestor->nTime += SEQUENCE_LOCK_TIME; // Trick the MedianTimePast
@@ -617,14 +612,16 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     m_node.chainman->ActiveChain().Tip()->nHeight++;
     SetMockTime(m_node.chainman->ActiveChain().Tip()->GetMedianTimePast() + 1);
 
-    // Now add the relative-locked txs: they are genuinely BIP68-final at the new height,
-    // so BlockAssembler will include them and TestBlockValidity will pass.
-    AddToMempool(tx_mempool, entry.Fee(HIGHFEE).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(txRelativeHeight));
-    AddToMempool(tx_mempool, entry.Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(txRelativeTime));
-
-    block_template = mining->createNewBlock(options);
+    // --- all four locked txs become final (coverage 2 of 2) ---
+    // At tip height 111 (next block 112):
+    //   relHeight : needs prevheight(1) + 111 = 112 <= 112  -> BIP68-final
+    //   relTime   : MTP advanced by SEQUENCE_LOCK_TIME       -> BIP68-final
+    //   absHeight : nLockTime=111 < 112                      -> IsFinalTx passes
+    //   absTime   : nLockTime <= new MTP                     -> IsFinalTx passes
+    // All four txs plus coinbase must appear in the template.
+    auto block_template = mining->createNewBlock(options);
     BOOST_REQUIRE(block_template);
-    block = block_template->getBlock();
+    CBlock block{block_template->getBlock()};
     BOOST_CHECK_EQUAL(block.vtx.size(), 5U);
 }
 
