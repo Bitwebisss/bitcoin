@@ -488,24 +488,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     // height map
     std::vector<int> prevheights;
 
-    // Bitweb: BIP68/CSV is active from block 1 — there is no pre-activation
-    // window where relative-locked txs can safely slip into a block template.
-    // AddToMempool bypasses lock point computation, so any relative-locked tx
-    // added this way would pass the miner's per-entry check but be rejected by
-    // TestBlockValidity (which enforces BIP68 for all heights >= CSVHeight).
-    //
-    // Strategy: verify sequence lock *logic* (TestSequenceLocks / SequenceLocks /
-    // IsFinalTx) without adding relative-locked txs to the mempool.  Only
-    // absolute-locked txs (excluded by IsFinalTx in the miner, not BIP68) go
-    // into the pool.  Expected vtx counts are adjusted accordingly.
-    //
-    // Original Bitcoin Core comment left for reference:
-    //   "relative locked txs will [enter the template] if inconsistently added
-    //    to mempool. For now these will still generate a valid template until
-    //    BIP68 soft fork"
-    // That window does not exist in Bitweb — hence the rewrite below.
-
-    // relative height locked — verify properties; do NOT add to mempool
+    // relative height locked
     tx.version = 2;
     tx.vin.resize(1);
     prevheights.resize(1);
@@ -518,7 +501,8 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     tx.vout[0].nValue = BLOCKSUBSIDY-HIGHFEE;
     tx.vout[0].scriptPubKey = CScript() << OP_1;
     tx.nLockTime = 0;
-    // (not added to mempool — BIP68 always active, sequence lock not yet satisfied)
+    hash = tx.GetHash();
+    AddToMempool(tx_mempool, entry.Fee(HIGHFEE).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
     BOOST_CHECK(CheckFinalTxAtTip(*Assert(m_node.chainman->ActiveChain().Tip()), CTransaction{tx})); // Locktime passes
     BOOST_CHECK(!TestSequenceLocks(CTransaction{tx}, tx_mempool)); // Sequence locks fail
 
@@ -527,11 +511,12 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
         BOOST_CHECK(SequenceLocks(CTransaction(tx), flags, prevheights, *CreateBlockIndex(active_chain_tip->nHeight + 2, active_chain_tip))); // Sequence locks pass on 2nd block
     }
 
-    // relative time locked — verify properties; do NOT add to mempool
+    // relative time locked
     tx.vin[0].prevout.hash = txFirst[1]->GetHash();
     tx.vin[0].nSequence = CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | (((m_node.chainman->ActiveChain().Tip()->GetMedianTimePast()+1-m_node.chainman->ActiveChain()[1]->GetMedianTimePast()) >> CTxIn::SEQUENCE_LOCKTIME_GRANULARITY) + 1); // txFirst[1] is the 3rd block
     prevheights[0] = baseheight + 2;
-    // (not added to mempool — same rationale)
+    hash = tx.GetHash();
+    AddToMempool(tx_mempool, entry.Time(Now<NodeSeconds>()).FromTx(tx));
     BOOST_CHECK(CheckFinalTxAtTip(*Assert(m_node.chainman->ActiveChain().Tip()), CTransaction{tx})); // Locktime passes
     BOOST_CHECK(!TestSequenceLocks(CTransaction{tx}, tx_mempool)); // Sequence locks fail
 
@@ -548,13 +533,13 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
         ancestor->nTime -= SEQUENCE_LOCK_TIME; // undo tricked MTP
     }
 
-    // absolute height locked — excluded by IsFinalTx (nLockTime), not BIP68; safe to pool
+    // absolute height locked
     tx.vin[0].prevout.hash = txFirst[2]->GetHash();
     tx.vin[0].nSequence = CTxIn::MAX_SEQUENCE_NONFINAL;
     prevheights[0] = baseheight + 3;
     tx.nLockTime = m_node.chainman->ActiveChain().Tip()->nHeight + 1;
     hash = tx.GetHash();
-    AddToMempool(tx_mempool, entry.Fee(HIGHFEE).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
+    AddToMempool(tx_mempool, entry.Time(Now<NodeSeconds>()).FromTx(tx));
     BOOST_CHECK(!CheckFinalTxAtTip(*Assert(m_node.chainman->ActiveChain().Tip()), CTransaction{tx})); // Locktime fails
     BOOST_CHECK(TestSequenceLocks(CTransaction{tx}, tx_mempool)); // Sequence locks pass
     BOOST_CHECK(IsFinalTx(CTransaction(tx), m_node.chainman->ActiveChain().Tip()->nHeight + 2, m_node.chainman->ActiveChain().Tip()->GetMedianTimePast())); // Locktime passes on 2nd block
@@ -563,7 +548,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     tx.nLockTime = 0;
     BOOST_CHECK(IsFinalTx(CTransaction(tx), /*nBlockHeight=*/0, m_node.chainman->ActiveChain().Tip()->GetMedianTimePast()));
 
-    // absolute time locked — same: excluded by IsFinalTx, safe to pool
+    // absolute time locked
     tx.vin[0].prevout.hash = txFirst[3]->GetHash();
     tx.nLockTime = m_node.chainman->ActiveChain().Tip()->GetMedianTimePast();
     prevheights.resize(1);
@@ -591,17 +576,13 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     auto block_template = mining->createNewBlock(options);
     BOOST_REQUIRE(block_template);
 
-    // Bitweb: BIP68 always active.
-    // Relative-locked txs were not added to mempool (see rationale above).
-    // Absolute-locked txs are in mempool but excluded by IsFinalTx — only
-    // coinbase makes it into this template.
+    // None of the of the absolute height/time locked tx should have made
+    // it into the template because we still check IsFinalTx in CreateNewBlock,
+    // but relative locked txs will if inconsistently added to mempool.
+    // For now these will still generate a valid template until BIP68 soft fork
     CBlock block{block_template->getBlock()};
-    BOOST_CHECK_EQUAL(block.vtx.size(), 1U);
-
-    // Advance height by 1 and MTP by SEQUENCE_LOCK_TIME — absolute-locked txs
-    // become final and are mined.  Relative-locked txs are not in mempool so
-    // they do not contribute (their sequence lock conditions are separately
-    // verified above via TestSequenceLocks / SequenceLocks).
+    BOOST_CHECK_EQUAL(block.vtx.size(), 3U);
+    // However if we advance height by 1 and time by SEQUENCE_LOCK_TIME, all of them should be mined
     for (int i = 0; i < CBlockIndex::nMedianTimeSpan; ++i) {
         CBlockIndex* ancestor{Assert(m_node.chainman->ActiveChain().Tip()->GetAncestor(m_node.chainman->ActiveChain().Tip()->nHeight - i))};
         ancestor->nTime += SEQUENCE_LOCK_TIME; // Trick the MedianTimePast
@@ -612,7 +593,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     block_template = mining->createNewBlock(options);
     BOOST_REQUIRE(block_template);
     block = block_template->getBlock();
-    BOOST_CHECK_EQUAL(block.vtx.size(), 3U); // coinbase + 2 absolute-locked
+    BOOST_CHECK_EQUAL(block.vtx.size(), 5U);
 }
 
 void MinerTestingSetup::TestPrioritisedMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst)
