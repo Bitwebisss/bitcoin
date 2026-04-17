@@ -488,7 +488,23 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     // height map
     std::vector<int> prevheights;
 
-    // relative height locked
+    // --- relative height locked ---
+    // BIP68 is active from block 1 in Bitweb. This tx has nSequence = tip->nHeight + 1 = 111,
+    // requiring the spending block to be at height prevheight(1) + 111 = 112.
+    // At current tip 110, next block is 111 < 112, so BIP68 sequence locks FAIL here.
+    //
+    // We do NOT add this tx to the mempool yet. The test helper always uses default
+    // LockPoints (lp.height=0, lp.time=0). BlockAssembler evaluates
+    // TestLockPointValidity(lp.height=0 <= tip=110) = true and would include the tx
+    // in the template without re-checking, causing TestBlockValidity to throw
+    // bad-txns-nonfinal. Instead, we save the tx and add it after the height advance
+    // when it is genuinely BIP68-final. We still verify all sequence-lock assertions
+    // below — TestSequenceLocks/SequenceLocks do not require the tx to be in the mempool;
+    // they resolve inputs through CCoinsViewMemPool against confirmed coins.
+    //
+    // Also update entry state here (without AddToMempool) so that the subsequent
+    // absolute-locked AddToMempool calls inherit the correct fee and spendsCoinbase,
+    // matching the original test intent.
     tx.version = 2;
     tx.vin.resize(1);
     prevheights.resize(1);
@@ -501,8 +517,9 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     tx.vout[0].nValue = BLOCKSUBSIDY-HIGHFEE;
     tx.vout[0].scriptPubKey = CScript() << OP_1;
     tx.nLockTime = 0;
+    CMutableTransaction txRelativeHeight = tx; // saved for re-adding after height/time advance
     hash = tx.GetHash();
-    AddToMempool(tx_mempool, entry.Fee(HIGHFEE).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
+    entry.Fee(HIGHFEE).Time(Now<NodeSeconds>()).SpendsCoinbase(true); // update entry state without adding
     BOOST_CHECK(CheckFinalTxAtTip(*Assert(m_node.chainman->ActiveChain().Tip()), CTransaction{tx})); // Locktime passes
     BOOST_CHECK(!TestSequenceLocks(CTransaction{tx}, tx_mempool)); // Sequence locks fail
 
@@ -511,12 +528,17 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
         BOOST_CHECK(SequenceLocks(CTransaction(tx), flags, prevheights, *CreateBlockIndex(active_chain_tip->nHeight + 2, active_chain_tip))); // Sequence locks pass on 2nd block
     }
 
-    // relative time locked
+    // --- relative time locked ---
+    // Same rationale as relative height locked above: BIP68 active from block 1,
+    // the time-based sequence lock is not yet satisfied at the current MTP.
+    // Saved for adding to mempool after MTP advance. Entry state updated in-place
+    // without AddToMempool so downstream calls remain consistent.
     tx.vin[0].prevout.hash = txFirst[1]->GetHash();
     tx.vin[0].nSequence = CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | (((m_node.chainman->ActiveChain().Tip()->GetMedianTimePast()+1-m_node.chainman->ActiveChain()[1]->GetMedianTimePast()) >> CTxIn::SEQUENCE_LOCKTIME_GRANULARITY) + 1); // txFirst[1] is the 3rd block
     prevheights[0] = baseheight + 2;
+    CMutableTransaction txRelativeTime = tx; // saved for re-adding after height/time advance
     hash = tx.GetHash();
-    AddToMempool(tx_mempool, entry.Time(Now<NodeSeconds>()).FromTx(tx));
+    entry.Time(Now<NodeSeconds>()); // update entry state without adding
     BOOST_CHECK(CheckFinalTxAtTip(*Assert(m_node.chainman->ActiveChain().Tip()), CTransaction{tx})); // Locktime passes
     BOOST_CHECK(!TestSequenceLocks(CTransaction{tx}, tx_mempool)); // Sequence locks fail
 
@@ -576,19 +598,29 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     auto block_template = mining->createNewBlock(options);
     BOOST_REQUIRE(block_template);
 
-    // None of the of the absolute height/time locked tx should have made
-    // it into the template because we still check IsFinalTx in CreateNewBlock,
-    // but relative locked txs will if inconsistently added to mempool.
-    // For now these will still generate a valid template until BIP68 soft fork
+    // With BIP68 active from block 1, relative-locked txs were intentionally not added
+    // to the mempool above (they are BIP68-non-final at this height and stale LockPoints
+    // would cause BlockAssembler to include them, then TestBlockValidity would throw).
+    // The two absolute-locked txs are excluded by IsFinalTx as before.
+    // Result: only the coinbase survives into the template.
     CBlock block{block_template->getBlock()};
-    BOOST_CHECK_EQUAL(block.vtx.size(), 3U);
-    // However if we advance height by 1 and time by SEQUENCE_LOCK_TIME, all of them should be mined
+    BOOST_CHECK_EQUAL(block.vtx.size(), 1U);
+
+    // Advance height by 1 and time by SEQUENCE_LOCK_TIME so all four locked txs become
+    // mineable. Then add the two relative-locked txs to the mempool — at the new height
+    // (tip=111, next block=112) they satisfy BIP68: relHeight needs 1+111=112 <=112,
+    // relTime needs MTP satisfied after the +512s trick below.
     for (int i = 0; i < CBlockIndex::nMedianTimeSpan; ++i) {
         CBlockIndex* ancestor{Assert(m_node.chainman->ActiveChain().Tip()->GetAncestor(m_node.chainman->ActiveChain().Tip()->nHeight - i))};
         ancestor->nTime += SEQUENCE_LOCK_TIME; // Trick the MedianTimePast
     }
     m_node.chainman->ActiveChain().Tip()->nHeight++;
     SetMockTime(m_node.chainman->ActiveChain().Tip()->GetMedianTimePast() + 1);
+
+    // Now add the relative-locked txs: they are genuinely BIP68-final at the new height,
+    // so BlockAssembler will include them and TestBlockValidity will pass.
+    AddToMempool(tx_mempool, entry.Fee(HIGHFEE).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(txRelativeHeight));
+    AddToMempool(tx_mempool, entry.Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(txRelativeTime));
 
     block_template = mining->createNewBlock(options);
     BOOST_REQUIRE(block_template);
@@ -773,7 +805,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
             }
             FILE* f = fopen("/tmp/blockinfo.txt", "a");
             fprintf(f, "{%u, %u},\n", bi.extranonce, block.nNonce);
-            fclose(f); 
+            fclose(f);
             */
         }
         std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
