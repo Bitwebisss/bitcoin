@@ -93,12 +93,12 @@ public:
         consensus.script_flag_exceptions.emplace( // Taproot exception
             uint256{"0000000000000000000f14c35b2d841e986ab5441de8c585d5ffe55ea1e395ad"}, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS);
         */
-        consensus.BIP34Height = 1;
-        consensus.BIP34Hash = uint256{};
-        consensus.BIP65Height = 1;
-        consensus.BIP66Height = 1;
-        consensus.CSVHeight = 1;
-        consensus.SegwitHeight = 1;
+        consensus.BIP34Height = 1; // Active from the start
+        consensus.BIP34Hash = uint256{}; 
+        consensus.BIP65Height = 1; // Active from the start
+        consensus.BIP66Height = 1; // Active from the start
+        consensus.CSVHeight = 1; // Active from the start
+        consensus.SegwitHeight = 1; // Active from the start
         consensus.MinBIP9WarningHeight = 4032; // don't warn about unknown BIP9 activations below this height
         consensus.powLimit = uint256{"000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
 //        consensus.nPowTargetTimespan = 5 * 60; // 5m
