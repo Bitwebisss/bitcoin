@@ -97,7 +97,7 @@ public:
         consensus.BIP34Hash = uint256{}; 
         consensus.BIP65Height = 1; // Active from the start
         consensus.BIP66Height = 1; // Active from the start
-        consensus.CSVHeight = 1; // Active from the start
+        consensus.CSVHeight = 112; // Active from the start
         consensus.SegwitHeight = 1; // Active from the start
         consensus.MinBIP9WarningHeight = 4032; // don't warn about unknown BIP9 activations below this height
         consensus.powLimit = uint256{"000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"};
