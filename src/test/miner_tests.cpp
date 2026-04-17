@@ -488,6 +488,24 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     // height map
     std::vector<int> prevheights;
 
+    // BIP68/CSV is always active in Bitweb (from block 1).  AddToMempool() bypasses
+    // AcceptToMemoryPool so it does NOT compute LockPoints — the mempool entry is
+    // stored with a default-constructed (all-zero) LockPoints.  The miner then sees
+    // lp.height == 0, concludes the sequence lock is already satisfied, includes the
+    // tx, and TestBlockValidity inside createNewBlock() rejects it with
+    // "bad-txns-nonfinal".
+    //
+    // The fix: compute proper LockPoints via CalculateLockPointsAtTip (the same call
+    // used inside TestSequenceLocks) and store them in entry.lp — which is a public
+    // field of TestMemPoolEntryHelper.  AddToMempool already forwards
+    // entry.GetLockPoints() into the changeset (see test/util/txmempool.cpp), so no
+    // new helper method is needed.
+    //
+    // With correct LockPoints the miner properly skips relative-locked txs when
+    // the lock is unsatisfied (Phase 1), and correctly includes them once the chain
+    // tip advances past the lock point (Phase 2) — exactly what the original test
+    // intended to verify.
+
     // relative height locked
     tx.version = 2;
     tx.vin.resize(1);
@@ -502,6 +520,14 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     tx.vout[0].scriptPubKey = CScript() << OP_1;
     tx.nLockTime = 0;
     hash = tx.GetHash();
+    {
+        // Compute lock points so the miner can correctly filter this tx.
+        // entry.lp is a public field forwarded verbatim by AddToMempool.
+        CCoinsViewMemPool view_mempool{&m_node.chainman->ActiveChainstate().CoinsTip(), tx_mempool};
+        const auto lp = CalculateLockPointsAtTip(m_node.chainman->ActiveChain().Tip(), view_mempool, CTransaction{tx});
+        BOOST_REQUIRE(lp.has_value());
+        entry.lp = *lp;
+    }
     AddToMempool(tx_mempool, entry.Fee(HIGHFEE).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
     BOOST_CHECK(CheckFinalTxAtTip(*Assert(m_node.chainman->ActiveChain().Tip()), CTransaction{tx})); // Locktime passes
     BOOST_CHECK(!TestSequenceLocks(CTransaction{tx}, tx_mempool)); // Sequence locks fail
@@ -516,6 +542,13 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     tx.vin[0].nSequence = CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | (((m_node.chainman->ActiveChain().Tip()->GetMedianTimePast()+1-m_node.chainman->ActiveChain()[1]->GetMedianTimePast()) >> CTxIn::SEQUENCE_LOCKTIME_GRANULARITY) + 1); // txFirst[1] is the 3rd block
     prevheights[0] = baseheight + 2;
     hash = tx.GetHash();
+    {
+        // Same rationale as above.
+        CCoinsViewMemPool view_mempool{&m_node.chainman->ActiveChainstate().CoinsTip(), tx_mempool};
+        const auto lp = CalculateLockPointsAtTip(m_node.chainman->ActiveChain().Tip(), view_mempool, CTransaction{tx});
+        BOOST_REQUIRE(lp.has_value());
+        entry.lp = *lp;
+    }
     AddToMempool(tx_mempool, entry.Time(Now<NodeSeconds>()).FromTx(tx));
     BOOST_CHECK(CheckFinalTxAtTip(*Assert(m_node.chainman->ActiveChain().Tip()), CTransaction{tx})); // Locktime passes
     BOOST_CHECK(!TestSequenceLocks(CTransaction{tx}, tx_mempool)); // Sequence locks fail
@@ -533,13 +566,17 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
         ancestor->nTime -= SEQUENCE_LOCK_TIME; // undo tricked MTP
     }
 
+    // Absolute-locked txs use MAX_SEQUENCE_NONFINAL (bit 31 set — BIP68 disabled),
+    // so they carry no sequence-lock constraint.  Default LockPoints{} are correct.
+    entry.lp = LockPoints{};
+
     // absolute height locked
     tx.vin[0].prevout.hash = txFirst[2]->GetHash();
     tx.vin[0].nSequence = CTxIn::MAX_SEQUENCE_NONFINAL;
     prevheights[0] = baseheight + 3;
     tx.nLockTime = m_node.chainman->ActiveChain().Tip()->nHeight + 1;
     hash = tx.GetHash();
-    AddToMempool(tx_mempool, entry.Time(Now<NodeSeconds>()).FromTx(tx));
+    AddToMempool(tx_mempool, entry.Fee(HIGHFEE).Time(Now<NodeSeconds>()).SpendsCoinbase(true).FromTx(tx));
     BOOST_CHECK(!CheckFinalTxAtTip(*Assert(m_node.chainman->ActiveChain().Tip()), CTransaction{tx})); // Locktime fails
     BOOST_CHECK(TestSequenceLocks(CTransaction{tx}, tx_mempool)); // Sequence locks pass
     BOOST_CHECK(IsFinalTx(CTransaction(tx), m_node.chainman->ActiveChain().Tip()->nHeight + 2, m_node.chainman->ActiveChain().Tip()->GetMedianTimePast())); // Locktime passes on 2nd block
@@ -576,13 +613,14 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     auto block_template = mining->createNewBlock(options);
     BOOST_REQUIRE(block_template);
 
-    // None of the of the absolute height/time locked tx should have made
-    // it into the template because we still check IsFinalTx in CreateNewBlock,
-    // but relative locked txs will if inconsistently added to mempool.
-    // For now these will still generate a valid template until BIP68 soft fork
+    // Phase 1: all 4 locked txs are in the mempool but none enters the template:
+    //   - relative height/time locked txs: sequence lock not yet satisfied (BIP68)
+    //   - absolute height/time locked txs: IsFinalTx fails (nLockTime)
     CBlock block{block_template->getBlock()};
-    BOOST_CHECK_EQUAL(block.vtx.size(), 3U);
-    // However if we advance height by 1 and time by SEQUENCE_LOCK_TIME, all of them should be mined
+    BOOST_CHECK_EQUAL(block.vtx.size(), 1U);
+
+    // Phase 2: advance height by 1 and MTP by SEQUENCE_LOCK_TIME.
+    // All 4 locks are now satisfied — the miner must include all 4 txs.
     for (int i = 0; i < CBlockIndex::nMedianTimeSpan; ++i) {
         CBlockIndex* ancestor{Assert(m_node.chainman->ActiveChain().Tip()->GetAncestor(m_node.chainman->ActiveChain().Tip()->nHeight - i))};
         ancestor->nTime += SEQUENCE_LOCK_TIME; // Trick the MedianTimePast
@@ -593,7 +631,7 @@ void MinerTestingSetup::TestBasicMining(const CScript& scriptPubKey, const std::
     block_template = mining->createNewBlock(options);
     BOOST_REQUIRE(block_template);
     block = block_template->getBlock();
-    BOOST_CHECK_EQUAL(block.vtx.size(), 5U);
+    BOOST_CHECK_EQUAL(block.vtx.size(), 5U); // coinbase + 4 locked txs
 }
 
 void MinerTestingSetup::TestPrioritisedMining(const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst)
