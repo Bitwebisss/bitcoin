@@ -149,13 +149,16 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         # So mine a number of blocks > 4104 to ensure that the first window of
         # received headers during a sync are fully between locator entries.
         BLOCKS_TO_MINE = 4110
-
+        
+        self.nodes[0].setmocktime(tip_time + BLOCKS_TO_MINE + 100)
         self.generate(self.nodes[0], BLOCKS_TO_MINE, sync_fun=self.no_op)
+ 
+        self.nodes[1].setmocktime(tip_time + BLOCKS_TO_MINE + 100)
         self.generate(self.nodes[1], BLOCKS_TO_MINE+2, sync_fun=self.no_op)
 
         self.reconnect_all()
 
-        self.mocktime_all(int(time.time()))  # Temporarily hold time to avoid internal timeouts
+        self.mocktime_all(tip_time + BLOCKS_TO_MINE + 100)  # Temporarily hold time to avoid internal timeouts
         self.sync_blocks(timeout=300) # Ensure tips eventually agree
         self.mocktime_all(0)
 
