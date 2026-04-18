@@ -265,7 +265,7 @@ class BIP68Test(BitcoinTestFramework):
         self.nodes[0].prioritisetransaction(txid=tx2.txid_hex, fee_delta=int(-self.relayfee*COIN))
         cur_time = int(time.time())
         for _ in range(10):
-            self.nodes[0].setmocktime(cur_time + 600)
+            self.nodes[0].setmocktime(cur_time)
             self.generate(self.wallet, 1, sync_fun=self.no_op)
             cur_time += 600
 
