@@ -159,7 +159,7 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         
         def generate_batched(node, count):
             nonlocal tip_time
-            BATCH = 500  # keep comfortably under FTL=600
+            BATCH = 200  # keep comfortably under FTL=600
             remaining = count
             mock_t = tip_time + 1
             while remaining > 0:
