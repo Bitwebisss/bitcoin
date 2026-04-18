@@ -150,12 +150,18 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         # received headers during a sync are fully between locator entries.
         BLOCKS_TO_MINE = 4110
 
+        # With Bitweb's FTL=600, bulk generation needs mocktime advanced far enough.
+        # Keep it set during sync so future-timestamped blocks pass FTL on all nodes.
+        tip_time = self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())['time']
+        future_time = tip_time + (BLOCKS_TO_MINE + 200) * 300  # 300s/block + buffer
+        self.mocktime_all(future_time)
+
         self.generate(self.nodes[0], BLOCKS_TO_MINE, sync_fun=self.no_op)
         self.generate(self.nodes[1], BLOCKS_TO_MINE+2, sync_fun=self.no_op)
 
         self.reconnect_all()
 
-        self.mocktime_all(int(time.time()))  # Temporarily hold time to avoid internal timeouts
+        # self.mocktime_all(int(time.time()))  # Temporarily hold time to avoid internal timeouts
         self.sync_blocks(timeout=300) # Ensure tips eventually agree
         self.mocktime_all(0)
 
