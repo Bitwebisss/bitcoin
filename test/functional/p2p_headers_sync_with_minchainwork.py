@@ -149,17 +149,27 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         # So mine a number of blocks > 4104 to ensure that the first window of
         # received headers during a sync are fully between locator entries.
         BLOCKS_TO_MINE = 4110
+        # With Bitweb's MAX_FUTURE_BLOCK_TIME=600, bulk generation requires advancing
+        # mocktime in chunks: after ~6 blocks MTP catches up to mocktime and each
+        # subsequent block gets nTime=mocktime+1,+2,... After 600 blocks nTime exceeds
+        # mocktime+600 and generation fails with time-too-new.
+        CHUNK = 500
 
-        tip_time = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['time']
-        self.nodes[0].setmocktime(tip_time + BLOCKS_TO_MINE + 100)
-        self.generate(self.nodes[0], BLOCKS_TO_MINE, sync_fun=self.no_op)
- 
-        self.nodes[1].setmocktime(tip_time + BLOCKS_TO_MINE + 100)
-        self.generate(self.nodes[1], BLOCKS_TO_MINE+2, sync_fun=self.no_op)
+        def generate_advancing_time(node, total):
+            done = 0
+            while done < total:
+                count = min(CHUNK, total - done)
+                tip_time = node.getblock(node.getbestblockhash())['time']
+                node.setmocktime(tip_time + CHUNK + 100)
+                self.generate(node, count, sync_fun=self.no_op)
+                done += count
 
+        generate_advancing_time(self.nodes[0], BLOCKS_TO_MINE)
+        generate_advancing_time(self.nodes[1], BLOCKS_TO_MINE + 2)
+    
         self.reconnect_all()
-
-        self.mocktime_all(tip_time + BLOCKS_TO_MINE + 100)  # Temporarily hold time to avoid internal timeouts
+        tip_time = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['time']
+        self.mocktime_all(tip_time + 600)  # Temporarily hold time to avoid internal timeouts
         self.sync_blocks(timeout=300) # Ensure tips eventually agree
         self.mocktime_all(0)
 
