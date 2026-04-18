@@ -1425,9 +1425,6 @@ class TaprootTest(BitcoinTestFramework):
         block = create_block(self.tip, coinbase_tx, self.lastblocktime + 1, txlist=txs)
         witness and add_witness_commitment(block)
         block.solve()
-
-        # Move the node's local time to match MAX_FUTURE_BLOCK_TIME = 600
-        node.setmocktime(self.lastblocktime)
         block_response = node.submitblock(block.serialize().hex())
         if err_msg is not None:
             assert block_response is not None and err_msg in block_response, "Missing error message '%s' from block response '%s': %s" % (err_msg, "(None)" if block_response is None else block_response, msg)
@@ -1447,6 +1444,9 @@ class TaprootTest(BitcoinTestFramework):
         block = node.getblock(self.lastblockhash)
         self.lastblockheight = block['height']
         self.lastblocktime = block['time']
+
+        # Move the node's local time to match MAX_FUTURE_BLOCK_TIME = 600, some huge value to prevent reject.
+        node.setmocktime(self.lastblocktime + 9999)
 
     def test_spenders(self, node, spenders, input_counts):
         """Run randomized tests with a number of "spenders".
