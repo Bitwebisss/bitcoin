@@ -50,9 +50,9 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         self.connect_nodes(0, 2)
         self.connect_nodes(0, 3)
 
-    def mocktime_all(self, time):
+    def mocktime_all(self, t):
         for n in self.nodes:
-            n.setmocktime(time)
+            n.setmocktime(t)
 
     def test_chains_sync_when_long_enough(self):
         self.log.info("Generate blocks on the node with no required chainwork, and verify nodes 1 and 2 have no new headers in their headers tree")
@@ -110,7 +110,7 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
     def test_large_reorgs_can_succeed(self):
         self.log.info("Test that a 2000+ block reorg, starting from a point that is more than 2000 blocks before a locator entry, can succeed")
 
-        self.sync_all() # Ensure all nodes are synced.
+        self.sync_all()
         self.disconnect_all()
 
         # locator(block at height T) will have heights:
@@ -120,28 +120,37 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         # received headers during a sync are fully between locator entries.
         BLOCKS_TO_MINE = 4110
 
-        tip_time = self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())['time']
+        # Bitweb uses MAX_FUTURE_BLOCK_TIME=600, so bulk generation requires
+        # advancing mocktime in batches. We use node.setmocktime (NOT mocktime_all)
+        # so that nodes 2/3 are unaffected during generation. Both nodes 0 and 1
+        # start from the same base tip_time so their chains end at similar timestamps,
+        # minimising the mocktime required at reconnect.
+        BATCH = 200  # comfortably under FTL=600
 
-        def generate_batched(node, count):
-            nonlocal tip_time
-            BATCH = 200  # keep comfortably under FTL=600
-            remaining = count
+        def generate_with_time(node, total):
+            tip_time = node.getblock(node.getbestblockhash())['time']
             mock_t = tip_time + 1
+            remaining = total
             while remaining > 0:
                 batch = min(BATCH, remaining)
-                self.mocktime_all(mock_t)
+                node.setmocktime(mock_t)
                 self.generate(node, batch, sync_fun=self.no_op)
                 mock_t += batch + 1
                 remaining -= batch
-            tip_time = mock_t
+            node.setmocktime(0)
 
-        generate_batched(self.nodes[0], BLOCKS_TO_MINE)
-        generate_batched(self.nodes[1], BLOCKS_TO_MINE + 2)
+        generate_with_time(self.nodes[0], BLOCKS_TO_MINE)
+        generate_with_time(self.nodes[1], BLOCKS_TO_MINE + 2)
+
+        # Set mocktime on ALL nodes BEFORE reconnecting so every node can accept
+        # the highest-timestamped blocks from either chain from the first message.
+        # This eliminates any race window between reconnect and time update.
+        tip_time_0 = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['time']
+        tip_time_1 = self.nodes[1].getblock(self.nodes[1].getbestblockhash())['time']
+        self.mocktime_all(max(tip_time_0, tip_time_1) + 700)
 
         self.reconnect_all()
-
-        self.mocktime_all(tip_time + 600)  # Temporarily hold time to avoid internal timeouts
-        self.sync_blocks(timeout=300) # Ensure tips eventually agree
+        self.sync_blocks(timeout=300)
         self.mocktime_all(0)
 
     def test_peerinfo_includes_headers_presync_height(self):
@@ -156,16 +165,16 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         if current_height < 3000:
             self.generate(node, 3000 - current_height, sync_fun=self.no_op)
 
-        # After test_large_reorgs_can_succeed the chain tip is ~10000s in the future
-        # (mocktime was advanced to mine 4110+ blocks). With mocktime=0 (real time),
-        # getblocktemplate returns curtime=MTP+1 which is far in the future, so
-        # TestBlockValidity fails with time-too-new.
+        # After test_large_reorgs_can_succeed the chain tip is thousands of seconds
+        # in the future (mocktime was advanced to mine 4110+ blocks). With mocktime=0
+        # (real time), getblocktemplate returns curtime=MTP+1 which is far in the
+        # future, so its internal TestBlockValidity fails with time-too-new.
         #
-        # Fix: temporarily set mocktime >= tip_time to get a valid template (we only
-        # need its 'bits' field). Then build fork headers with sequential timestamps
-        # starting at genesis_time+1 — these timestamps are in year 2011, so:
-        #   - time-too-new check always passes (nTime << real_time + MAX_FUTURE_BLOCK_TIME)
-        #   - MTP check always passes (nTime strictly increases by 1 per block)
+        # Fix: temporarily raise node's mocktime past the tip so getblocktemplate
+        # succeeds (we only need the 'bits' field from it). Then build 2000 fork
+        # headers with sequential timestamps starting at genesis_time+1:
+        #   - time-too-new always passes  (nTime is year 2011, real clock is 2026)
+        #   - MTP always passes           (nTime strictly increases by 1 per block)
         tip_time = node.getblock(node.getbestblockhash())['time']
         node.setmocktime(tip_time + 700)
         tmpl = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
