@@ -150,18 +150,32 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         # received headers during a sync are fully between locator entries.
         BLOCKS_TO_MINE = 4110
 
-        # With Bitweb's FTL=600, bulk generation needs mocktime advanced far enough.
-        # Keep it set during sync so future-timestamped blocks pass FTL on all nodes.
+        # With fast Argon2id mining (low regtest difficulty), block timestamps
+        # increment by 1 per block while real time barely advances. After ~600
+        # blocks the tip timestamp exceeds mocktime + FTL (600s) and mining fails
+        # with time-too-new. Solution: generate in batches of 500, advancing
+        # mocktime to track the growing chain tip time between batches.
         tip_time = self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())['time']
-        future_time = tip_time + (BLOCKS_TO_MINE + 200) * 300  # 300s/block + buffer
-        self.mocktime_all(future_time)
-
-        self.generate(self.nodes[0], BLOCKS_TO_MINE, sync_fun=self.no_op)
-        self.generate(self.nodes[1], BLOCKS_TO_MINE+2, sync_fun=self.no_op)
+        
+        def generate_batched(node, count):
+            nonlocal tip_time
+            BATCH = 500  # keep comfortably under FTL=600
+            remaining = count
+            mock_t = tip_time + 1
+            while remaining > 0:
+                batch = min(BATCH, remaining)
+                self.mocktime_all(mock_t)
+                self.generate(node, batch, sync_fun=self.no_op)
+                mock_t += batch + 1
+                remaining -= batch
+            tip_time = mock_t
+        
+        generate_batched(self.nodes[0], BLOCKS_TO_MINE)
+        generate_batched(self.nodes[1], BLOCKS_TO_MINE + 2)
 
         self.reconnect_all()
 
-        # self.mocktime_all(int(time.time()))  # Temporarily hold time to avoid internal timeouts
+        self.mocktime_all(tip_time + 600)  # Temporarily hold time to avoid internal timeouts
         self.sync_blocks(timeout=300) # Ensure tips eventually agree
         self.mocktime_all(0)
 
