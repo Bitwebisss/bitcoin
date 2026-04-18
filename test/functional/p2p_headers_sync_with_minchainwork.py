@@ -110,6 +110,8 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
     def test_peerinfo_includes_headers_presync_height(self):
         self.log.info("Test that getpeerinfo() includes headers presync height")
 
+        # Disconnect network, so that we can find our own peer connection more
+        # easily
         self.disconnect_all()
 
         p2p = self.nodes[0].add_p2p_connection(P2PInterface())
@@ -120,11 +122,6 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         if (current_height < 3000):
             self.generate(node, 3000-current_height, sync_fun=self.no_op)
 
-        # After test_large_reorgs_can_succeed the tip chain is far in the future.
-        # Set mocktime so getblocktemplate's internal TestBlockValidity passes.
-        tip_time = node.getblock(node.getbestblockhash())['time']
-        node.setmocktime(tip_time + 600)
-
         # Send a group of 2000 headers, forking from genesis.
         new_blocks = []
         hashPrevBlock = int(node.getblockhash(0), 16)
@@ -133,8 +130,6 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
             block.solve()
             new_blocks.append(block)
             hashPrevBlock = block.hash_int
-
-        node.setmocktime(0)
 
         headers_message = msg_headers(headers=new_blocks)
         p2p.send_and_ping(headers_message)
@@ -154,29 +149,13 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         # So mine a number of blocks > 4104 to ensure that the first window of
         # received headers during a sync are fully between locator entries.
         BLOCKS_TO_MINE = 4110
-        # With Bitweb's reduced MAX_FUTURE_BLOCK_TIME, bulk generation requires
-        # advancing mocktime in chunks: after ~6 blocks MTP catches up to mocktime
-        # and each subsequent block gets nTime=mocktime+1,+2,... Eventually nTime
-        # exceeds mocktime+MAX_FUTURE_BLOCK_TIME and generation fails with time-too-new.
-        CHUNK = 500
 
-        def generate_advancing_time(node, total):
-            done = 0
-            while done < total:
-                count = min(CHUNK, total - done)
-                tip_time = node.getblock(node.getbestblockhash())['time']
-                node.setmocktime(tip_time + CHUNK + 100)
-                self.generate(node, count, sync_fun=self.no_op)
-                done += count
-
-        generate_advancing_time(self.nodes[0], BLOCKS_TO_MINE)
-        generate_advancing_time(self.nodes[1], BLOCKS_TO_MINE + 2)
+        self.generate(self.nodes[0], BLOCKS_TO_MINE, sync_fun=self.no_op)
+        self.generate(self.nodes[1], BLOCKS_TO_MINE+2, sync_fun=self.no_op)
 
         self.reconnect_all()
-        # Use max of both tips so all nodes can accept blocks from the longest chain
-        tip_time_0 = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['time']
-        tip_time_1 = self.nodes[1].getblock(self.nodes[1].getbestblockhash())['time']
-        self.mocktime_all(max(tip_time_0, tip_time_1) + 600)  # Temporarily hold time to avoid internal timeouts
+
+        self.mocktime_all(int(time.time()))  # Temporarily hold time to avoid internal timeouts
         self.sync_blocks(timeout=300) # Ensure tips eventually agree
         self.mocktime_all(0)
 
