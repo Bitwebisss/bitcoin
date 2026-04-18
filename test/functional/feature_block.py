@@ -665,7 +665,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.log.info("Reject a block with a timestamp >2 hours in the future")
         self.move_tip(44)
         b48 = self.next_block(48)
-        b48.nTime = int(time.time()) + 60 * 60 * 3
+        b48.nTime = int(time.time()) + 60 * 9
         # Header timestamp has changed. Re-solve the block.
         b48.solve()
         self.send_blocks([b48], False, force_send=True, reject_reason='time-too-new')
@@ -721,7 +721,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.send_blocks([b55], True)
         self.save_spendable_output()
 
-        # The block which was previously rejected because of being "too far(3 hours)" must be accepted 2 hours later.
+        # The block which was previously rejected because of being "too far(9 mins )" must be accepted 9 mins later.
         # The new block is only 1 hour into future now and we must reorg onto to the new longer chain.
         # The new bestblock b48p is invalidated manually.
         #  -> b31 (8) -> b33 (9) -> b35 (10) -> b39 (11) -> b42 (12) -> b43 (13) -> b53 (14) -> b55 (15)
