@@ -107,37 +107,7 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         self.log.info("Verify that node2 and node3 will sync the chain when it gets long enough")
         self.sync_blocks()
 
-    def test_peerinfo_includes_headers_presync_height(self):
-        self.log.info("Test that getpeerinfo() includes headers presync height")
-
-        # Disconnect network, so that we can find our own peer connection more
-        # easily
-        self.disconnect_all()
-
-        p2p = self.nodes[0].add_p2p_connection(P2PInterface())
-        node = self.nodes[0]
-
-        # Ensure we have a long chain already
-        current_height = self.nodes[0].getblockcount()
-        if (current_height < 3000):
-            self.generate(node, 3000-current_height, sync_fun=self.no_op)
-
-        # Send a group of 2000 headers, forking from genesis.
-        new_blocks = []
-        hashPrevBlock = int(node.getblockhash(0), 16)
-        for i in range(2000):
-            block = create_block(hashprev = hashPrevBlock, tmpl=node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS))
-            block.solve()
-            new_blocks.append(block)
-            hashPrevBlock = block.hash_int
-
-        headers_message = msg_headers(headers=new_blocks)
-        p2p.send_and_ping(headers_message)
-
-        # getpeerinfo should show a sync in progress
-        assert_equal(node.getpeerinfo()[0]['presynced_headers'], 2000)
-
-    def test_large_reorgs_can_succeed(self):
+def test_large_reorgs_can_succeed(self):
         self.log.info("Test that a 2000+ block reorg, starting from a point that is more than 2000 blocks before a locator entry, can succeed")
 
         self.sync_all() # Ensure all nodes are synced.
@@ -151,7 +121,7 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         BLOCKS_TO_MINE = 4110
 
         tip_time = self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())['time']
-        
+
         def generate_batched(node, count):
             nonlocal tip_time
             BATCH = 200  # keep comfortably under FTL=600
@@ -164,7 +134,7 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
                 mock_t += batch + 1
                 remaining -= batch
             tip_time = mock_t
-        
+
         generate_batched(self.nodes[0], BLOCKS_TO_MINE)
         generate_batched(self.nodes[1], BLOCKS_TO_MINE + 2)
 
@@ -174,6 +144,47 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         self.sync_blocks(timeout=300) # Ensure tips eventually agree
         self.mocktime_all(0)
 
+    def test_peerinfo_includes_headers_presync_height(self):
+        self.log.info("Test that getpeerinfo() includes headers presync height")
+
+        self.disconnect_all()
+
+        p2p = self.nodes[0].add_p2p_connection(P2PInterface())
+        node = self.nodes[0]
+
+        current_height = self.nodes[0].getblockcount()
+        if current_height < 3000:
+            self.generate(node, 3000 - current_height, sync_fun=self.no_op)
+
+        # After test_large_reorgs_can_succeed the chain tip is ~10000s in the future
+        # (mocktime was advanced to mine 4110+ blocks). With mocktime=0 (real time),
+        # getblocktemplate returns curtime=MTP+1 which is far in the future, so
+        # TestBlockValidity fails with time-too-new.
+        #
+        # Fix: temporarily set mocktime >= tip_time to get a valid template (we only
+        # need its 'bits' field). Then build fork headers with sequential timestamps
+        # starting at genesis_time+1 — these timestamps are in year 2011, so:
+        #   - time-too-new check always passes (nTime << real_time + MAX_FUTURE_BLOCK_TIME)
+        #   - MTP check always passes (nTime strictly increases by 1 per block)
+        tip_time = node.getblock(node.getbestblockhash())['time']
+        node.setmocktime(tip_time + 700)
+        tmpl = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
+        node.setmocktime(0)
+
+        genesis_time = node.getblock(node.getblockhash(0))['time']
+        new_blocks = []
+        hashPrevBlock = int(node.getblockhash(0), 16)
+        for i in range(2000):
+            block = create_block(hashprev=hashPrevBlock, ntime=genesis_time + 1 + i, tmpl=tmpl)
+            block.solve()
+            new_blocks.append(block)
+            hashPrevBlock = block.hash_int
+
+        headers_message = msg_headers(headers=new_blocks)
+        p2p.send_and_ping(headers_message)
+
+        assert_equal(node.getpeerinfo()[0]['presynced_headers'], 2000)
+
 
     def run_test(self):
         self.test_chains_sync_when_long_enough()
@@ -181,7 +192,6 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         self.test_large_reorgs_can_succeed()
 
         self.test_peerinfo_includes_headers_presync_height()
-
 
 
 if __name__ == '__main__':
