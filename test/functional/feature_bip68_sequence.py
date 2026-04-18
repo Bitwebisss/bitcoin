@@ -278,9 +278,7 @@ class BIP68Test(BitcoinTestFramework):
         self.nodes[0].prioritisetransaction(txid=tx2.txid_hex, fee_delta=int(self.relayfee*COIN))
 
         # Advance the time on the node so that we can test timelocks
-        for n in self.nodes:
-            n.setmocktime(cur_time+600)
-
+        self.nodes[0].setmocktime(cur_time+600)
         # Save block template now to use for the reorg later
         tmpl = self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
         self.generate(self.nodes[0], 1)
@@ -341,8 +339,7 @@ class BIP68Test(BitcoinTestFramework):
         assert tx2.txid_hex in mempool
 
         # Reset the chain and get rid of the mocktimed-blocks
-        for n in self.nodes:
-            n.setmocktime(0)
+        self.nodes[0].setmocktime(0)
         self.nodes[0].invalidateblock(self.nodes[0].getblockhash(cur_height+1))
         self.generate(self.wallet, 10, sync_fun=self.no_op)
 
