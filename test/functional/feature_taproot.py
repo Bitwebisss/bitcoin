@@ -1425,6 +1425,16 @@ class TaprootTest(BitcoinTestFramework):
         block = create_block(self.tip, coinbase_tx, self.lastblocktime + 1, txlist=txs)
         witness and add_witness_commitment(block)
         block.solve()
+
+        # MAX_FUTURE_BLOCK_TIME is 600s.  Each accepted block increments lastblocktime by 1,
+        # so after 500 accepted submissions the next block's timestamp would be
+        # _submit_time_base + 501, which is still safe (< 600), but we advance early to keep
+        # a healthy margin.  Rejected blocks do not increment lastblocktime, so we compare
+        # against lastblocktime + 1 (the timestamp that will actually be submitted).
+        if (self.lastblocktime + 1) - self._submit_time_base >= 500:
+            node.setmocktime(self.lastblocktime + 1)
+            self._submit_time_base = self.lastblocktime + 1
+
         block_response = node.submitblock(block.serialize().hex())
         if err_msg is not None:
             assert block_response is not None and err_msg in block_response, "Missing error message '%s' from block response '%s': %s" % (err_msg, "(None)" if block_response is None else block_response, msg)
@@ -1444,6 +1454,9 @@ class TaprootTest(BitcoinTestFramework):
         block = node.getblock(self.lastblockhash)
         self.lastblockheight = block['height']
         self.lastblocktime = block['time']
+        # Track the mocktime baseline so block_submit() can advance it before
+        # block timestamps exceed NodeClock::now() + MAX_FUTURE_BLOCK_TIME (600s).
+        self._submit_time_base = self.lastblocktime
 
     def test_spenders(self, node, spenders, input_counts):
         """Run randomized tests with a number of "spenders".
