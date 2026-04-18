@@ -1420,12 +1420,13 @@ class TaprootTest(BitcoinTestFramework):
         # busting txin-level limits. We simply have to account for the p2pk outputs in all
         # transactions.
         extra_output_script = CScript(bytes([OP_CHECKSIG]*((MAX_BLOCK_SIGOPS_WEIGHT - sigops_weight) // WITNESS_SCALE_FACTOR)))
-
+        
+        node.setmocktime(self.lastblocktime + 300)
         coinbase_tx = create_coinbase(self.lastblockheight + 1, pubkey=cb_pubkey, extra_output_script=extra_output_script, fees=fees)
         block = create_block(self.tip, coinbase_tx, self.lastblocktime + 1, txlist=txs)
         witness and add_witness_commitment(block)
         block.solve()
-        node.setmocktime(self.lastblocktime + 300)
+        
         block_response = node.submitblock(block.serialize().hex())
         if err_msg is not None:
             assert block_response is not None and err_msg in block_response, "Missing error message '%s' from block response '%s': %s" % (err_msg, "(None)" if block_response is None else block_response, msg)
