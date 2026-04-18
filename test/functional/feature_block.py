@@ -662,7 +662,7 @@ class FullBlockTest(BitcoinTestFramework):
             b47.nNonce += 1
         self.send_blocks([b47], False, force_send=True, reject_reason='high-hash', reconnect=True)
 
-        self.log.info("Reject a block with a timestamp >2 hours in the future")
+        self.log.info("Reject a block with a timestamp >10 Minutes in the future")
         self.move_tip(44)
         b48 = self.next_block(48)
         b48.nTime = int(time.time()) + 60 * 9 #( 15 minutes)
