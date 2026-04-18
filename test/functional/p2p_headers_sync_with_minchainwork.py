@@ -107,7 +107,7 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         self.log.info("Verify that node2 and node3 will sync the chain when it gets long enough")
         self.sync_blocks()
 
-def test_large_reorgs_can_succeed(self):
+    def test_large_reorgs_can_succeed(self):
         self.log.info("Test that a 2000+ block reorg, starting from a point that is more than 2000 blocks before a locator entry, can succeed")
 
         self.sync_all() # Ensure all nodes are synced.
@@ -184,7 +184,6 @@ def test_large_reorgs_can_succeed(self):
         p2p.send_and_ping(headers_message)
 
         assert_equal(node.getpeerinfo()[0]['presynced_headers'], 2000)
-
 
     def run_test(self):
         self.test_chains_sync_when_long_enough()
