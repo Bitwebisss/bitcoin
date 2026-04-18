@@ -102,7 +102,7 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         check_node3_chaintips(2, self.nodes[0].getbestblockhash(), NODE1_BLOCKS_REQUIRED)
 
         self.log.info("Generate long chain for node0/node1/node3")
-        self.generate_large(self.nodes[0], NODE2_BLOCKS_REQUIRED-self.nodes[0].getblockcount(), sync_fun=self.no_op)
+        self.generate(self.nodes[0], NODE2_BLOCKS_REQUIRED-self.nodes[0].getblockcount(), sync_fun=self.no_op)
 
         self.log.info("Verify that node2 and node3 will sync the chain when it gets long enough")
         self.sync_blocks()
@@ -120,7 +120,7 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         # Ensure we have a long chain already
         current_height = self.nodes[0].getblockcount()
         if (current_height < 3000):
-            self.generate_large(node, 3000-current_height, sync_fun=self.no_op)
+            self.generate(node, 3000-current_height, sync_fun=self.no_op)
 
         # Send a group of 2000 headers, forking from genesis.
         new_blocks = []
@@ -150,8 +150,8 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         # received headers during a sync are fully between locator entries.
         BLOCKS_TO_MINE = 4110
 
-        self.generate_large(self.nodes[0], BLOCKS_TO_MINE, sync_fun=self.no_op, time_nodes=self.nodes)
-        self.generate_large(self.nodes[1], BLOCKS_TO_MINE+2, sync_fun=self.no_op, time_nodes=self.nodes)
+        self.generate(self.nodes[0], BLOCKS_TO_MINE, sync_fun=self.no_op)
+        self.generate(self.nodes[1], BLOCKS_TO_MINE+2, sync_fun=self.no_op)
 
         self.reconnect_all()
 

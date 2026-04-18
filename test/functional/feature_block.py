@@ -665,7 +665,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.log.info("Reject a block with a timestamp >10 Minutes in the future")
         self.move_tip(44)
         b48 = self.next_block(48)
-        b48.nTime = int(time.time()) + 20 * 60  # 20 minutes (> MAX_FUTURE_BLOCK_TIME of 600s)
+        b48.nTime = int(time.time()) + 60 * 60 * 3
         # Header timestamp has changed. Re-solve the block.
         b48.solve()
         self.send_blocks([b48], False, force_send=True, reject_reason='time-too-new')
@@ -721,17 +721,14 @@ class FullBlockTest(BitcoinTestFramework):
         self.send_blocks([b55], True)
         self.save_spendable_output()
 
-        # The block which was previously rejected because of being "too far(20 minutes)" must be accepted
-        # 12 minutes later. The new block is now only 8 minutes into the future, which is within
-        # MAX_FUTURE_BLOCK_TIME (600s = 10 minutes), so the node accepts it and reorgs to the longer chain.
+        # The block which was previously rejected because of being "too far(3 hours)" must be accepted 2 hours later.
+        # The new block is only 1 hour into future now and we must reorg onto to the new longer chain.
         # The new bestblock b48p is invalidated manually.
         #  -> b31 (8) -> b33 (9) -> b35 (10) -> b39 (11) -> b42 (12) -> b43 (13) -> b53 (14) -> b55 (15)
         #                                                                                   \-> b54 (15)
         #                                                                        -> b44 (14)\-> b48 () -> b48p ()
         self.log.info("Accept a previously rejected future block at a later time")
-        # Advance mocktime by 12 minutes (720s).  b48.nTime = now+1200, mocktime = now+720.
-        # Check: b48.nTime > mocktime + 600?  → (now+1200) > (now+720+600=now+1320)?  No → accepted.
-        node.setmocktime(int(time.time()) + 12*60)
+        node.setmocktime(int(time.time()) + 2*60*60)
         self.move_tip(48)
         self.block_heights[b48.hash_int] = self.block_heights[b44.hash_int] + 1 # b48 is a parent of b44
         b48p = self.next_block("48p")

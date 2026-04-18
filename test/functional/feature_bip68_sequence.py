@@ -391,9 +391,7 @@ class BIP68Test(BitcoinTestFramework):
         min_activation_height = 432
         height = self.nodes[0].getblockcount()
         assert_greater_than(min_activation_height - height, 2)
-        # Use generate_large to guard against MAX_FUTURE_BLOCK_TIME (600s) rejection
-        # in case the chain height is low enough that the batch exceeds 600 blocks.
-        self.generate_large(self.wallet, min_activation_height - height - 2, sync_fun=self.no_op)
+        self.generate(self.wallet, min_activation_height - height - 2, sync_fun=self.no_op)
         assert not softfork_active(self.nodes[0], 'csv')
         self.generate(self.wallet, 1, sync_fun=self.no_op)
         assert softfork_active(self.nodes[0], 'csv')

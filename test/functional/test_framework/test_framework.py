@@ -764,60 +764,6 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         sync_fun() if sync_fun else self.sync_all()
         return blocks
 
-    # MAX_FUTURE_BLOCK_TIME in regtest is 600 seconds (10 minutes).
-    # Generating more than 600 blocks with a fixed mocktime means block N+601 will have
-    # a timestamp > mocktime + 600 and will be rejected with "time-too-new".
-    # This constant is the safe batch size (leaves a 100-block margin).
-    GENERATE_BATCH_SIZE = 500
-
-    def generate_large(self, generator, nblocks, *, sync_fun=None, time_nodes=None):
-        """Generate a large number of blocks safely, avoiding MAX_FUTURE_BLOCK_TIME rejection.
-
-        When blocks are generated with a fixed mocktime (or even real time that advances
-        slower than block timestamps), each block's nTime increments by 1 second.  After
-        MAX_FUTURE_BLOCK_TIME (600 s) blocks the next block's timestamp exceeds
-        NodeClock::now() + 600 and is rejected with "time-too-new".
-
-        This helper splits generation into batches of at most GENERATE_BATCH_SIZE blocks.
-        After each batch it advances the mocktime of all relevant nodes to the current
-        chain tip's timestamp, so the next batch starts from a safe baseline.
-
-        Args:
-            generator:   node (or wallet) that is used to mine the blocks.
-            nblocks:     total number of blocks to generate.
-            sync_fun:    called once after ALL blocks are done (default: self.no_op).
-                         Intentionally does NOT sync between batches so callers that
-                         pass sync_fun=self.no_op keep their expected behaviour.
-            time_nodes:  list of nodes whose mocktime must be kept in sync.
-                         Defaults to self.nodes (all nodes in the test).
-        """
-        if time_nodes is None:
-            time_nodes = self.nodes
-
-        blocks = []
-        remaining = nblocks
-
-        while remaining > 0:
-            batch = min(remaining, self.GENERATE_BATCH_SIZE)
-            # Generate without syncing; we handle that at the very end.
-            new_blocks = self.generate(generator, batch, sync_fun=self.no_op)
-            blocks.extend(new_blocks)
-            remaining -= batch
-
-            if remaining > 0:
-                # Advance mocktime to the tip timestamp so the next batch does not
-                # produce blocks that are > 600 s ahead of the node clock.
-                tip_time = generator.getblockheader(generator.getbestblockhash())['time']
-                for node in time_nodes:
-                    node.setmocktime(tip_time)
-
-        # Final sync according to caller's preference.
-        if sync_fun:
-            sync_fun()
-        # Do NOT call sync_all() by default – many large-generate callers explicitly
-        # pass sync_fun=self.no_op because they do not want cross-node sync here.
-        return blocks
-
     def create_outpoints(self, node, *, outputs):
         """Send funds to a given list of `{address: amount}` targets using the bitwebd
         wallet and return the corresponding outpoints as a list of dictionaries
