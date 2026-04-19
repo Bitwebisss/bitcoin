@@ -188,6 +188,7 @@ public:
 
 /**
  * Testnet (v3): public test network which is reset from time to time.
+ * Not for use, checkpoint tests require it.
  */
 class CTestNetParams : public CChainParams {
 public:
@@ -270,7 +271,7 @@ public:
         // Checkpoints restored
         checkpointData = {
             {
-                {580, uint256{"8b9881e75e1a0850f9dc68147b974dc4f1e974bdd6cd15a3cc242239b060599c"}},
+                {0, uint256{"d57b558193dd042caa90f3b3b06626cecd47fd0d09ecb7e355ae21f8f64b47b1"}},
             }
         };
         // Checkpoints restored
