@@ -58,7 +58,6 @@ add_executable(bench_bitweb
 
 include(TargetDataSources)
 target_raw_data_sources(bench_bitweb NAMESPACE benchmark::data
-  data/block413567.raw
   data/block0.raw
 )
 
