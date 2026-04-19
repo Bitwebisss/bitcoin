@@ -185,19 +185,19 @@ class PruneTest(BitcoinTestFramework):
             self.disconnect_nodes(0, 1)
             self.disconnect_nodes(0, 2)
             # Mine 24 blocks in node 1
-            set_mocktime_for_large_blocks([self.nodes[1], self.nodes[2]], 24)
+            set_mocktime_for_large_blocks([self.nodes[0], self.nodes[1], self.nodes[2]], 24)
             mine_large_blocks(self.nodes[1], 24)
-            reset_mocktime([self.nodes[1], self.nodes[2]])
 
             # Reorg back with 25 block chain from node 0
-            set_mocktime_for_large_blocks([self.nodes[0], self.nodes[2]], 25)
+            set_mocktime_for_large_blocks([self.nodes[0], self.nodes[1], self.nodes[2]], 25)
             mine_large_blocks(self.nodes[0], 25)
-            reset_mocktime([self.nodes[0], self.nodes[2]])
 
             # Create connections in the order so both nodes can see the reorg at the same time
+            # mocktime must remain set during sync so nodes accept the reorg blocks (FTL=600)
             self.connect_nodes(0, 1)
             self.connect_nodes(0, 2)
             self.sync_blocks(self.nodes[0:3])
+            reset_mocktime([self.nodes[0], self.nodes[1], self.nodes[2]])
 
         self.log.info(f"Usage can be over target because of high stale rate: {calc_usage(self.prunedir)}")
 
