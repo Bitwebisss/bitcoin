@@ -35,7 +35,7 @@ from test_framework.util import (
 
 # Extra seconds added to mocktime beyond the last block's nTime to ensure all
 # mine_large_blocks() submissions are accepted under FTL=600.
-MOCK_BUFFER = 700
+MOCK_BUFFER = 600
 
 
 def set_mocktime(nodes, mock_time):
