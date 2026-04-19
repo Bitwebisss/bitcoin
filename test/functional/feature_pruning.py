@@ -36,6 +36,8 @@ TIMESTAMP_WINDOW = 2 * 60 * 60
 # Extra seconds added to mocktime beyond the last block's nTime to ensure all
 # mine_large_blocks() submissions are accepted under FTL=600.
 MOCK_BUFFER = 700
+# Keep large-block timestamps from drifting too far ahead over the full test.
+LARGE_BLOCK_TIME_WINDOW = 11
 
 
 def set_mocktime(nodes, mock_time):
@@ -60,22 +62,25 @@ def mine_large_blocks(node, n):
     # Make a large scriptPubKey for the coinbase transaction. This is OP_RETURN
     # followed by 950k of OP_NOP. This would be non-standard in a non-coinbase
     # transaction but is consensus valid.
-
-    # Set the nTime if this is the first time this function has been called.
-    # A static variable ensures that time is monotonicly increasing and is therefore
-    # different for each block created => blockhash is unique.
+    #
+    # Use a coarse timestamp cadence so the chain tip stays within the new
+    # 600-second future-time limit across the long test run.
     if "nTime" not in mine_large_blocks.__dict__:
         mine_large_blocks.nTime = 0
 
-    # Get the block parameters for the first block
     big_script = CScript([OP_RETURN] + [OP_NOP] * 950000)
     best_block = node.getblock(node.getbestblockhash())
     height = int(best_block["height"]) + 1
-    mine_large_blocks.nTime = max(mine_large_blocks.nTime, int(best_block["time"])) + 1
+    base_time = max(mine_large_blocks.nTime, int(best_block["time"])) + 1
     previousblockhash = int(best_block["hash"], 16)
 
-    for _ in range(n):
-        block = create_block(hashprev=previousblockhash, ntime=mine_large_blocks.nTime, coinbase=create_coinbase(height, script_pubkey=big_script))
+    for i in range(n):
+        block_time = base_time + (i // LARGE_BLOCK_TIME_WINDOW)
+        block = create_block(
+            hashprev=previousblockhash,
+            ntime=block_time,
+            coinbase=create_coinbase(height, script_pubkey=big_script),
+        )
         block.solve()
 
         # Submit to the node
@@ -83,7 +88,9 @@ def mine_large_blocks(node, n):
 
         previousblockhash = block.hash_int
         height += 1
-        mine_large_blocks.nTime += 1
+
+    mine_large_blocks.nTime = base_time + ((n - 1) // LARGE_BLOCK_TIME_WINDOW)
+
 
 def calc_usage(blockdir):
     return sum(os.path.getsize(blockdir + f) for f in os.listdir(blockdir) if os.path.isfile(os.path.join(blockdir, f))) / (1024. * 1024.)
@@ -135,7 +142,7 @@ class PruneTest(BitcoinTestFramework):
         # Then mine enough full blocks to create more than 550MiB of data
         set_mocktime_for_large_blocks(self.nodes[0:5], 645)
         mine_large_blocks(self.nodes[0], 645)
-        self.sync_blocks(self.nodes[0:5])  # FIX: sync before reset so nodes accept future-timestamp blocks
+        self.sync_blocks(self.nodes[0:5])
         reset_mocktime(self.nodes[0:5])
 
     def test_invalid_command_line_options(self):
@@ -169,7 +176,7 @@ class PruneTest(BitcoinTestFramework):
         # Pruning doesn't run until we're allocating another chunk, 20 full blocks past the height cutoff will ensure this
         set_mocktime_for_large_blocks(self.nodes[0:3], 25)  # nodes 3,4 are stopped at this point
         mine_large_blocks(self.nodes[0], 25)
-        self.sync_blocks(self.nodes[0:3])  # FIX: sync before reset so nodes accept future-timestamp blocks
+        self.sync_blocks(self.nodes[0:3])
         reset_mocktime(self.nodes[0:3])
 
         # Wait for blk00000.dat to be pruned
@@ -239,7 +246,7 @@ class PruneTest(BitcoinTestFramework):
         # also accept node 1's chain during sync after reconnect.
         best_time = self.nodes[1].getblock(self.nodes[1].getbestblockhash())["time"]
         mock_time = best_time + 300 + MOCK_BUFFER
-        set_mocktime(self.nodes[0:3], mock_time)  # FIX: use helper instead of inline loop
+        set_mocktime(self.nodes[0:3], mock_time)
         self.generate(self.nodes[1], 300, sync_fun=self.no_op)
 
         self.log.info("Reconnect nodes")
@@ -295,8 +302,7 @@ class PruneTest(BitcoinTestFramework):
             self.nodes[0].invalidateblock(curchainhash)
             assert_equal(self.nodes[0].getblockcount(), self.mainchainheight)
             assert_equal(self.nodes[0].getbestblockhash(), self.mainchainhash2)
-            # FIX: node 0's tip timestamp >> real time; set mocktime on node 0 (to generate)
-            # and node 2 (to accept the blocks while waiting below).
+            # Keep mocktime set while node 0 generates the longer chain and node 2 waits to accept it.
             set_mocktime_for_large_blocks([self.nodes[0], self.nodes[2]], blocks_to_mine)
             goalbesthash = self.generate(self.nodes[0], blocks_to_mine, sync_fun=self.no_op)[-1]
             goalbestheight = first_reorg_height + 1
@@ -304,7 +310,7 @@ class PruneTest(BitcoinTestFramework):
         self.log.info("Verify node 2 reorged back to the main chain, some blocks of which it had to redownload")
         # Wait for Node 2 to reorg to proper height
         self.wait_until(lambda: self.nodes[2].getblockcount() >= goalbestheight, timeout=900)
-        reset_mocktime([self.nodes[0], self.nodes[2]])  # FIX: reset after node 2 has finished reorg
+        reset_mocktime([self.nodes[0], self.nodes[2]])
         assert_equal(self.nodes[2].getbestblockhash(), goalbesthash)
         # Verify we can now have the data for a block previously pruned
         assert_equal(self.nodes[2].getblock(self.forkhash)["height"], self.forkheight)
@@ -342,7 +348,7 @@ class PruneTest(BitcoinTestFramework):
         assert_equal(block1_details["nTx"], len(block1_details["tx"]))
 
         # mine 6 blocks so we are at height 1001 (i.e., above PruneAfterHeight)
-        # FIX: chain tip timestamp >> real time (from 645 large blocks), mocktime required
+        # The chain tip is far ahead of wall clock here, so mocktime is required.
         set_mocktime_for_large_blocks([node], 6)
         self.generate(node, 6, sync_fun=self.no_op)
         reset_mocktime([node])
@@ -383,7 +389,7 @@ class PruneTest(BitcoinTestFramework):
         assert has_block(2), "blk00002.dat is still there, should be pruned by now"
 
         # advance the tip so blk00002.dat and blk00003.dat can be pruned (the last 288 blocks should now be in blk00004.dat)
-        # FIX: chain tip timestamp >> real time, mocktime required
+        # The chain tip is far ahead of wall clock here, so mocktime is required.
         set_mocktime_for_large_blocks([node], MIN_BLOCKS_TO_KEEP)
         self.generate(node, MIN_BLOCKS_TO_KEEP, sync_fun=self.no_op)
         reset_mocktime([node])
@@ -405,8 +411,7 @@ class PruneTest(BitcoinTestFramework):
         # check that wallet loads successfully when restarting a pruned node after IBD.
         # this was reported to fail in #7494.
         self.log.info("Syncing node 5 to test wallet")
-        # FIX: node 5 downloads the full chain from genesis; all those blocks have
-        # timestamps >> real time, so mocktime must cover the sync (FTL=600).
+        # Node 5 downloads the full chain from genesis; mocktime must cover the sync.
         set_mocktime_for_large_blocks([self.nodes[0], self.nodes[5]], 0)
         self.connect_nodes(0, 5)
         nds = [self.nodes[0], self.nodes[5]]
