@@ -11,6 +11,7 @@ This test takes 30 mins or more (up to 2 hours)
 import os
 
 from test_framework.blocktools import (
+    MAX_FUTURE_BLOCK_TIME,
     TIMESTAMP_WINDOW,
     MIN_BLOCKS_TO_KEEP,
     create_block,
@@ -34,8 +35,8 @@ from test_framework.util import (
 # compatible with pruning based on key creation time.
 
 # Extra seconds added to mocktime beyond the last block's nTime to ensure all
-# mine_large_blocks() submissions are accepted under FTL=600.
-MOCK_BUFFER = 600
+# mine_large_blocks() submissions are accepted under MAX_FUTURE_BLOCK_TIME=600.
+MOCK_BUFFER = MAX_FUTURE_BLOCK_TIME + 1
 
 
 def set_mocktime(nodes, mock_time):
