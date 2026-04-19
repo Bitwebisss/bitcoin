@@ -197,8 +197,9 @@ void fill_segment(const argon2_instance_t *instance,
 }
 
 /* Non-x86 stub — no detection needed, always reference */
-const char *Argon2AutoDetectImpl(void)
+const char *Argon2AutoDetectImpl(uint8_t use_implementation)
 {
+    (void)use_implementation;
     return "reference";
 }
 

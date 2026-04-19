@@ -108,8 +108,8 @@ static void next_addresses(block *address_block, block *input_block) {
     fill_block(zero2_block, address_block, address_block, 0);
 }
 
-void fill_segment_sse2(const argon2_instance_t *instance,
-                       argon2_position_t position) {
+static void fill_segment_sse2(const argon2_instance_t *instance,
+                              argon2_position_t position) {
     block *ref_block = NULL, *curr_block = NULL;
     block address_block, input_block;
     uint64_t pseudo_rand, ref_index, ref_lane;
@@ -227,7 +227,7 @@ void fill_segment(const argon2_instance_t *instance,
  * Argon2AutoDetectImpl — x86 implementation.
  * Non-x86 stub is in ref.c.
  * ------------------------------------------------------------------------- */
-const char *Argon2AutoDetectImpl(void)
+const char *Argon2AutoDetectImpl(uint8_t use_implementation)
 {
     const char *ret = "sse2";
     argon2_fill_segment = fill_segment_sse2;
@@ -250,19 +250,20 @@ const char *Argon2AutoDetectImpl(void)
         have_avx512f = (ebx >> 16) & 1;
 
 #if defined(ENABLE_ARGON2_AVX512)
-        if (have_avx512f && have_xsave && AVX512Enabled()) {
+        if ((use_implementation & 0x02) &&
+            have_avx512f && have_xsave && AVX512Enabled()) {
             argon2_fill_segment = fill_segment_avx512;
             ret = "avx512";
         } else
 #endif
 #if defined(ENABLE_ARGON2_AVX2)
-        if (have_avx2 && have_avx && enabled_avx) {
+        if ((use_implementation & 0x01) &&
+            have_avx2 && have_avx && enabled_avx) {
             argon2_fill_segment = fill_segment_avx2;
             ret = "avx2";
         } else
 #endif
         {
-            /* SSE2 baseline already set above */
             (void)have_avx; (void)have_avx2; (void)have_avx512f; (void)enabled_avx;
         }
     }
