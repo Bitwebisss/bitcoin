@@ -108,8 +108,8 @@ static void next_addresses(block *address_block, block *input_block) {
     fill_block(zero2_block, address_block, address_block, 0);
 }
 
-static void fill_segment_sse2(const argon2_instance_t *instance,
-                              argon2_position_t position) {
+void fill_segment_sse2(const argon2_instance_t *instance,
+                       argon2_position_t position) {
     block *ref_block = NULL, *curr_block = NULL;
     block address_block, input_block;
     uint64_t pseudo_rand, ref_index, ref_lane;

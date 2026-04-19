@@ -20,6 +20,7 @@ add_executable(bench_bitweb
   checkqueue.cpp
   cluster_linearize.cpp
   connectblock.cpp
+  crypto_argon2.cpp
   crypto_hash.cpp
   descriptors.cpp
   disconnected_transactions.cpp
