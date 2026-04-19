@@ -1,7 +1,7 @@
 Bitweb Core integration/staging tree
 =====================================
 
-https://bitwebcore.net
+https://bitwebcore.net.
 
 For an immediately usable, binary version of the Bitweb Core software, see
 https://bitwebcore.net/en/download/.
