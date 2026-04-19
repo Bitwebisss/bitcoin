@@ -4,6 +4,7 @@
 # file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
 import time
+from test_framework.blocktools import TIMESTAMP_WINDOW
 from test_framework.descriptors import descsum_create
 from test_framework.messages import (
     COutPoint,
@@ -21,8 +22,6 @@ from test_framework.util import (
     assert_raises_rpc_error,
 )
 from test_framework.wallet import MiniWallet
-
-TIMESTAMP_WINDOW = 2 * 60 * 60
 
 class WalletAnchorTest(BitcoinTestFramework):
     def set_test_params(self):

@@ -57,6 +57,8 @@ TIME_GENESIS_BLOCK = 1761888888
 
 MAX_FUTURE_BLOCK_TIME = 600
 
+TIMESTAMP_WINDOW = 2 * 60 * 60
+
 # Coinbase transaction outputs can only be spent after this number of new blocks (network rule)
 COINBASE_MATURITY = 100
 
