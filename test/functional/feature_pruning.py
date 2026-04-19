@@ -229,12 +229,20 @@ class PruneTest(BitcoinTestFramework):
         self.disconnect_nodes(1, 2)
 
         self.log.info("Generating new longer chain of 300 more blocks")
+        # node 1 is at forkheight-1; its tip timestamp is already >> real time,
+        # so generate() hits FTL=600 without mocktime. Set on all three so they
+        # also accept node 1's chain during sync after reconnect.
+        best_time = self.nodes[1].getblock(self.nodes[1].getbestblockhash())["time"]
+        mock_time = best_time + 300 + MOCK_BUFFER
+        for node in self.nodes[0:3]:
+            node.setmocktime(mock_time)
         self.generate(self.nodes[1], 300, sync_fun=self.no_op)
 
         self.log.info("Reconnect nodes")
         self.connect_nodes(0, 1)
         self.connect_nodes(1, 2)
         self.sync_blocks(self.nodes[0:3], timeout=120)
+        reset_mocktime(self.nodes[0:3])
 
         self.log.info(f"Verify height on node 2: {self.nodes[2].getblockcount()}")
         self.log.info(f"Usage possibly still high because of stale blocks in block files: {calc_usage(self.prunedir)}")
@@ -243,9 +251,8 @@ class PruneTest(BitcoinTestFramework):
 
         set_mocktime_for_large_blocks(self.nodes[0:3], 220)
         mine_large_blocks(self.nodes[0], 220)
-        reset_mocktime(self.nodes[0:3])
-
         self.sync_blocks(self.nodes[0:3], timeout=120)
+        reset_mocktime(self.nodes[0:3])
 
         usage = calc_usage(self.prunedir)
         self.log.info(f"Usage should be below target: {usage}")
