@@ -50,6 +50,12 @@ def set_mocktime_for_large_blocks(nodes, n_blocks):
         node.setmocktime(mock_time)
     return mock_time
 
+
+def reset_mocktime(nodes):
+    for node in nodes:
+        node.setmocktime(0)
+
+
 def mine_large_blocks(node, n):
     # Make a large scriptPubKey for the coinbase transaction. This is OP_RETURN
     # followed by 950k of OP_NOP. This would be non-standard in a non-coinbase
@@ -130,6 +136,7 @@ class PruneTest(BitcoinTestFramework):
         set_mocktime_for_large_blocks(self.nodes[0:5], 645)
         mine_large_blocks(self.nodes[0], 645)
         self.sync_blocks(self.nodes[0:5])  # FIX: sync before reset so nodes accept future-timestamp blocks
+        reset_mocktime(self.nodes[0:5])
 
     def test_invalid_command_line_options(self):
         self.stop_node(0)
@@ -163,6 +170,7 @@ class PruneTest(BitcoinTestFramework):
         set_mocktime_for_large_blocks(self.nodes[0:3], 25)  # nodes 3,4 are stopped at this point
         mine_large_blocks(self.nodes[0], 25)
         self.sync_blocks(self.nodes[0:3])  # FIX: sync before reset so nodes accept future-timestamp blocks
+        reset_mocktime(self.nodes[0:3])
 
         # Wait for blk00000.dat to be pruned
         self.wait_until(lambda: not os.path.isfile(os.path.join(self.prunedir, "blk00000.dat")), timeout=30)
@@ -194,6 +202,7 @@ class PruneTest(BitcoinTestFramework):
             self.connect_nodes(0, 1)
             self.connect_nodes(0, 2)
             self.sync_blocks(self.nodes[0:3])
+            reset_mocktime([self.nodes[0], self.nodes[1], self.nodes[2]])
 
         self.log.info(f"Usage can be over target because of high stale rate: {calc_usage(self.prunedir)}")
 
@@ -237,6 +246,7 @@ class PruneTest(BitcoinTestFramework):
         self.connect_nodes(0, 1)
         self.connect_nodes(1, 2)
         self.sync_blocks(self.nodes[0:3], timeout=120)
+        reset_mocktime(self.nodes[0:3])
 
         self.log.info(f"Verify height on node 2: {self.nodes[2].getblockcount()}")
         self.log.info(f"Usage possibly still high because of stale blocks in block files: {calc_usage(self.prunedir)}")
@@ -246,6 +256,7 @@ class PruneTest(BitcoinTestFramework):
         set_mocktime_for_large_blocks(self.nodes[0:3], 220)
         mine_large_blocks(self.nodes[0], 220)
         self.sync_blocks(self.nodes[0:3], timeout=120)
+        reset_mocktime(self.nodes[0:3])
 
         usage = calc_usage(self.prunedir)
         self.log.info(f"Usage should be below target: {usage}")
@@ -293,6 +304,7 @@ class PruneTest(BitcoinTestFramework):
         self.log.info("Verify node 2 reorged back to the main chain, some blocks of which it had to redownload")
         # Wait for Node 2 to reorg to proper height
         self.wait_until(lambda: self.nodes[2].getblockcount() >= goalbestheight, timeout=900)
+        reset_mocktime([self.nodes[0], self.nodes[2]])  # FIX: reset after node 2 has finished reorg
         assert_equal(self.nodes[2].getbestblockhash(), goalbesthash)
         # Verify we can now have the data for a block previously pruned
         assert_equal(self.nodes[2].getblock(self.forkhash)["height"], self.forkheight)
@@ -333,6 +345,7 @@ class PruneTest(BitcoinTestFramework):
         # FIX: chain tip timestamp >> real time (from 645 large blocks), mocktime required
         set_mocktime_for_large_blocks([node], 6)
         self.generate(node, 6, sync_fun=self.no_op)
+        reset_mocktime([node])
         assert_equal(node.getblockchaininfo()["blocks"], 1001)
 
         # prune parameter in the future (block or timestamp) should raise an exception
@@ -373,6 +386,7 @@ class PruneTest(BitcoinTestFramework):
         # FIX: chain tip timestamp >> real time, mocktime required
         set_mocktime_for_large_blocks([node], MIN_BLOCKS_TO_KEEP)
         self.generate(node, MIN_BLOCKS_TO_KEEP, sync_fun=self.no_op)
+        reset_mocktime([node])
         prune(1000)
         assert not has_block(2), "blk00002.dat is still there, should be pruned by now"
         assert not has_block(3), "blk00003.dat is still there, should be pruned by now"
@@ -397,6 +411,7 @@ class PruneTest(BitcoinTestFramework):
         self.connect_nodes(0, 5)
         nds = [self.nodes[0], self.nodes[5]]
         self.sync_blocks(nds, wait=5, timeout=300)
+        reset_mocktime([self.nodes[0], self.nodes[5]])
         self.restart_node(5, extra_args=["-prune=550", "-blockfilterindex=1"]) # restart to trigger rescan
         self.log.info("Success")
 
