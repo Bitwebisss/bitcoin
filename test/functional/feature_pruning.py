@@ -9,8 +9,8 @@ This test uses 4GB of disk space.
 This test takes 30 mins or more (up to 2 hours)
 """
 import os
+
 from test_framework.blocktools import (
-    TIMESTAMP_WINDOW,
     MIN_BLOCKS_TO_KEEP,
     create_block,
     create_coinbase,
@@ -31,6 +31,7 @@ from test_framework.util import (
 # Rescans start at the earliest block up to 2 hours before a key timestamp, so
 # the manual prune RPC avoids pruning blocks in the same window to be
 # compatible with pruning based on key creation time.
+TIMESTAMP_WINDOW = 2 * 60 * 60
 
 def mine_large_blocks(node, n):
     # Make a large scriptPubKey for the coinbase transaction. This is OP_RETURN
