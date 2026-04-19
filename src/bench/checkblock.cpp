@@ -4,6 +4,7 @@
 
 #include <bench/bench.h>
 #include <bench/data/block413567.raw.h>
+#include <bench/data/block0.raw.h>
 #include <chainparams.h>
 #include <common/args.h>
 #include <consensus/validation.h>
@@ -41,7 +42,8 @@ static void DeserializeBlockTest(benchmark::Bench& bench)
 
 static void DeserializeAndCheckBlockTest(benchmark::Bench& bench)
 {
-    DataStream stream(benchmark::data::block413567);
+    // Temporary we use here Mainnet genesis before find good replace.
+    DataStream stream(benchmark::data::block0);
     std::byte a{0};
     stream.write({&a, 1}); // Prevent compaction
 
@@ -51,7 +53,7 @@ static void DeserializeAndCheckBlockTest(benchmark::Bench& bench)
     bench.unit("block").run([&] {
         CBlock block; // Note that CBlock caches its checked state, so we need to recreate it here
         stream >> TX_WITH_WITNESS(block);
-        bool rewound = stream.Rewind(benchmark::data::block413567.size());
+        bool rewound = stream.Rewind(benchmark::data::block0.size());
         assert(rewound);
 
         BlockValidationState validationState;
