@@ -7,23 +7,10 @@
 WARNING:
 This test uses 4GB of disk space.
 This test takes 30 mins or more (up to 2 hours)
-
-Bitweb adaptation note:
-  MAX_FUTURE_BLOCK_TIME (FTL) = 600s in Bitweb vs 7200s in Bitcoin Core.
-  mine_large_blocks() increments nTime by 1 per block, so after 600 blocks
-  the block timestamps exceed node_time + FTL and are silently rejected.
-  Fix: set mocktime before every mine_large_blocks() call and reset after.
-  Pattern used throughout:
-      best_time = node.getblock(node.getbestblockhash())["time"]
-      mock_time = best_time + <n_blocks> + 700   # 700s buffer past all blocks
-      for node in <affected_nodes>: node.setmocktime(mock_time)
-      mine_large_blocks(...)
-      for node in <affected_nodes>: node.setmocktime(0)
 """
 import os
 
 from test_framework.blocktools import (
-    TIMESTAMP_WINDOW,
     MIN_BLOCKS_TO_KEEP,
     create_block,
     create_coinbase,
@@ -44,8 +31,7 @@ from test_framework.util import (
 # Rescans start at the earliest block up to 2 hours before a key timestamp, so
 # the manual prune RPC avoids pruning blocks in the same window to be
 # compatible with pruning based on key creation time.
-# NOTE: This constant is intentionally NOT MAX_FUTURE_BLOCK_TIME — it describes
-# wallet rescan behaviour, not the consensus FTL rule.
+TIMESTAMP_WINDOW = 2 * 60 * 60
 
 # Extra seconds added to mocktime beyond the last block's nTime to ensure all
 # mine_large_blocks() submissions are accepted under FTL=600.
@@ -53,14 +39,6 @@ MOCK_BUFFER = 700
 
 
 def set_mocktime_for_large_blocks(nodes, n_blocks):
-    """Set mocktime on all nodes so that mine_large_blocks(n_blocks) won't hit FTL.
-
-    mine_large_blocks increments nTime by 1 per block starting from the current
-    best block time. With FTL=600 any block whose nTime > node_time + 600 is
-    rejected. We advance mocktime far enough to accept all n_blocks.
-
-    Returns the mock_time value set, so the caller can restore with setmocktime(0).
-    """
     best_time = nodes[0].getblock(nodes[0].getbestblockhash())["time"]
     mock_time = best_time + n_blocks + MOCK_BUFFER
     for node in nodes:
@@ -69,7 +47,6 @@ def set_mocktime_for_large_blocks(nodes, n_blocks):
 
 
 def reset_mocktime(nodes):
-    """Reset mocktime to 0 (real time) on all nodes."""
     for node in nodes:
         node.setmocktime(0)
 
@@ -150,8 +127,7 @@ class PruneTest(BitcoinTestFramework):
         self.generate(self.nodes[1], 200, sync_fun=lambda: self.sync_blocks(self.nodes[0:2]))
         self.generate(self.nodes[0], 150, sync_fun=self.no_op)
 
-        # Then mine enough full blocks to create more than 550 MiB of data.
-        # Bitweb FTL=600s: set mocktime so all 645 large blocks are accepted.
+        # Then mine enough full blocks to create more than 550MiB of data
         set_mocktime_for_large_blocks(self.nodes[0:5], 645)
         mine_large_blocks(self.nodes[0], 645)
         reset_mocktime(self.nodes[0:5])
@@ -186,12 +162,10 @@ class PruneTest(BitcoinTestFramework):
         self.log.info("Success")
         self.log.info(f"Though we're already using more than 550MiB, current usage: {calc_usage(self.prunedir)}")
         self.log.info("Mining 25 more blocks should cause the first block file to be pruned")
-
-        # Bitweb FTL=600s: these 25 additional large blocks would be rejected
-        # without mocktime because their nTime exceeds node_time + FTL.
-        set_mocktime_for_large_blocks(self.nodes[0:5], 25)
+        # Pruning doesn't run until we're allocating another chunk, 20 full blocks past the height cutoff will ensure this
+        set_mocktime_for_large_blocks(self.nodes[0:3], 25)  # nodes 3,4 are stopped at this point
         mine_large_blocks(self.nodes[0], 25)
-        reset_mocktime(self.nodes[0:5])
+        reset_mocktime(self.nodes[0:3])
 
         # Wait for blk00000.dat to be pruned
         self.wait_until(lambda: not os.path.isfile(os.path.join(self.prunedir, "blk00000.dat")), timeout=30)
@@ -206,21 +180,16 @@ class PruneTest(BitcoinTestFramework):
         self.log.info("Mine 24 (stale) blocks on Node 1, followed by 25 (main chain) block reorg from Node 0, for 12 rounds")
 
         for _ in range(12):
-            # Disconnect node 0 so it can mine a longer reorg chain without
-            # knowing about node 1's soon-to-be-stale chain.
-            # Node 2 stays connected, so it hears about the stale blocks and
-            # then reorg's when node 0 reconnects.
+            # Disconnect node 0 so it can mine a longer reorg chain without knowing about node 1's soon-to-be-stale chain
+            # Node 2 stays connected, so it hears about the stale blocks and then reorg's when node0 reconnects
             self.disconnect_nodes(0, 1)
             self.disconnect_nodes(0, 2)
-
-            # Mine 24 blocks in node 1.
-            # Bitweb FTL=600s: set mocktime so blocks are accepted.
+            # Mine 24 blocks in node 1
             set_mocktime_for_large_blocks([self.nodes[1], self.nodes[2]], 24)
             mine_large_blocks(self.nodes[1], 24)
             reset_mocktime([self.nodes[1], self.nodes[2]])
 
-            # Reorg back with 25 block chain from node 0.
-            # Bitweb FTL=600s: set mocktime on nodes 0 and 2 for reorg blocks.
+            # Reorg back with 25 block chain from node 0
             set_mocktime_for_large_blocks([self.nodes[0], self.nodes[2]], 25)
             mine_large_blocks(self.nodes[0], 25)
             reset_mocktime([self.nodes[0], self.nodes[2]])
@@ -272,7 +241,6 @@ class PruneTest(BitcoinTestFramework):
 
         self.log.info("Mine 220 more large blocks so we have requisite history")
 
-        # Bitweb FTL=600s: 220 large blocks would exceed FTL without mocktime.
         set_mocktime_for_large_blocks(self.nodes[0:3], 220)
         mine_large_blocks(self.nodes[0], 220)
         reset_mocktime(self.nodes[0:3])
