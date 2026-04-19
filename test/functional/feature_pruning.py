@@ -109,8 +109,19 @@ class PruneTest(BitcoinTestFramework):
         self.generate(self.nodes[1], 200, sync_fun=lambda: self.sync_blocks(self.nodes[0:2]))
         self.generate(self.nodes[0], 150, sync_fun=self.no_op)
 
+        # mine_large_blocks increments nTime by 1 per block.
+        # With FTL=600, blocks beyond +600s from node time are rejected silently.
+        # Set mocktime far enough ahead to accept all large blocks.
+        best_time = self.nodes[0].getblock(self.nodes[0].getbestblockhash())["time"]
+        mock_time = best_time + 645 + 700  # 700s buffer past all blocks
+        for node in self.nodes[0:5]:
+            node.setmocktime(mock_time)
+
         # Then mine enough full blocks to create more than 550MiB of data
-        mine_large_blocks(self.nodes[0], 660)
+        mine_large_blocks(self.nodes[0], 645)
+
+        for node in self.nodes[0:5]:
+            node.setmocktime(0)
 
         self.sync_blocks(self.nodes[0:5])
 
