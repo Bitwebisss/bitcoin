@@ -61,9 +61,9 @@ typedef struct __blake2b_state {
 /* Ensure param structs have not been wrongly padded */
 /* Poor man's static_assert */
 enum {
-    blake2_size_check_0 = 1 / !!(CHAR_BIT == 8),
+    blake2_size_check_0 = 1 / (int)!!(CHAR_BIT == 8),
     blake2_size_check_2 =
-        1 / !!(sizeof(blake2b_param) == sizeof(uint64_t) * CHAR_BIT)
+        1 / (int)!!(sizeof(blake2b_param) == sizeof(uint64_t) * CHAR_BIT)
 };
 
 /* Streaming API */
