@@ -142,7 +142,7 @@ class PruneTest(BitcoinTestFramework):
         self.restart_node(node_number, extra_args=all_args)
         self.nodes[node_number].setmocktime(0)
 
-    def _start_node_mocktime(self, node_number, tip_time, extra_args=None):
+    def start_node_mocktime(self, node_number, tip_time, extra_args=None):
         """Start a stopped node (whose tip_time is known from another node) with
         -mocktime so startup block validation accepts future-timestamped blocks.
         Clears mocktime immediately after the node is ready.
@@ -341,7 +341,7 @@ class PruneTest(BitcoinTestFramework):
         # nTime), so we must pass -mocktime at startup to satisfy the block-DB
         # "block from future" check that bitwebd performs during initialization.
         tip_time_995 = self.nodes[0].getblock(self.nodes[0].getblockhash(995))["time"]
-        self._start_node_mocktime(node_number, tip_time=tip_time_995)
+        self.start_node_mocktime(node_number, tip_time=tip_time_995)
         node = self.nodes[node_number]
         assert_equal(node.getblockcount(), 995)
         assert_raises_rpc_error(-1, "Cannot prune blocks because node is not in prune mode", node.pruneblockchain, 500)
