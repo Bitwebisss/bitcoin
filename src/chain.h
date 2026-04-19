@@ -34,7 +34,7 @@ static constexpr int64_t MAX_FUTURE_BLOCK_TIME = 600; /* 2 Blocks Time Wrape Pro
  * to block timestamps. This should be set at least as high as
  * MAX_FUTURE_BLOCK_TIME.
  */
-static constexpr int64_t TIMESTAMP_WINDOW = MAX_FUTURE_BLOCK_TIME;
+static constexpr int64_t TIMESTAMP_WINDOW = 2 * 60 * 60;
 
 /**
  * Maximum gap between node time and block time used
