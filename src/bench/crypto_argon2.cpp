@@ -4,6 +4,7 @@
 
 #include <bench/bench.h>
 #include <crypto/argon2d/argon2.h>
+#include <crypto/argon2d/core.h>
 #include <tinyformat.h>
 #include <uint256.h>
 
