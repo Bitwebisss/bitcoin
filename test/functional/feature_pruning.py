@@ -110,7 +110,7 @@ class PruneTest(BitcoinTestFramework):
         self.generate(self.nodes[0], 150, sync_fun=self.no_op)
 
         # Then mine enough full blocks to create more than 550MiB of data
-        mine_large_blocks(self.nodes[0], 645)
+        mine_large_blocks(self.nodes[0], 660)
 
         self.sync_blocks(self.nodes[0:5])
 
