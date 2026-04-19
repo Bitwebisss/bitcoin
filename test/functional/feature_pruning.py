@@ -127,6 +127,31 @@ class PruneTest(BitcoinTestFramework):
         if self.is_wallet_compiled():
             self.import_deterministic_coinbase_privkeys()
 
+    def _restart_node_mocktime(self, node_number, extra_args=None):
+        """Restart a node, injecting -mocktime so the startup block-timestamp check
+        does not reject our own chain whose tip >> real wall-clock time.
+
+        After the node is up we immediately clear mocktime via setmocktime(0) so
+        the rest of the test runs on real time (or its own next mocktime call).
+        """
+        tip_time = self.nodes[node_number].getblock(
+            self.nodes[node_number].getbestblockhash()
+        )["time"]
+        mock_arg = f"-mocktime={tip_time + MOCK_BUFFER}"
+        all_args = list(extra_args or []) + [mock_arg]
+        self.restart_node(node_number, extra_args=all_args)
+        self.nodes[node_number].setmocktime(0)
+
+    def _start_node_mocktime(self, node_number, tip_time, extra_args=None):
+        """Start a stopped node (whose tip_time is known from another node) with
+        -mocktime so startup block validation accepts future-timestamped blocks.
+        Clears mocktime immediately after the node is ready.
+        """
+        mock_arg = f"-mocktime={tip_time + MOCK_BUFFER}"
+        all_args = list(extra_args or []) + [mock_arg]
+        self.start_node(node_number, extra_args=all_args)
+        self.nodes[node_number].setmocktime(0)
+
     def create_big_chain(self):
         # Start by creating some coinbases we can spend later
         self.generate(self.nodes[1], 200, sync_fun=lambda: self.sync_blocks(self.nodes[0:2]))
@@ -158,7 +183,8 @@ class PruneTest(BitcoinTestFramework):
         )
 
     def test_rescan_blockchain(self):
-        self.restart_node(0, ["-prune=550"])
+        # FIX: node 0 tip >> real clock; pass -mocktime at startup then clear it.
+        self._restart_node_mocktime(0, extra_args=["-prune=550"])
         assert_raises_rpc_error(-1, "Can't rescan beyond pruned data. Use RPC call getblockchaininfo to determine your pruned height.", self.nodes[0].rescanblockchain)
 
     def test_height_min(self):
@@ -310,14 +336,18 @@ class PruneTest(BitcoinTestFramework):
         assert_equal(self.nodes[2].getblock(self.forkhash)["height"], self.forkheight)
 
     def manual_test(self, node_number, use_timestamp):
-        # at this point, node has 995 blocks and has not yet run in prune mode
-        self.start_node(node_number)
+        # at this point, node has 995 blocks and has not yet run in prune mode.
+        # Its chain tip timestamp is already > real clock (large blocks with future
+        # nTime), so we must pass -mocktime at startup to satisfy the block-DB
+        # "block from future" check that bitwebd performs during initialization.
+        tip_time_995 = self.nodes[0].getblock(self.nodes[0].getblockhash(995))["time"]
+        self._start_node_mocktime(node_number, tip_time=tip_time_995)
         node = self.nodes[node_number]
         assert_equal(node.getblockcount(), 995)
         assert_raises_rpc_error(-1, "Cannot prune blocks because node is not in prune mode", node.pruneblockchain, 500)
 
-        # now re-start in manual pruning mode
-        self.restart_node(node_number, extra_args=["-prune=1"])
+        # now re-start in manual pruning mode — same mocktime protection needed
+        self._restart_node_mocktime(node_number, extra_args=["-prune=1"])
         node = self.nodes[node_number]
         assert_equal(node.getblockcount(), 995)
 
@@ -391,15 +421,21 @@ class PruneTest(BitcoinTestFramework):
         assert not has_block(2), "blk00002.dat is still there, should be pruned by now"
         assert not has_block(3), "blk00003.dat is still there, should be pruned by now"
 
-        # stop node, start back up with auto-prune at 550 MiB, make sure still runs
-        self.restart_node(node_number, extra_args=["-prune=550"])
+        # stop node, start back up with auto-prune at 550 MiB, make sure still runs.
+        # FIX: after generate(6) + generate(MIN_BLOCKS_TO_KEEP) the tip timestamp is
+        # well ahead of real clock (accumulated mocktime from set_mocktime_for_large_blocks).
+        # Pass -mocktime at startup so bitwebd does not reject its own chain; then clear
+        # mocktime immediately via setmocktime(0).
+        self._restart_node_mocktime(node_number, extra_args=["-prune=550"])
 
         self.log.info("Success")
 
     def wallet_test(self):
         # check that the pruning node's wallet is still in good shape
         self.log.info("Stop and start pruning node to trigger wallet rescan")
-        self.restart_node(2, extra_args=["-prune=550"])
+        # FIX: node 2 tip >> real clock after all the reorg/stale-block mining.
+        # Use _restart_node_mocktime to pass -mocktime at startup, cleared immediately.
+        self._restart_node_mocktime(2, extra_args=["-prune=550"])
         self.log.info("Success")
 
         # check that wallet loads successfully when restarting a pruned node after IBD.
@@ -412,7 +448,9 @@ class PruneTest(BitcoinTestFramework):
         nds = [self.nodes[0], self.nodes[5]]
         self.sync_blocks(nds, wait=5, timeout=300)
         reset_mocktime([self.nodes[0], self.nodes[5]])
-        self.restart_node(5, extra_args=["-prune=550", "-blockfilterindex=1"]) # restart to trigger rescan
+        # FIX: restart with -mocktime so startup check accepts the synced chain
+        # (tip timestamps >> real clock); cleared via setmocktime(0) right after.
+        self._restart_node_mocktime(5, extra_args=["-prune=550", "-blockfilterindex=1"])
         self.log.info("Success")
 
     def run_test(self):
