@@ -130,8 +130,6 @@ FUZZ_TARGET(pow_transition, .init = initialize_pow)
     const Consensus::Params& consensus_params{Params().GetConsensus()};
     std::vector<std::unique_ptr<CBlockIndex>> blocks;
 
-    const uint32_t old_time{fuzzed_data_provider.ConsumeIntegral<uint32_t>()};
-    const uint32_t new_time{fuzzed_data_provider.ConsumeIntegral<uint32_t>()};
     const int32_t version{fuzzed_data_provider.ConsumeIntegral<int32_t>()};
     uint32_t nbits{fuzzed_data_provider.ConsumeIntegral<uint32_t>()};
 
@@ -149,7 +147,7 @@ FUZZ_TARGET(pow_transition, .init = initialize_pow)
         CBlockHeader header;
         header.nVersion = version;
         header.nBits = nbits;
-        header.nTime = (height == num_blocks - 1) ? new_time : old_time;
+        header.nTime = fuzzed_data_provider.ConsumeIntegral<uint32_t>(); // ← каждый блок своё время
 
         auto current_block{std::make_unique<CBlockIndex>(header)};
         current_block->pprev = blocks.empty() ? nullptr : blocks.back().get();
