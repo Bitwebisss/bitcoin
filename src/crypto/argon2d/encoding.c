@@ -443,7 +443,7 @@ size_t b64len(uint32_t len) {
     switch (len % 3) {
     case 2:
         olen++;
-    __attribute__((fallthrough))
+    __attribute__((fallthrough));
     case 1:
         olen += 2;
         break;
