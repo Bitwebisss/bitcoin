@@ -39,7 +39,7 @@ class ToolBitcoinTest(BitcoinTestFramework):
 
     def set_cmd_args(self, node, args):
         """Set up node so it will be started through bitweb wrapper command with specified arguments."""
-        # Manually construct the `bitcoin node` command, similar to Binaries::node_argv()
+        # Manually construct the `bitweb node` command, similar to Binaries::node_argv()
         bitcoin_cmd = node.binaries.valgrind_cmd + [node.binaries.paths.bitcoin_bin]
         node.args = bitcoin_cmd + args + ["node"] + self.node_options[node.index]
 

@@ -157,5 +157,6 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         available_utxos = [u["txid"] for u in node.listunspent(minconf=0)]
         assert utxo["txid"] not in available_utxos, "UTXO should still be spent by conflicting tx"
 
+
 if __name__ == '__main__':
     ImportPrunedFundsTest(__file__).main()
