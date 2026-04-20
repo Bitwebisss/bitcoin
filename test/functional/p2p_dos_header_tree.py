@@ -25,22 +25,9 @@ After mining:
 # Only this constant needs updating if you want more/fewer blocks.
 # Hashes are read directly from the JSON — no manual copying needed.
 # ---------------------------------------------------------------------------
-CHECKPOINT_HEIGHT = 580
-# ---------------------------------------------------------------------------
-
 import json
 import os
 import time as _time
-
-
-def _progress(msg):
-    """Write directly to /dev/tty, bypassing all test framework output capture."""
-    try:
-        with open('/dev/tty', 'w', encoding='utf-8') as tty:
-            tty.write(msg + '\n')
-            tty.flush()
-    except OSError:
-        os.write(2, (msg + '\n').encode())
 
 from test_framework.messages import (
     CBlock,
@@ -58,6 +45,19 @@ from test_framework.blocktools import (
     create_coinbase,
 )
 from test_framework.util import assert_equal
+
+CHECKPOINT_HEIGHT = 580
+# ---------------------------------------------------------------------------
+
+
+def _progress(msg):
+    """Write directly to /dev/tty, bypassing all test framework output capture."""
+    try:
+        with open('/dev/tty', 'w', encoding='utf-8') as tty:
+            tty.write(msg + '\n')
+            tty.flush()
+    except OSError:
+        os.write(2, (msg + '\n').encode())
 
 
 # ---------------------------------------------------------------------------

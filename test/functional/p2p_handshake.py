@@ -67,7 +67,7 @@ class P2PHandshakeTest(BitcoinTestFramework):
 
     def generate_at_mocktime(self, time):
         info = self.nodes[0].getblockchaininfo()
-        self.log.info(f"=== generate_at_mocktime ===")
+        self.log.info("=== generate_at_mocktime ===")
         self.log.info(f"  mocktime to set : {time}")
         self.log.info(f"  tip height      : {info['blocks']}")
         self.log.info(f"  mediantime(MTP) : {info['mediantime']}")

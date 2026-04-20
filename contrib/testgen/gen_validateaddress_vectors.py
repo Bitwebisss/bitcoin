@@ -65,7 +65,7 @@ for _candidate in [
 else:
     sys.exit("ERROR: cannot locate test_framework/segwit_addr.py")
 
-from segwit_addr import bech32_encode, bech32_decode, Encoding
+from segwit_addr import bech32_encode, bech32_decode  # noqa: E402
 
 # Path to the target test file, resolved from either invocation location.
 # Candidates mirror the same logic as test_framework above.
@@ -160,11 +160,11 @@ def generate_blocks(hrp: str) -> str:
     def row(addr, error, locs, comment=""):
         cmt = f"  {comment}" if comment else ""
         if locs == "[]":
-            w(f"    (")
+            w("    (")
             w(f"        \"{addr}\",")
             w(f"        \"{error}\",{cmt}")
-            w(f"        [],")
-            w(f"    ),")
+            w("        [],")
+            w("    ),")
         else:
             w(f"    (\"{addr}\", \"{error}\", {locs}),{cmt}")
 
@@ -279,10 +279,10 @@ def generate_blocks(hrp: str) -> str:
         if pre_comment:
             w(pre_comment)
         new = reencode(bc_addr, hrp, force_upper=force_upper)
-        w(f"    (")
+        w("    (")
         w(f"        \"{new}\",")
         w(f"        \"{spk}\",")
-        w(f"    ),")
+        w("    ),")
 
     valid_entry("BC1QW508D6QEJXTDG4Y5R3ZARVARY0C5XW7KV8F3T4",
                 "0014751e76e8199196d454941c45d1b3a323f1433bd6",
