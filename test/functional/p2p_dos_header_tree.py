@@ -36,7 +36,7 @@ import time as _time
 def _progress(msg):
     """Write directly to /dev/tty, bypassing all test framework output capture."""
     try:
-        with open('/dev/tty', 'w') as tty:
+        with open('/dev/tty', 'w', encoding='utf-8') as tty:
             tty.write(msg + '\n')
             tty.flush()
     except OSError:

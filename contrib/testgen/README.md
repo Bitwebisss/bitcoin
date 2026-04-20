@@ -13,12 +13,12 @@ Regenerates INVALID_DATA and VALID_DATA test vectors in
 test/functional/rpc_validateaddress.py for an arbitrary bech32 HRP.
 
     # Print generated blocks to stdout (inspect before applying):
-	chmod +x gen_validateaddress_vectors.py
+    chmod +x gen_validateaddress_vectors.py
     ./gen_validateaddress_vectors.py
     ./gen_validateaddress_vectors.py --hrp bte
 
     # Patch rpc_validateaddress.py in-place (recommended):
-	chmod +x gen_validateaddress_vectors.py
+    chmod +x gen_validateaddress_vectors.py
     ./gen_validateaddress_vectors.py --apply
     ./gen_validateaddress_vectors.py --hrp bte --apply
 

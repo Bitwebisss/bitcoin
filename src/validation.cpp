@@ -1924,7 +1924,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
     // Premmine block check — disabled for regtest via PreMineEnabled = false
     if (consensusParams.PreMineEnabled && nHeight == consensusParams.PreMineBlockHeight)
         return consensusParams.PreMineValue * COIN;
-	
+
     int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
     // Force block reward to zero when right shift is undefined.
     if (halvings >= 64)

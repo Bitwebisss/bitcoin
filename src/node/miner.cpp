@@ -53,7 +53,7 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
     if (consensusParams.fPowAllowMinDifficultyBlocks) {
         pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, consensusParams);
     }
-    */    
+    */
 
     return nNewTime - nOldTime;
 }
@@ -502,7 +502,7 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
         LOCK(::cs_main);
 
         // On test networks return a minimum difficulty block after 20 minutes
-		/*
+        /*
         if (!tip_changed && allow_min_difficulty) {
             const NodeClock::time_point tip_time{std::chrono::seconds{chainman.ActiveChain().Tip()->GetBlockTime()}};
             if (now > tip_time + 20min) {
