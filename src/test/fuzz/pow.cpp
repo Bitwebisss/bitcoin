@@ -87,6 +87,7 @@ FUZZ_TARGET(pow, .init = initialize_pow)
     }
 }
 */
+
 /*
 FUZZ_TARGET(pow_transition, .init = initialize_pow)
 {
@@ -124,6 +125,7 @@ FUZZ_TARGET(pow_transition, .init = initialize_pow)
     Assert(PermittedDifficultyTransition(consensus_params, last_block->nHeight + 1, last_block->nBits, new_nbits));
 }
 */
+
 FUZZ_TARGET(pow_transition, .init = initialize_pow)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
@@ -133,6 +135,7 @@ FUZZ_TARGET(pow_transition, .init = initialize_pow)
     const int32_t version{fuzzed_data_provider.ConsumeIntegral<int32_t>()};
     uint32_t nbits{fuzzed_data_provider.ConsumeIntegral<uint32_t>()};
 
+    // Clamp nbits to pow_limit so we never start with an invalid target
     const arith_uint256 pow_limit = UintToArith256(consensus_params.powLimit);
     arith_uint256 old_target;
     old_target.SetCompact(nbits);
@@ -140,14 +143,20 @@ FUZZ_TARGET(pow_transition, .init = initialize_pow)
         nbits = pow_limit.GetCompact();
     }
 
+    // N = 576 (lwmaAveragingWindow). Chain length range: 1 .. N*3 = 1728.
+    //
+    // This covers all three branches of the algorithm:
+    //   height in [1,   N+1] — "new coin" branch, returns genesis bits
+    //   height in [N+2, N*2] — LWMA warming up, unstable phase
+    //   height in [N*2, N*3] — LWMA fully stabilized
     const int64_t N = consensus_params.lwmaAveragingWindow;
-    const int num_blocks = static_cast<int>(N + 3);
+    const int num_blocks = fuzzed_data_provider.ConsumeIntegralInRange<int>(1, static_cast<int>(N * 3));
 
     for (int height = 0; height < num_blocks; ++height) {
         CBlockHeader header;
         header.nVersion = version;
         header.nBits = nbits;
-        header.nTime = fuzzed_data_provider.ConsumeIntegral<uint32_t>(); // ← каждый блок своё время
+        header.nTime = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
 
         auto current_block{std::make_unique<CBlockIndex>(header)};
         current_block->pprev = blocks.empty() ? nullptr : blocks.back().get();
@@ -158,10 +167,12 @@ FUZZ_TARGET(pow_transition, .init = initialize_pow)
     auto last_block{blocks.back().get()};
     unsigned int new_nbits{GetNextWorkRequired(last_block, nullptr, consensus_params)};
 
+    // Result must never exceed pow_limit
     arith_uint256 new_target;
     new_target.SetCompact(new_nbits);
     Assert(new_target <= pow_limit);
 
+    // Difficulty transition must be permitted by the protocol rules
     Assert(PermittedDifficultyTransition(
         consensus_params,
         last_block->nHeight + 1,
