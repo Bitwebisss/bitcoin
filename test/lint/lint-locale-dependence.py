@@ -47,6 +47,7 @@ KNOWN_VIOLATIONS = [
     "src/test/fuzz/locale.cpp:.*setlocale",
     "src/test/util_tests.cpp:.*strtoll",
     "src/util/syserror.cpp:.*strerror",      # Outside this function use `SysErrorString`
+    "src/test/miner_tests.cpp:.*fprintf", # Used for re-mine blocks.
 ]
 
 REGEXP_EXTERNAL_DEPENDENCIES_EXCLUSIONS = [
