@@ -30,7 +30,7 @@
 #if !defined(DISABLE_OPTIMIZED_ARGON2)
 #include <compat/cpuid.h>
 
-#if defined(HAVE_GETCPUID)
+#if defined(HAVE_GETCPUID) && defined(__SSE2__)
 
 #include <stdint.h>
 #include <string.h>
@@ -271,5 +271,5 @@ const char *Argon2AutoDetectImpl(uint8_t use_implementation)
     return ret;
 }
 
-#endif /* HAVE_GETCPUID */
+#endif /* HAVE_GETCPUID and SSE2 */
 #endif /* !DISABLE_OPTIMIZED_ARGON2 */
