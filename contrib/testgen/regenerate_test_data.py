@@ -24,6 +24,14 @@ import os
 import subprocess
 import sys
 
+# ---------------------------------------------------------------------------
+# Path resolution — everything is derived from this script's location.
+# Layout assumption:
+#   <repo>/contrib/testgen/regenerate_test_data.py   <- this file
+#   <repo>/build/bin/bitweb-tx                       <- binary
+#   <repo>/test/functional/data/util/                <- data + test JSON
+# ---------------------------------------------------------------------------
+
 _here    = os.path.dirname(os.path.abspath(__file__))
 _repo    = os.path.abspath(os.path.join(_here, "..", ".."))
 
@@ -31,7 +39,12 @@ BINARY_DIR = os.path.join(_repo, "build", "bin")
 DATA_DIR   = os.path.join(_repo, "test", "functional", "data", "util")
 TEST_JSON  = os.path.join(DATA_DIR, "bitcoin-util-test.json")
 
+# ---------------------------------------------------------------------------
+# Main logic
+# ---------------------------------------------------------------------------
+
 def main():
+    # Sanity checks before doing anything.
     if not os.path.isfile(TEST_JSON):
         sys.exit(f"ERROR: test spec not found:\n  {TEST_JSON}")
 
@@ -55,19 +68,24 @@ def main():
     errors    = 0
 
     for i, test in enumerate(tests):
+        # Skip entries that have no output file to generate.
         if "output_cmp" not in test:
             skipped += 1
             continue
 
+        # Skip entries that are expected to fail (they produce no useful output).
         if test.get("return_code", 0) != 0:
             skipped += 1
             continue
 
         total += 1
 
+        # The "exec" field names the binary (e.g. "./bitcoin-tx" or "./bitweb-tx").
+        # We always use our resolved binary_path regardless of the name in JSON,
+        # so the test spec does not need to be edited when renaming the binary.
         args        = test.get("args", [])
         output_file = test["output_cmp"]
-        input_file  = test.get("input")
+        input_file  = test.get("input") # optional stdin file
         output_path = os.path.join(DATA_DIR, output_file)
 
         cmd = [binary_path] + args
@@ -75,6 +93,7 @@ def main():
         print(f"[{i:03d}] {output_file}")
         print(f"      {preview}")
 
+        # Read stdin data if this test pipes a file into the binary.
         stdin_data = None
         if input_file:
             input_path = os.path.join(DATA_DIR, input_file)
@@ -83,8 +102,9 @@ def main():
                 errors += 1
                 continue
             with open(input_path, "rb") as fh:
-                stdin_data = fh.read().strip()
+                stdin_data = fh.read().strip() # strip trailing newline from hex files
 
+        # Run the command.
         try:
             result = subprocess.run(
                 cmd,
@@ -109,6 +129,7 @@ def main():
             errors += 1
             continue
 
+        # Write the output directly into the data/util/ directory.
         output = result.stdout
 
         with open(output_path, "wb") as fh:
@@ -117,6 +138,7 @@ def main():
         print(f"      OK  ({len(output)} bytes written)")
         generated += 1
 
+    # Summary
     print()
     print("=" * 60)
     print(f"Generated : {generated}")
