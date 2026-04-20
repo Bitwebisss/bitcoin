@@ -270,5 +270,4 @@ const char *Argon2AutoDetectImpl(uint8_t use_implementation)
     return ret;
 }
 
-#endif /* HAVE_GETCPUID and SSE2 */
-#endif /* !DISABLE_OPTIMIZED_ARGON2 */
+#endif /* HAVE_GETCPUID */
