@@ -222,6 +222,8 @@ fn get_pathspecs_default_excludes() -> Vec<String> {
         .iter()
         .chain(&[
             "doc/release-notes/release-notes-*", // archived notes
+			"doc/bitcoin-release-notes/release-notes-*",
+			
         ])
         .map(|s| format!(":(exclude){}", s))
         .collect()
