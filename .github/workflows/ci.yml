@@ -175,16 +175,16 @@ jobs:
           restore-keys: ${{ github.job }}-${{ matrix.job-type }}-ccache-
 
       - name: CI script
-        run: ./ci/test_run_all.sh 2>&1 | tee /tmp/ci_macos.log; exit ${PIPESTATUS[0]}
+        run: ./ci/test_run_all.sh
         env:
           FILE_ENV: ${{ matrix.file-env }}
 
-      - name: Upload build log on failure
+      - name: Upload CMake logs on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: macos-build-log-${{ matrix.job-type }}
-          path: /tmp/ci_macos.log
+          name: cmake-logs-${{ matrix.job-type }}
+          path: ci/scratch/build-*/CMakeFiles/CMakeConfigureLog.yaml
 
       - name: Save Ccache cache
         uses: actions/cache/save@v4
