@@ -305,12 +305,12 @@ jobs:
         if: matrix.job-type == 'standard'
         working-directory: build
         env:
-          BITWEB_BIN: '${{ github.workspace }}\build\bin\Release\bitweb.exe'
-          BITWEBD: '${{ github.workspace }}\build\bin\Release\bitwebd.exe'
-          BITWEBCLI: '${{ github.workspace }}\build\bin\Release\bitweb-cli.exe'
-          BITWEBTX: '${{ github.workspace }}\build\bin\Release\bitweb-tx.exe'
-          BITWEBUTIL: '${{ github.workspace }}\build\bin\Release\bitweb-util.exe'
-          BITWEBWALLET: '${{ github.workspace }}\build\bin\Release\bitweb-wallet.exe'
+          BITCOIN_BIN: '${{ github.workspace }}\build\bin\Release\bitweb.exe'
+          BITCOIND: '${{ github.workspace }}\build\bin\Release\bitwebd.exe'
+          BITCOINCLI: '${{ github.workspace }}\build\bin\Release\bitweb-cli.exe'
+          BITCOINTX: '${{ github.workspace }}\build\bin\Release\bitweb-tx.exe'
+          BITCOINUTIL: '${{ github.workspace }}\build\bin\Release\bitweb-util.exe'
+          BITCOINWALLET: '${{ github.workspace }}\build\bin\Release\bitweb-wallet.exe'
           TEST_RUNNER_EXTRA: ${{ github.event_name != 'pull_request' && '--extended' || '' }}
         run: py -3 test/functional/test_runner.py --jobs $NUMBER_OF_PROCESSORS --ci --quiet --tmpdirprefix="${RUNNER_TEMP}" --combinedlogslen=99999999 --timeout-factor=${TEST_RUNNER_TIMEOUT_FACTOR} ${TEST_RUNNER_EXTRA}
 
