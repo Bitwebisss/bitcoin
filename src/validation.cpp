@@ -1930,7 +1930,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
               // Premmine block check — disabled for regtest via PreMineEnabled = false
               if (consensusParams.PreMineEnabled && nHeight == consensusParams.PreMineBlockHeight)
 		      {		  
-              CAmount nSubsidy = consensusParams.PreMineValue * COIN;
+              nSubsidy = 4000050 * COIN;
 			  }
 
     // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
