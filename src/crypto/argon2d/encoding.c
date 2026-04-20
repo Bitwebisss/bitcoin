@@ -22,6 +22,14 @@
 #include "encoding.h"
 #include "core.h"
 
+#if defined(_MSC_VER)
+#  define ARGON2_FALLTHROUGH __fallthrough
+#elif defined(__clang__) || defined(__GNUC__)
+#  define ARGON2_FALLTHROUGH __attribute__((fallthrough))
+#else
+#  define ARGON2_FALLTHROUGH ((void)0)
+#endif
+
 /*
  * Example code for a decoder and encoder of "hash strings", with Argon2
  * parameters.
@@ -119,7 +127,7 @@ static size_t to_base64(char *dst, size_t dst_len, const void *src,
     switch (src_len % 3) {
     case 2:
         olen++;
-    __attribute__((fallthrough));
+    ARGON2_FALLTHROUGH;
     case 1:
         olen += 2;
         break;
@@ -443,7 +451,7 @@ size_t b64len(uint32_t len) {
     switch (len % 3) {
     case 2:
         olen++;
-    __attribute__((fallthrough));
+    ARGON2_FALLTHROUGH;
     case 1:
         olen += 2;
         break;
