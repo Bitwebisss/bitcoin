@@ -9,8 +9,8 @@ https://bitwebcore.net/en/download/.
 What is Bitweb Core?
 ---------------------
 
-Bitweb Core, based on Bitcoin Core 30.2 source codebase, connects to the Bitweb 
-peer-to-peer network to download and fully validate blocks and transactions. 
+Bitweb Core, based on Bitcoin Core 30.2 source codebase, connects to the Bitweb
+peer-to-peer network to download and fully validate blocks and transactions.
 It also includes a wallet and graphical user interface, which can be optionally built.
 
 Further information about Bitweb Core is available in the [doc folder](/doc).

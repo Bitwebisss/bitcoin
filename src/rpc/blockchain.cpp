@@ -2061,7 +2061,7 @@ static RPCHelpMan getblockstats()
                 /*
                 if (pindex.nHeight == 0 || (IsBIP30Repeat(pindex) && tx->IsCoinBase())) continue;
                 */
-				if (pindex.nHeight == 0) continue;
+                if (pindex.nHeight == 0) continue;
                 // Skip unspendable outputs since they are not included in the UTXO set
                 if (out.scriptPubKey.IsUnspendable()) continue;
 
