@@ -175,9 +175,16 @@ jobs:
           restore-keys: ${{ github.job }}-${{ matrix.job-type }}-ccache-
 
       - name: CI script
-        run: ./ci/test_run_all.sh
+        run: ./ci/test_run_all.sh 2>&1 | tee /tmp/ci_macos.log; exit ${PIPESTATUS[0]}
         env:
           FILE_ENV: ${{ matrix.file-env }}
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-build-log-${{ matrix.job-type }}
+          path: /tmp/ci_macos.log
 
       - name: Save Ccache cache
         uses: actions/cache/save@v4
@@ -535,7 +542,14 @@ jobs:
         run: sudo sysctl -w vm.mmap_rnd_bits=28
 
       - name: CI script
-        run: ./ci/test_run_all.sh
+        run: ./ci/test_run_all.sh 2>&1 | tee /tmp/ci_matrix.log; exit ${PIPESTATUS[0]}
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-matrix-build-log-${{ env.CONTAINER_NAME }}
+          path: /tmp/ci_matrix.log
 
       - name: Save caches
         uses: ./.github/actions/save-caches
