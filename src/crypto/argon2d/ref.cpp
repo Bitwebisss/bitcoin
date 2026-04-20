@@ -16,7 +16,7 @@
  */
 #include <compat/cpuid.h> /* defines HAVE_GETCPUID on x86 */
 
-#if !defined(HAVE_GETCPUID) || !defined(__SSE2__) || defined(DISABLE_OPTIMIZED_ARGON2)
+#if !defined(HAVE_GETCPUID) || (!defined(__x86_64__) && !defined(__amd64__)) || defined(DISABLE_OPTIMIZED_ARGON2)
 
 #include <stdint.h>
 #include <string.h>

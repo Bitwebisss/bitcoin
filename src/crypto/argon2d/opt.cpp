@@ -30,7 +30,7 @@
 #if !defined(DISABLE_OPTIMIZED_ARGON2)
 #include <compat/cpuid.h>
 
-#if defined(HAVE_GETCPUID) && defined(__SSE2__)
+#if defined(HAVE_GETCPUID) && (defined(__x86_64__) || defined(__amd64__))
 
 #include <stdint.h>
 #include <string.h>
