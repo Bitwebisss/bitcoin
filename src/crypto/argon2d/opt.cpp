@@ -29,7 +29,7 @@
 
 #include <compat/cpuid.h>
 
-#if defined(HAVE_GETCPUID)
+#if defined(HAVE_GETCPUID) && defined(__SSE2__)
 
 #include <stdint.h>
 #include <string.h>
