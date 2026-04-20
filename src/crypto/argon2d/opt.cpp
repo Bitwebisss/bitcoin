@@ -194,7 +194,7 @@ static void fill_segment_sse2(const argon2_instance_t *instance,
 /* -------------------------------------------------------------------------
  * AVXEnabled() — same helper as sha256.cpp
  * ------------------------------------------------------------------------- */
-#if defined(__x86_64__) || defined(__amd64__)
+#if defined(__x86_64__) || defined(__amd64__) || defined(__i386__)
 static int AVXEnabled(void)
 {
     uint32_t a, d;
