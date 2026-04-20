@@ -168,26 +168,19 @@ jobs:
 
       - name: Restore Ccache cache
         id: ccache-cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: ${{ env.CCACHE_DIR }}
           key: ${{ github.job }}-${{ matrix.job-type }}-ccache-${{ github.run_id }}
           restore-keys: ${{ github.job }}-${{ matrix.job-type }}-ccache-
 
       - name: CI script
-        run: ./ci/test_run_all.sh 2>/tmp/ci_stderr.log || (cat /tmp/ci_stderr.log; exit 1)
+        run: ./ci/test_run_all.sh
         env:
           FILE_ENV: ${{ matrix.file-env }}
 
-      - name: Upload logs on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: cmake-logs-${{ matrix.job-type }}
-          path: /tmp/ci_stderr.log
-
       - name: Save Ccache cache
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         if: github.event_name != 'pull_request' && steps.ccache-cache.outputs.cache-hit != 'true'
         with:
           path: ${{ env.CCACHE_DIR }}
@@ -219,11 +212,16 @@ jobs:
     steps:
       - *CHECKOUT
 
-      - name: Configure Developer Command Prompt for Microsoft Visual C++
-        # Using microsoft/setup-msbuild is not enough.
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x64
+      - &SET_UP_VS
+        name: Set up VS Developer Prompt
+        shell: pwsh -Command "$PSVersionTable; $PSNativeCommandUseErrorActionPreference = $true; $ErrorActionPreference = 'Stop'; & '{0}'"
+        run: |
+          $vswherePath = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $installationPath = & $vswherePath -latest -property installationPath
+          & "${env:COMSPEC}" /s /c "`"$installationPath\Common7\Tools\vsdevcmd.bat`" -arch=x64 -no_logo && set" | foreach-object {
+            $name, $value = $_ -split '=', 2
+            echo "$name=$value" >> $env:GITHUB_ENV
+          }
 
       - name: Get tool information
         shell: pwsh
@@ -246,13 +244,13 @@ jobs:
           sed -i '1s/^/set(ENV{CMAKE_POLICY_VERSION_MINIMUM} 3.5)\n/' "${VCPKG_INSTALLATION_ROOT}/scripts/ports.cmake"
 
       - name: vcpkg tools cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: C:/vcpkg/downloads/tools
           key: ${{ github.job }}-vcpkg-tools
 
       - name: Restore vcpkg binary cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         id: vcpkg-binary-cache
         with:
           path: ~/AppData/Local/vcpkg/archives
@@ -263,7 +261,7 @@ jobs:
           cmake -B build -Werror=dev --preset vs2022 -DCMAKE_TOOLCHAIN_FILE="${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake" ${{ matrix.generate-options }}
 
       - name: Save vcpkg binary cache
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         if: github.event_name != 'pull_request' && steps.vcpkg-binary-cache.outputs.cache-hit != 'true' && matrix.job-type == 'standard'
         with:
           path: ~/AppData/Local/vcpkg/archives
@@ -274,14 +272,26 @@ jobs:
         run: |
           cmake --build . -j $NUMBER_OF_PROCESSORS --config Release
 
-      - name: Get bitwebd manifest
+      - name: Check executable manifests
         if: matrix.job-type == 'standard'
         working-directory: build
+        shell: pwsh -Command "$PSVersionTable; $PSNativeCommandUseErrorActionPreference = $true; $ErrorActionPreference = 'Stop'; & '{0}'"
         run: |
-          mt.exe -nologo -inputresource:bin/Release/bitwebd.exe -out:bitwebd.manifest
-          cat bitwebd.manifest
-          echo
-          mt.exe -nologo -inputresource:bin/Release/bitwebd.exe -validate_manifest
+          mt.exe -nologo -inputresource:bin\Release\bitwebd.exe -out:bitwebd.manifest
+          Get-Content bitwebd.manifest
+
+          Get-ChildItem -Filter "bin\Release\*.exe" | ForEach-Object {
+            $exeName = $_.Name
+
+            # Skip as they currently do not have manifests
+            if ($exeName -eq "fuzz.exe" -or $exeName -eq "bench_bitweb.exe" -or $exeName -eq "test_bitweb-qt.exe") {
+              Write-Host "Skipping $exeName (no manifest present)"
+              return
+            }
+
+            Write-Host "Checking $exeName"
+            & mt.exe -nologo -inputresource:$_.FullName -validate_manifest
+          }
 
       - name: Run test suite
         if: matrix.job-type == 'standard'
@@ -352,7 +362,7 @@ jobs:
         uses: ./.github/actions/save-caches
 
       - name: Upload built executables
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: x86_64-w64-mingw32-executables-${{ github.run_id }}
           path: |
@@ -374,7 +384,7 @@ jobs:
       - *CHECKOUT
 
       - name: Download built executables
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: x86_64-w64-mingw32-executables-${{ github.run_id }}
 
@@ -384,19 +394,26 @@ jobs:
       - name: Run bitwebd.exe
         run: ./bin/bitwebd.exe -version
 
-      - name: Find mt.exe tool
-        shell: pwsh
-        run: |
-          $sdk_dir = (Get-ItemProperty 'HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots' -Name KitsRoot10).KitsRoot10
-          $sdk_latest = (Get-ChildItem "$sdk_dir\bin" -Directory | Where-Object { $_.Name -match '^\d+\.\d+\.\d+\.\d+$' } | Sort-Object Name -Descending | Select-Object -First 1).Name
-          "MT_EXE=${sdk_dir}bin\${sdk_latest}\x64\mt.exe" >> $env:GITHUB_ENV
+      - *SET_UP_VS
 
-      - name: Get bitwebd manifest
-        shell: pwsh
+      - name: Check executable manifests
+        shell: pwsh -Command "$PSVersionTable; $PSNativeCommandUseErrorActionPreference = $true; $ErrorActionPreference = 'Stop'; & '{0}'"
         run: |
-          & $env:MT_EXE -nologo -inputresource:bin\bitwebd.exe -out:bitwebd.manifest
+          mt.exe -nologo -inputresource:bin\bitwebd.exe -out:bitwebd.manifest
           Get-Content bitwebd.manifest
-          & $env:MT_EXE -nologo -inputresource:bin\bitwebd.exe -validate_manifest
+
+          Get-ChildItem -Filter "bin\*.exe" | ForEach-Object {
+            $exeName = $_.Name
+
+            # Skip as they currently do not have manifests
+            if ($exeName -eq "fuzz.exe" -or $exeName -eq "bench_bitweb.exe") {
+              Write-Host "Skipping $exeName (no manifest present)"
+              return
+            }
+
+            Write-Host "Checking $exeName"
+            & mt.exe -nologo -inputresource:$_.FullName -validate_manifest
+          }
 
       - name: Run unit tests
         # Can't use ctest here like other jobs as we don't have a CMake build tree.
@@ -542,14 +559,7 @@ jobs:
         run: sudo sysctl -w vm.mmap_rnd_bits=28
 
       - name: CI script
-        run: ./ci/test_run_all.sh 2>&1 | tee /tmp/ci_matrix.log; exit ${PIPESTATUS[0]}
-
-      - name: Upload build log on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ci-matrix-build-log-${{ env.CONTAINER_NAME }}
-          path: /tmp/ci_matrix.log
+        run: ./ci/test_run_all.sh
 
       - name: Save caches
         uses: ./.github/actions/save-caches
