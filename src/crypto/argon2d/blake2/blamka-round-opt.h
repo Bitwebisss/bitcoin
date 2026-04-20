@@ -14,7 +14,8 @@
  * You should have received a copy of both of these licenses along with this
  * software. If not, they may be obtained at the above URLs.
  */
-#if defined(HAVE_GETCPUID) && (defined(__x86_64__) || defined(__amd64__))
+#if defined(HAVE_GETCPUID)
+
 #ifndef BLAKE_ROUND_MKA_OPT_H
 #define BLAKE_ROUND_MKA_OPT_H
 
