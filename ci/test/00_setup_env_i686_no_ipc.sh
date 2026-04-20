@@ -11,7 +11,6 @@ export CONTAINER_NAME=ci_i686_no_multiprocess
 export CI_IMAGE_NAME_TAG="mirror.gcr.io/ubuntu:24.04"
 export CI_IMAGE_PLATFORM="linux/amd64"
 export PACKAGES="llvm clang g++-multilib"
-export PIP_PACKAGES="--break-system-packages argon2-cffi"
 export DEP_OPTS="DEBUG=1 NO_IPC=1"
 export GOAL="install"
 export CI_LIMIT_STACK_SIZE=1
