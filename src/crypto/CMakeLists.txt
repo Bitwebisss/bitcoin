@@ -30,6 +30,12 @@ add_library(bitcoin_crypto STATIC EXCLUDE_FROM_ALL
   argon2d/blake2/blake2b.c
 )
 
+# Suppress -Wtype-limits in argon2 core — ARGON2_MAX_MEMORY comparisons are
+# intentionally kept for correctness on 32-bit; always-false on 64-bit is expected.
+set_property(SOURCE argon2d/core.c PROPERTY
+  COMPILE_OPTIONS $<$<C_COMPILER_ID:GNU,Clang,AppleClang>:-Wno-type-limits>
+)
+
 target_link_libraries(bitcoin_crypto
   PRIVATE
     core_interface
