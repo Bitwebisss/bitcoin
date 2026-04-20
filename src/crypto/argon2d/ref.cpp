@@ -16,7 +16,7 @@
  */
 #include <compat/cpuid.h> /* defines HAVE_GETCPUID on x86 */
 
-#if !defined(HAVE_GETCPUID) || (!defined(__x86_64__) && !defined(__amd64__)) || defined(DISABLE_OPTIMIZED_ARGON2)
+#if !defined(HAVE_GETCPUID)
 
 #include <stdint.h>
 #include <string.h>
@@ -203,4 +203,4 @@ const char *Argon2AutoDetectImpl(uint8_t use_implementation)
     return "reference";
 }
 
-#endif /* #if !defined(HAVE_GETCPUID) || defined(DISABLE_OPTIMIZED_ARGON2) */
+#endif /* #if !defined(HAVE_GETCPUID) */

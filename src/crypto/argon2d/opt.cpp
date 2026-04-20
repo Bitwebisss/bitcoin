@@ -27,10 +27,9 @@
  *     ISA variants, same as ENABLE_AVX2 / ENABLE_SSE41 in sha256.cpp.
  */
 
-#if !defined(DISABLE_OPTIMIZED_ARGON2)
 #include <compat/cpuid.h>
 
-#if defined(HAVE_GETCPUID) && (defined(__x86_64__) || defined(__amd64__))
+#if defined(HAVE_GETCPUID)
 
 #include <stdint.h>
 #include <string.h>
@@ -195,7 +194,7 @@ static void fill_segment_sse2(const argon2_instance_t *instance,
 /* -------------------------------------------------------------------------
  * AVXEnabled() — same helper as sha256.cpp
  * ------------------------------------------------------------------------- */
-#if defined(__x86_64__) || defined(__amd64__) || defined(__i386__)
+#if defined(__x86_64__) || defined(__amd64__)
 static int AVXEnabled(void)
 {
     uint32_t a, d;
