@@ -175,16 +175,16 @@ jobs:
           restore-keys: ${{ github.job }}-${{ matrix.job-type }}-ccache-
 
       - name: CI script
-        run: ./ci/test_run_all.sh
+        run: ./ci/test_run_all.sh 2>/tmp/ci_stderr.log || (cat /tmp/ci_stderr.log; exit 1)
         env:
           FILE_ENV: ${{ matrix.file-env }}
 
-      - name: Upload CMake logs on failure
+      - name: Upload logs on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: cmake-logs-${{ matrix.job-type }}
-          path: ci/scratch/build-*/CMakeFiles/CMakeConfigureLog.yaml
+          path: /tmp/ci_stderr.log
 
       - name: Save Ccache cache
         uses: actions/cache/save@v4
