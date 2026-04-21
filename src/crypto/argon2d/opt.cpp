@@ -128,30 +128,27 @@ const char *Argon2AutoDetectImpl(uint8_t use_implementation)
         have_avx512f = (ebx >> 16) & 1;
 
 #if defined(ENABLE_ARGON2_AVX512)
-        if ((use_implementation & 0x02) &&
+        if ((use_implementation & 0x04) &&
             have_avx512f && have_xsave && AVX512Enabled()) {
             argon2_fill_segment = fill_segment_avx512;
             ret = "avx512";
         } else
 #endif
 #if defined(ENABLE_ARGON2_AVX2)
-        if ((use_implementation & 0x01) &&
+        if ((use_implementation & 0x02) &&
             have_avx2 && have_avx && enabled_avx) {
             argon2_fill_segment = fill_segment_avx2;
             ret = "avx2";
         } else
 #endif
 #if defined(ENABLE_ARGON2_SSE2)
-        {
-            /* SSE2 is the x86-64 ABI baseline; always safe on 64-bit.
-             * On i686, opt_sse2.cpp is only compiled when HAVE_ARGON2_SSE2
-             * passed the intrinsics check, so this branch is always valid. */
+        if (use_implementation & 0x01) {
             argon2_fill_segment = fill_segment_sse2;
             ret = "sse2";
-        }
-#else
+        } else
+#endif
         {
-            /* No SSE2 (i686 without SSE2) — stay on reference */
+            /* STANDARD=0 or no matching tier compiled — stay on reference */
             (void)have_avx; (void)have_avx2; (void)have_avx512f;
             (void)enabled_avx;
         }

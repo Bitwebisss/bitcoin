@@ -438,9 +438,10 @@ ARGON2_PUBLIC const char *Argon2AutoDetectImpl(uint8_t use_implementation);
 namespace argon2_implementation {
 enum UseImplementation : uint8_t {
     STANDARD   = 0,
-    USE_AVX2   = 1 << 0,
-    USE_AVX512 = 1 << 1,
-    USE_ALL    = USE_AVX2 | USE_AVX512,
+    USE_SSE2   = 1 << 0,
+    USE_AVX2   = 1 << 1,
+    USE_AVX512 = 1 << 2,
+    USE_ALL    = USE_SSE2 | USE_AVX2 | USE_AVX512,
 };
 }
 inline std::string Argon2AutoDetect(
