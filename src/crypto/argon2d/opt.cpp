@@ -152,7 +152,6 @@ const char *Argon2AutoDetectImpl(uint8_t use_implementation)
             (void)have_avx; (void)have_avx2; (void)have_avx512f;
             (void)enabled_avx;
         }
-#endif
     }
 
     return ret;
