@@ -40,6 +40,9 @@ BOOST_AUTO_TEST_CASE(argon2id_cross_isa_consistency)
     Argon2AutoDetect(argon2_implementation::STANDARD);
     const std::string hash_std = hdr.GetArgon2idPoWHash().ToString();
 
+    Argon2AutoDetect(argon2_implementation::USE_SSE2);
+    BOOST_CHECK_EQUAL(hdr.GetArgon2idPoWHash().ToString(), hash_std);
+
     Argon2AutoDetect(argon2_implementation::USE_AVX2);
     BOOST_CHECK_EQUAL(hdr.GetArgon2idPoWHash().ToString(), hash_std);
 
