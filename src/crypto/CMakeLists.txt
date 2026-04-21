@@ -89,6 +89,17 @@ if(HAVE_ARGON2_SSE2)
   )
 endif()
 
+# Argon2id SSSE3 optimised implementation (Sandy Bridge / Ivy Bridge).
+# Compiled separately so -mssse3 applies only to this translation unit.
+# Selected only on SSSE3 machines without AVX2 (Sandy Bridge / Ivy Bridge).
+if(HAVE_ARGON2_SSSE3)
+  target_compile_definitions(bitcoin_crypto PRIVATE ENABLE_ARGON2_SSSE3)
+  target_sources(bitcoin_crypto PRIVATE argon2d/argon2_opt_ssse3.cpp)
+  set_property(SOURCE argon2d/argon2_opt_ssse3.cpp PROPERTY
+    COMPILE_OPTIONS ${ARGON2_SSSE3_CXXFLAGS}
+  )
+endif()
+
 # Argon2id AVX2 optimised implementation.
 # Compiled separately so -mavx2 applies only to this translation unit.
 if(HAVE_ARGON2_AVX2)

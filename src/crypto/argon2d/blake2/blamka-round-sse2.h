@@ -16,10 +16,9 @@
  */
 
 /*
- * SSE2 / SSSE3 Blake2b round primitives for Argon2.
+ * SSE2 Blake2b round primitives for Argon2.
  *
- * This header is intentionally ISA-specific: it contains ONLY the SSE2 /
- * SSSE3 __m128i code.  It must NOT be included from translation units
+ * This header is intentionally ISA-specific: it contains ONLY the SSE2
  * compiled with -mavx2 or -mavx512f, because those macros are redundantly
  * re-defined here under unique names (BLAKE2_ROUND_SSE2 etc.) and the old
  * monolithic blamka-round-opt.h's #if !defined(__AVX2__) dispatch is gone.
@@ -32,40 +31,13 @@
 #define BLAKE_ROUND_MKA_SSE2_H
 
 #include <emmintrin.h>          /* SSE2 — always available when this file is used */
-#if defined(__SSSE3__)
-#  include <tmmintrin.h>        /* _mm_shuffle_epi8, _mm_alignr_epi8 */
-#endif
 
 /* blake2-impl.h provides BLAKE2_INLINE, load64/store64 etc.
  * Future <>-migration: <crypto/argon2d/blake2/blake2-impl.h>            */
 #include <crypto/argon2d/blake2/blake2-impl.h>
 
-/* -------------------------------------------------------------------------
- * Rotation helpers.
- *
- * SSSE3 can use byte-shuffle for r16 / r24; pure SSE2 falls back to shift+or.
- * ------------------------------------------------------------------------- */
-#if defined(__SSSE3__)
-#  define BLAMKA_SSE2_r16                                                      \
-    (_mm_setr_epi8(2, 3, 4, 5, 6, 7, 0, 1, 10, 11, 12, 13, 14, 15, 8, 9))
-#  define BLAMKA_SSE2_r24                                                      \
-    (_mm_setr_epi8(3, 4, 5, 6, 7, 0, 1, 2, 11, 12, 13, 14, 15, 8, 9, 10))
-#  define BLAMKA_SSE2_mm_roti_epi64(x, c)                                      \
-    (-(c) == 32                                                                \
-        ? _mm_shuffle_epi32((x), _MM_SHUFFLE(2, 3, 0, 1))                      \
-        : (-(c) == 24                                                          \
-              ? _mm_shuffle_epi8((x), BLAMKA_SSE2_r24)                         \
-              : (-(c) == 16                                                    \
-                    ? _mm_shuffle_epi8((x), BLAMKA_SSE2_r16)                   \
-                    : (-(c) == 63                                              \
-                          ? _mm_xor_si128(_mm_srli_epi64((x), -(c)),           \
-                                          _mm_add_epi64((x), (x)))             \
-                          : _mm_xor_si128(_mm_srli_epi64((x), -(c)),           \
-                                          _mm_slli_epi64((x), 64 - (-(c))))))))
-#else /* pure SSE2 */
-#  define BLAMKA_SSE2_mm_roti_epi64(r, c)                                      \
+#define BLAMKA_SSE2_mm_roti_epi64(r, c)                                      \
     _mm_xor_si128(_mm_srli_epi64((r), -(c)), _mm_slli_epi64((r), 64 - (-(c))))
-#endif
 
 /* -------------------------------------------------------------------------
  * fBlaMka — multiply-add mixing function (Argon2 variant of Blake2b G).
@@ -124,33 +96,8 @@ static BLAKE2_INLINE __m128i fBlaMka_sse2(__m128i x, __m128i y)
 
 /* -------------------------------------------------------------------------
  * DIAGONALIZE / UNDIAGONALIZE — permute 8 __m128i values into diagonal form.
- *
- * SSSE3 uses _mm_alignr_epi8 (faster); plain SSE2 uses unpack pairs.
  * ------------------------------------------------------------------------- */
-#if defined(__SSSE3__)
-#  define DIAGONALIZE_SSE2(A0, B0, C0, D0, A1, B1, C1, D1)                    \
-    do {                                                                       \
-        __m128i t0 = _mm_alignr_epi8(B1, B0, 8);                               \
-        __m128i t1 = _mm_alignr_epi8(B0, B1, 8);                               \
-        B0 = t0;  B1 = t1;                                                     \
-        t0 = C0;  C0 = C1;  C1 = t0;                                           \
-        t0 = _mm_alignr_epi8(D1, D0, 8);                                       \
-        t1 = _mm_alignr_epi8(D0, D1, 8);                                       \
-        D0 = t1;  D1 = t0;                                                     \
-    } while ((void)0, 0)
-
-#  define UNDIAGONALIZE_SSE2(A0, B0, C0, D0, A1, B1, C1, D1)                  \
-    do {                                                                       \
-        __m128i t0 = _mm_alignr_epi8(B0, B1, 8);                               \
-        __m128i t1 = _mm_alignr_epi8(B1, B0, 8);                               \
-        B0 = t0;  B1 = t1;                                                     \
-        t0 = C0;  C0 = C1;  C1 = t0;                                           \
-        t0 = _mm_alignr_epi8(D0, D1, 8);                                       \
-        t1 = _mm_alignr_epi8(D1, D0, 8);                                       \
-        D0 = t1;  D1 = t0;                                                     \
-    } while ((void)0, 0)
-#else /* pure SSE2 */
-#  define DIAGONALIZE_SSE2(A0, B0, C0, D0, A1, B1, C1, D1)                    \
+#define DIAGONALIZE_SSE2(A0, B0, C0, D0, A1, B1, C1, D1)                    \
     do {                                                                       \
         __m128i t0 = D0;                                                       \
         __m128i t1 = B0;                                                       \
@@ -161,7 +108,7 @@ static BLAKE2_INLINE __m128i fBlaMka_sse2(__m128i x, __m128i y)
         B1 = _mm_unpackhi_epi64(B1, _mm_unpacklo_epi64(t1, t1));               \
     } while ((void)0, 0)
 
-#  define UNDIAGONALIZE_SSE2(A0, B0, C0, D0, A1, B1, C1, D1)                  \
+#define UNDIAGONALIZE_SSE2(A0, B0, C0, D0, A1, B1, C1, D1)                  \
     do {                                                                       \
         __m128i t0, t1;                                                        \
         t0 = C0;  C0 = C1;  C1 = t0;                                           \
@@ -171,7 +118,6 @@ static BLAKE2_INLINE __m128i fBlaMka_sse2(__m128i x, __m128i y)
         D0 = _mm_unpackhi_epi64(D0, _mm_unpacklo_epi64(D1, D1));               \
         D1 = _mm_unpackhi_epi64(D1, _mm_unpacklo_epi64(t1, t1));               \
     } while ((void)0, 0)
-#endif
 
 /* -------------------------------------------------------------------------
  * BLAKE2_ROUND_SSE2 — full Blake2b round on 8 __m128i registers.

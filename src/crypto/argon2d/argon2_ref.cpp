@@ -20,7 +20,7 @@
  *
  * fill_segment_ref() is always compiled and always exported — it serves as the
  * safe fallback that opt.cpp (x86 dispatcher) defaults to before CPUID
- * detection upgrades to SSE2 / AVX2 / AVX-512.
+ * detection upgrades to SSE2 / SSSE3 / AVX2 / AVX-512.
  *
  * On non-x86 targets (no HAVE_GETCPUID) this file also provides the public
  * fill_segment() and Argon2AutoDetectImpl() entry points, just as before.

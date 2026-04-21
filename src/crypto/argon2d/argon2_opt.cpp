@@ -22,6 +22,7 @@
  * No SIMD code lives here — each ISA variant is its own translation unit:
  *
  *   argon2_opt_sse2.cpp   — SSE2 baseline  (compiled with -msse2)
+ *   argon2_opt_ssse3.cpp  — SSSE3          (compiled with -mssse3)
  *   argon2_opt_avx2.cpp   — AVX2           (compiled with -mavx2)
  *   argon2_opt_avx512.cpp — AVX-512F       (compiled with -mavx512f)
  *   argon2_ref.cpp        — pure-C reference, always compiled, always exported as
@@ -30,7 +31,7 @@
  *
  * Structure mirrors sha256.cpp:
  *   - HAVE_GETCPUID (from cpuid.h) is the x86 guard.
- *   - ENABLE_ARGON2_SSE2 / AVX2 / AVX512 gate the separately-compiled variants.
+ *   - ENABLE_ARGON2_SSE2 / SSSE3 / AVX2 / AVX512 gate the separately-compiled variants.
  *   - Non-x86 fill_segment() and Argon2AutoDetectImpl() are in ref.cpp.
  */
 
@@ -55,6 +56,11 @@ void fill_segment_ref(const argon2_instance_t *instance,
 #if defined(ENABLE_ARGON2_SSE2)
 void fill_segment_sse2(const argon2_instance_t *instance,
                        argon2_position_t position);
+#endif
+
+#if defined(ENABLE_ARGON2_SSSE3)
+void fill_segment_ssse3(const argon2_instance_t *instance,
+                        argon2_position_t position);
 #endif
 
 #if defined(ENABLE_ARGON2_AVX2)
@@ -114,12 +120,13 @@ const char *Argon2AutoDetectImpl(uint8_t use_implementation)
         uint32_t eax, ebx, ecx, edx;
         int have_xsave, have_avx, enabled_avx;
         int have_avx2, have_avx512f;
-        int have_sse2;
+        int have_sse2, have_ssse3;
 
         GetCPUID(1, 0, eax, ebx, ecx, edx);
         have_xsave  = (ecx >> 27) & 1;
         have_avx    = (ecx >> 28) & 1;
         have_sse2   = (edx >> 26) & 1;
+        have_ssse3  = (ecx >> 9)  & 1;
         enabled_avx = 0;
         if (have_xsave && have_avx) {
             enabled_avx = AVXEnabled();
@@ -130,17 +137,23 @@ const char *Argon2AutoDetectImpl(uint8_t use_implementation)
         have_avx512f = (ebx >> 16) & 1;
 
 #if defined(ENABLE_ARGON2_AVX512)
-        if ((use_implementation & 0x04) &&
+        if ((use_implementation & 0x08) &&
             have_avx512f && have_xsave && AVX512Enabled()) {
             argon2_fill_segment = fill_segment_avx512;
             ret = "avx512";
         } else
 #endif
 #if defined(ENABLE_ARGON2_AVX2)
-        if ((use_implementation & 0x02) &&
+        if ((use_implementation & 0x04) &&
             have_avx2 && have_avx && enabled_avx) {
             argon2_fill_segment = fill_segment_avx2;
             ret = "avx2";
+        } else
+#endif
+#if defined(ENABLE_ARGON2_SSSE3)
+        if ((use_implementation & 0x02) && have_ssse3) {
+            argon2_fill_segment = fill_segment_ssse3;
+            ret = "ssse3";
         } else
 #endif
 #if defined(ENABLE_ARGON2_SSE2)
@@ -152,7 +165,7 @@ const char *Argon2AutoDetectImpl(uint8_t use_implementation)
         {
             /* STANDARD=0 or no matching tier compiled — stay on reference */
             (void)have_avx; (void)have_avx2; (void)have_avx512f;
-            (void)enabled_avx;
+            (void)have_ssse3; (void)have_sse2; (void)enabled_avx;
         }
     }
 

@@ -231,6 +231,31 @@ if(NOT MSVC)
     CXXFLAGS ${ARGON2_SSE2_CXXFLAGS}
   )
 
+  # Check for Argon2 SSSE3 intrinsics.
+  # SSSE3 was introduced in Intel Penryn (2007) and AMD Bobcat (2011).
+  # On Sandy Bridge / Ivy Bridge machines (SSSE3 but no AVX2) this is the
+  # fastest available tier. On Haswell+ it is superseded by AVX2.
+  #
+  # Key SSSE3 instructions used:
+  #   _mm_shuffle_epi8  — faster rotr24 and rotr16 vs. shift+or (SSE2)
+  #   _mm_alignr_epi8   — faster diagonalize vs. unpack pair (SSE2)
+  set(ARGON2_SSSE3_CXXFLAGS -mssse3)
+  check_cxx_source_compiles_with_flags("
+    #include <tmmintrin.h>
+    int main()
+    {
+      __m128i a = _mm_set1_epi8(0);
+      /* _mm_shuffle_epi8 and _mm_alignr_epi8 are the two key SSSE3 ops */
+      static const char tbl[16] = {3,4,5,6,7,0,1,2, 11,12,13,14,15,8,9,10};
+      __m128i b = _mm_shuffle_epi8(a, _mm_loadu_si128((const __m128i*)tbl));
+      __m128i c = _mm_alignr_epi8(a, b, 8);
+      (void)c;
+      return 0;
+    }
+    " HAVE_ARGON2_SSSE3
+    CXXFLAGS ${ARGON2_SSSE3_CXXFLAGS}
+  )
+
   # Check for Argon2 AVX2 intrinsics.
   set(ARGON2_AVX2_CXXFLAGS -mavx2)
   check_cxx_source_compiles_with_flags("

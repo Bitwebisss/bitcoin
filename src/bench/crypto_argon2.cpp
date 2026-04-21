@@ -64,6 +64,14 @@ static void Argon2id_SSE2(benchmark::Bench& bench)
     Argon2AutoDetect();
 }
 
+static void Argon2id_SSSE3(benchmark::Bench& bench)
+{
+    bench.name(strprintf("%s using the '%s' Argon2id implementation",
+        __func__, Argon2AutoDetect(argon2_implementation::USE_SSSE3)));
+    RunArgon2idHash(bench);
+    Argon2AutoDetect();
+}
+
 static void Argon2id_AVX2(benchmark::Bench& bench)
 {
     bench.name(strprintf("%s using the '%s' Argon2id implementation",
@@ -82,5 +90,6 @@ static void Argon2id_AVX512(benchmark::Bench& bench)
 
 BENCHMARK(Argon2id_STANDARD, benchmark::PriorityLevel::HIGH);
 BENCHMARK(Argon2id_SSE2,     benchmark::PriorityLevel::HIGH);
+BENCHMARK(Argon2id_SSSE3,    benchmark::PriorityLevel::HIGH);
 BENCHMARK(Argon2id_AVX2,     benchmark::PriorityLevel::HIGH);
 BENCHMARK(Argon2id_AVX512,   benchmark::PriorityLevel::HIGH);
