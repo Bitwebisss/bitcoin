@@ -211,6 +211,26 @@ if(NOT MSVC)
     CXXFLAGS ${ARM_SHANI_CXXFLAGS}
   )
 
+  # Check for Argon2 SSE2 intrinsics.
+  # SSE2 is mandatory on x86-64 (ABI baseline) so -msse2 is a no-op there.
+  # On i686 without SSE2 this check will fail and opt_sse2.cpp is skipped;
+  # opt.cpp will fall back to fill_segment_ref (pure-C reference).
+  set(ARGON2_SSE2_CXXFLAGS -msse2)
+  check_cxx_source_compiles_with_flags("
+    #include <emmintrin.h>
+
+    int main()
+    {
+      __m128i a = _mm_set1_epi32(0);
+      __m128i b = _mm_set1_epi32(1);
+      __m128i r = _mm_xor_si128(a, b);
+      (void)r;
+      return 0;
+    }
+    " HAVE_ARGON2_SSE2
+    CXXFLAGS ${ARGON2_SSE2_CXXFLAGS}
+  )
+
   # Check for Argon2 AVX2 intrinsics.
   set(ARGON2_AVX2_CXXFLAGS -mavx2)
   check_cxx_source_compiles_with_flags("

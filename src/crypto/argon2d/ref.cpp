@@ -14,9 +14,19 @@
  * You should have received a copy of both of these licenses along with this
  * software. If not, they may be obtained at the above URLs.
  */
-#include <compat/cpuid.h> /* defines HAVE_GETCPUID on x86 */
 
-#if !defined(HAVE_GETCPUID) || !defined(__SSE2__)
+/*
+ * Pure-C reference implementation.
+ *
+ * fill_segment_ref() is always compiled and always exported — it serves as the
+ * safe fallback that opt.cpp (x86 dispatcher) defaults to before CPUID
+ * detection upgrades to SSE2 / AVX2 / AVX-512.
+ *
+ * On non-x86 targets (no HAVE_GETCPUID) this file also provides the public
+ * fill_segment() and Argon2AutoDetectImpl() entry points, just as before.
+ */
+
+#include <compat/cpuid.h>  /* defines HAVE_GETCPUID on x86 */
 
 #include <stdint.h>
 #include <string.h>
@@ -29,53 +39,43 @@
 #include "blake2/blake2-impl.h"
 #include "blake2/blake2.h"
 
+/* -------------------------------------------------------------------------
+ * Internal helpers — same as upstream reference implementation.
+ * ------------------------------------------------------------------------- */
 
-/*
- * Function fills a new memory block and optionally XORs the old block over the new one.
- * @next_block must be initialized.
- * @param prev_block Pointer to the previous block
- * @param ref_block Pointer to the reference block
- * @param next_block Pointer to the block to be constructed
- * @param with_xor Whether to XOR into the new block (1) or just overwrite (0)
- * @pre all block pointers must be valid
- */
 static void fill_block(const block *prev_block, const block *ref_block,
-                       block *next_block, int with_xor) {
+                       block *next_block, int with_xor)
+{
     block blockR, block_tmp;
     unsigned i;
 
     copy_block(&blockR, ref_block);
     xor_block(&blockR, prev_block);
     copy_block(&block_tmp, &blockR);
-    /* Now blockR = ref_block + prev_block and block_tmp = ref_block + prev_block */
+
     if (with_xor) {
-        /* Saving the next block contents for XOR over: */
         xor_block(&block_tmp, next_block);
-        /* Now blockR = ref_block + prev_block and
-           block_tmp = ref_block + prev_block + next_block */
     }
 
-    /* Apply Blake2 on columns of 64-bit words: (0,1,...,15) , then
-       (16,17,..31)... finally (112,113,...127) */
+    /* Apply Blake2 on columns of 64-bit words */
     for (i = 0; i < 8; ++i) {
         BLAKE2_ROUND_NOMSG(
-            blockR.v[16 * i], blockR.v[16 * i + 1], blockR.v[16 * i + 2],
-            blockR.v[16 * i + 3], blockR.v[16 * i + 4], blockR.v[16 * i + 5],
-            blockR.v[16 * i + 6], blockR.v[16 * i + 7], blockR.v[16 * i + 8],
-            blockR.v[16 * i + 9], blockR.v[16 * i + 10], blockR.v[16 * i + 11],
+            blockR.v[16 * i],      blockR.v[16 * i + 1],  blockR.v[16 * i + 2],
+            blockR.v[16 * i + 3],  blockR.v[16 * i + 4],  blockR.v[16 * i + 5],
+            blockR.v[16 * i + 6],  blockR.v[16 * i + 7],  blockR.v[16 * i + 8],
+            blockR.v[16 * i + 9],  blockR.v[16 * i + 10], blockR.v[16 * i + 11],
             blockR.v[16 * i + 12], blockR.v[16 * i + 13], blockR.v[16 * i + 14],
             blockR.v[16 * i + 15]);
     }
 
-    /* Apply Blake2 on rows of 64-bit words: (0,1,16,17,...112,113), then
-       (2,3,18,19,...,114,115).. finally (14,15,30,31,...,126,127) */
+    /* Apply Blake2 on rows of 64-bit words */
     for (i = 0; i < 8; i++) {
         BLAKE2_ROUND_NOMSG(
-            blockR.v[2 * i], blockR.v[2 * i + 1], blockR.v[2 * i + 16],
-            blockR.v[2 * i + 17], blockR.v[2 * i + 32], blockR.v[2 * i + 33],
-            blockR.v[2 * i + 48], blockR.v[2 * i + 49], blockR.v[2 * i + 64],
-            blockR.v[2 * i + 65], blockR.v[2 * i + 80], blockR.v[2 * i + 81],
-            blockR.v[2 * i + 96], blockR.v[2 * i + 97], blockR.v[2 * i + 112],
+            blockR.v[2 * i],       blockR.v[2 * i + 1],   blockR.v[2 * i + 16],
+            blockR.v[2 * i + 17],  blockR.v[2 * i + 32],  blockR.v[2 * i + 33],
+            blockR.v[2 * i + 48],  blockR.v[2 * i + 49],  blockR.v[2 * i + 64],
+            blockR.v[2 * i + 65],  blockR.v[2 * i + 80],  blockR.v[2 * i + 81],
+            blockR.v[2 * i + 96],  blockR.v[2 * i + 97],  blockR.v[2 * i + 112],
             blockR.v[2 * i + 113]);
     }
 
@@ -84,14 +84,19 @@ static void fill_block(const block *prev_block, const block *ref_block,
 }
 
 static void next_addresses(block *address_block, block *input_block,
-                           const block *zero_block) {
+                           const block *zero_block)
+{
     input_block->v[6]++;
     fill_block(zero_block, input_block, address_block, 0);
     fill_block(zero_block, address_block, address_block, 0);
 }
 
-void fill_segment(const argon2_instance_t *instance,
-                  argon2_position_t position) {
+/* -------------------------------------------------------------------------
+ * fill_segment_ref — always exported; used as fallback by the x86 dispatcher.
+ * ------------------------------------------------------------------------- */
+void fill_segment_ref(const argon2_instance_t *instance,
+                      argon2_position_t position)
+{
     block *ref_block = NULL, *curr_block = NULL;
     block address_block, input_block, zero_block;
     uint64_t pseudo_rand, ref_index, ref_lane;
@@ -124,35 +129,28 @@ void fill_segment(const argon2_instance_t *instance,
     starting_index = 0;
 
     if ((0 == position.pass) && (0 == position.slice)) {
-        starting_index = 2; /* we have already generated the first two blocks */
-
-        /* Don't forget to generate the first block of addresses: */
+        starting_index = 2;
         if (data_independent_addressing) {
             next_addresses(&address_block, &input_block, &zero_block);
         }
     }
 
-    /* Offset of the current block */
     curr_offset = position.lane * instance->lane_length +
                   position.slice * instance->segment_length + starting_index;
 
     if (0 == curr_offset % instance->lane_length) {
-        /* Last block in this lane */
         prev_offset = curr_offset + instance->lane_length - 1;
     } else {
-        /* Previous block */
         prev_offset = curr_offset - 1;
     }
 
     for (i = starting_index; i < instance->segment_length;
          ++i, ++curr_offset, ++prev_offset) {
-        /*1.1 Rotating prev_offset if needed */
+
         if (curr_offset % instance->lane_length == 1) {
             prev_offset = curr_offset - 1;
         }
 
-        /* 1.2 Computing the index of the reference block */
-        /* 1.2.1 Taking pseudo-random value from the previous block */
         if (data_independent_addressing) {
             if (i % ARGON2_ADDRESSES_IN_BLOCK == 0) {
                 next_addresses(&address_block, &input_block, &zero_block);
@@ -162,45 +160,45 @@ void fill_segment(const argon2_instance_t *instance,
             pseudo_rand = instance->memory[prev_offset].v[0];
         }
 
-        /* 1.2.2 Computing the lane of the reference block */
         ref_lane = ((pseudo_rand >> 32)) % instance->lanes;
 
         if ((position.pass == 0) && (position.slice == 0)) {
-            /* Can not reference other lanes yet */
             ref_lane = position.lane;
         }
 
-        /* 1.2.3 Computing the number of possible reference block within the
-         * lane.
-         */
         position.index = i;
         ref_index = index_alpha(instance, &position, pseudo_rand & 0xFFFFFFFF,
                                 ref_lane == position.lane);
 
-        /* 2 Creating a new block */
         ref_block =
             instance->memory + instance->lane_length * ref_lane + ref_index;
         curr_block = instance->memory + curr_offset;
+
         if (ARGON2_VERSION_10 == instance->version) {
-            /* version 1.2.1 and earlier: overwrite, not XOR */
             fill_block(instance->memory + prev_offset, ref_block, curr_block, 0);
         } else {
-            if(0 == position.pass) {
-                fill_block(instance->memory + prev_offset, ref_block,
-                           curr_block, 0);
-            } else {
-                fill_block(instance->memory + prev_offset, ref_block,
-                           curr_block, 1);
-            }
+            fill_block(instance->memory + prev_offset, ref_block, curr_block,
+                       position.pass != 0);
         }
     }
 }
 
-/* Non-x86 stub — no detection needed, always reference */
+/* -------------------------------------------------------------------------
+ * Non-x86 public entry points.
+ * On x86, fill_segment() and Argon2AutoDetectImpl() live in opt.cpp.
+ * ------------------------------------------------------------------------- */
+#if !defined(HAVE_GETCPUID)
+
+void fill_segment(const argon2_instance_t *instance,
+                  argon2_position_t position)
+{
+    fill_segment_ref(instance, position);
+}
+
 const char *Argon2AutoDetectImpl(uint8_t use_implementation)
 {
     (void)use_implementation;
     return "reference";
 }
 
-#endif /* #if !defined(HAVE_GETCPUID) */
+#endif /* !HAVE_GETCPUID */
