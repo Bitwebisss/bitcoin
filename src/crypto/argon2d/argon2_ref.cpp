@@ -32,12 +32,12 @@
 #include <cstring>
 #include <cstdlib>
 
-#include "argon2.h"
-#include "core.h"
+#include <crypto/argon2d/argon2.h>
+#include <crypto/argon2d/argon2_core.h>
 
-#include "blake2/blamka-round-ref.h"
-#include "blake2/blake2-impl.h"
-#include "blake2/blake2.h"
+#include <crypto/argon2d/blake2/blamka-round-ref.h>
+#include <crypto/argon2d/blake2/blake2-impl.h>
+#include <crypto/argon2d/blake2/blake2.h>
 
 /* -------------------------------------------------------------------------
  * Internal helpers — same as upstream reference implementation.

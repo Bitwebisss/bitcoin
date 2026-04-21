@@ -17,7 +17,7 @@
 
 #if !defined(ARGON2_NO_THREADS)
 
-#include "thread.h"
+#include <crypto/argon2d/argon2_thread.h>
 #if defined(_WIN32)
 #include <windows.h>
 #endif

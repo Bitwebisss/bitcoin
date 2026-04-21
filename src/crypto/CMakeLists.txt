@@ -26,17 +26,17 @@ add_library(bitcoin_crypto STATIC EXCLUDE_FROM_ALL
   #   opt.cpp    — x86 CPUID dispatcher; no SIMD code
   #   opt_sse2/avx2/avx512 — ISA variants, each compiled with their own flags
   argon2d/argon2.c
-  argon2d/core.c
-  argon2d/encoding.c
-  argon2d/thread.c
-  argon2d/ref.cpp
-  argon2d/opt.cpp
+  argon2d/argon2_core.c
+  argon2d/argon2_encoding.c
+  argon2d/argon2_thread.c
+  argon2d/argon2_ref.cpp
+  argon2d/argon2_opt.cpp
   argon2d/blake2/blake2b.c
 )
 
 # Suppress -Wtype-limits in argon2 core — ARGON2_MAX_MEMORY comparisons are
 # intentionally kept for correctness on 32-bit; always-false on 64-bit is expected.
-set_property(SOURCE argon2d/core.c PROPERTY
+set_property(SOURCE argon2d/argon2_core.c PROPERTY
   COMPILE_OPTIONS $<$<C_COMPILER_ID:GNU,Clang,AppleClang>:-Wno-type-limits>
 )
 
@@ -83,8 +83,8 @@ endif()
 # fill_segment_ref (pure-C reference from ref.cpp).
 if(HAVE_ARGON2_SSE2)
   target_compile_definitions(bitcoin_crypto PRIVATE ENABLE_ARGON2_SSE2)
-  target_sources(bitcoin_crypto PRIVATE argon2d/opt_sse2.cpp)
-  set_property(SOURCE argon2d/opt_sse2.cpp PROPERTY
+  target_sources(bitcoin_crypto PRIVATE argon2d/argon2_opt_sse2.cpp)
+  set_property(SOURCE argon2d/argon2_opt_sse2.cpp PROPERTY
     COMPILE_OPTIONS ${ARGON2_SSE2_CXXFLAGS}
   )
 endif()
@@ -93,8 +93,8 @@ endif()
 # Compiled separately so -mavx2 applies only to this translation unit.
 if(HAVE_ARGON2_AVX2)
   target_compile_definitions(bitcoin_crypto PRIVATE ENABLE_ARGON2_AVX2)
-  target_sources(bitcoin_crypto PRIVATE argon2d/opt_avx2.cpp)
-  set_property(SOURCE argon2d/opt_avx2.cpp PROPERTY
+  target_sources(bitcoin_crypto PRIVATE argon2d/argon2_opt_avx2.cpp)
+  set_property(SOURCE argon2d/argon2_opt_avx2.cpp PROPERTY
     COMPILE_OPTIONS ${ARGON2_AVX2_CXXFLAGS}
   )
 endif()
@@ -103,8 +103,8 @@ endif()
 # Compiled separately so -mavx512f applies only to this translation unit.
 if(HAVE_ARGON2_AVX512)
   target_compile_definitions(bitcoin_crypto PRIVATE ENABLE_ARGON2_AVX512)
-  target_sources(bitcoin_crypto PRIVATE argon2d/opt_avx512.cpp)
-  set_property(SOURCE argon2d/opt_avx512.cpp PROPERTY
+  target_sources(bitcoin_crypto PRIVATE argon2d/argon2_opt_avx512.cpp)
+  set_property(SOURCE argon2d/argon2_opt_avx512.cpp PROPERTY
     COMPILE_OPTIONS ${ARGON2_AVX512F_CXXFLAGS}
   )
 endif()

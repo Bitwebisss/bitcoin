@@ -16,78 +16,84 @@
  */
 
 /*
- * AVX-512F fill_segment — compiled separately with ${ARGON2_AVX512F_CXXFLAGS}
- * (-mavx512f).
+ * SSE2 fill_segment — compiled separately with ${ARGON2_SSE2_CXXFLAGS} (-msse2).
  *
- * Self-contained: all Blake2b round primitives come from blamka-round-avx512.h,
- * which contains only __m512i code.  The old blamka-round-opt.h is NOT
- * included here.
+ * Self-contained: all Blake2b round primitives come from blamka-round-sse2.h,
+ * which contains only __m128i code with no #if __AVX2__ / #if __AVX512F__
+ * dispatch.  The old blamka-round-opt.h is NOT included here; that header's
+ * #if !defined(__AVX2__) guard fires incorrectly when the base -march already
+ * defines __AVX2__ (e.g. AMD EPYC / Zen builds) even though -msse2 is used.
  *
- * Future <>-migration: "blake2/blamka-round-avx512.h"
- *                   → <crypto/argon2d/blake2/blamka-round-avx512.h>
+ * Future <>-migration: "blake2/blamka-round-sse2.h"
+ *                   → <crypto/argon2d/blake2/blamka-round-sse2.h>
  */
 
-#ifdef ENABLE_ARGON2_AVX512
+#ifdef ENABLE_ARGON2_SSE2
+
+#include <compat/cpuid.h>
+
+#if defined(HAVE_GETCPUID)
 
 #include <cstdint>
 #include <cstring>
 #include <cstdlib>
 
-#include "argon2.h"
-#include "core.h"
-#include "blake2/blake2.h"
-#include "blake2/blamka-round-avx512.h"  /* __m512i, BLAKE2_ROUND_1/2_AVX512 */
+#include <crypto/argon2d/argon2.h>
+#include <crypto/argon2d/argon2_core.h>
+#include <crypto/argon2d/blake2/blake2.h>
+#include <crypto/argon2d/blake2/blamka-round-sse2.h>   /* __m128i, BLAKE2_ROUND_SSE2 */
 
 /* -------------------------------------------------------------------------
- * fill_block — AVX-512F / __m512i version.
+ * fill_block — SSE2 / __m128i version.
  *
- * state[] holds ARGON2_512BIT_WORDS_IN_BLOCK (16) __m512i elements, covering
- * the full 1024-byte Argon2 block (each __m512i = 8 × 64-bit words).
+ * state[] holds ARGON2_OWORDS_IN_BLOCK (64) __m128i elements, covering the
+ * full 1024-byte Argon2 block (each __m128i = 2 × 64-bit words).
+ * BLAKE2_ROUND_SSE2 operates on 8 __m128i values at a time.
  * ------------------------------------------------------------------------- */
-static void fill_block(__m512i *state, const block *ref_block,
+static void fill_block(__m128i *state, const block *ref_block,
                        block *next_block, int with_xor)
 {
-    __m512i block_XY[ARGON2_512BIT_WORDS_IN_BLOCK];
+    __m128i block_XY[ARGON2_OWORDS_IN_BLOCK];
     unsigned int i;
 
     if (with_xor) {
-        for (i = 0; i < ARGON2_512BIT_WORDS_IN_BLOCK; i++) {
-            state[i] = _mm512_xor_si512(
-                state[i], _mm512_loadu_si512((const __m512i *)ref_block->v + i));
-            block_XY[i] = _mm512_xor_si512(
-                state[i], _mm512_loadu_si512((const __m512i *)next_block->v + i));
+        for (i = 0; i < ARGON2_OWORDS_IN_BLOCK; i++) {
+            state[i] = _mm_xor_si128(
+                state[i], _mm_loadu_si128((const __m128i *)ref_block->v + i));
+            block_XY[i] = _mm_xor_si128(
+                state[i], _mm_loadu_si128((const __m128i *)next_block->v + i));
         }
     } else {
-        for (i = 0; i < ARGON2_512BIT_WORDS_IN_BLOCK; i++) {
-            block_XY[i] = state[i] = _mm512_xor_si512(
-                state[i], _mm512_loadu_si512((const __m512i *)ref_block->v + i));
+        for (i = 0; i < ARGON2_OWORDS_IN_BLOCK; i++) {
+            block_XY[i] = state[i] = _mm_xor_si128(
+                state[i], _mm_loadu_si128((const __m128i *)ref_block->v + i));
         }
     }
 
-    /* Column pass — 2 iterations */
-    for (i = 0; i < 2; ++i) {
-        BLAKE2_ROUND_1_AVX512(
+    /* Column pass — 8 iterations × 8 elements */
+    for (i = 0; i < 8; ++i) {
+        BLAKE2_ROUND_SSE2(
             state[8 * i + 0], state[8 * i + 1], state[8 * i + 2], state[8 * i + 3],
             state[8 * i + 4], state[8 * i + 5], state[8 * i + 6], state[8 * i + 7]);
     }
 
-    /* Row pass — 2 iterations */
-    for (i = 0; i < 2; ++i) {
-        BLAKE2_ROUND_2_AVX512(
-            state[2 * 0 + i], state[2 * 1 + i], state[2 * 2 + i], state[2 * 3 + i],
-            state[2 * 4 + i], state[2 * 5 + i], state[2 * 6 + i], state[2 * 7 + i]);
+    /* Row pass — 8 iterations × 8 elements (strided) */
+    for (i = 0; i < 8; ++i) {
+        BLAKE2_ROUND_SSE2(
+            state[8 * 0 + i], state[8 * 1 + i], state[8 * 2 + i], state[8 * 3 + i],
+            state[8 * 4 + i], state[8 * 5 + i], state[8 * 6 + i], state[8 * 7 + i]);
     }
 
-    for (i = 0; i < ARGON2_512BIT_WORDS_IN_BLOCK; i++) {
-        state[i] = _mm512_xor_si512(state[i], block_XY[i]);
-        _mm512_storeu_si512((__m512i *)next_block->v + i, state[i]);
+    for (i = 0; i < ARGON2_OWORDS_IN_BLOCK; i++) {
+        state[i] = _mm_xor_si128(state[i], block_XY[i]);
+        _mm_storeu_si128((__m128i *)next_block->v + i, state[i]);
     }
 }
 
 static void next_addresses(block *address_block, block *input_block)
 {
-    __m512i zero_block[ARGON2_512BIT_WORDS_IN_BLOCK];
-    __m512i zero2_block[ARGON2_512BIT_WORDS_IN_BLOCK];
+    __m128i zero_block[ARGON2_OWORDS_IN_BLOCK];
+    __m128i zero2_block[ARGON2_OWORDS_IN_BLOCK];
     memset(zero_block,  0, sizeof(zero_block));
     memset(zero2_block, 0, sizeof(zero2_block));
     input_block->v[6]++;
@@ -96,17 +102,17 @@ static void next_addresses(block *address_block, block *input_block)
 }
 
 /* -------------------------------------------------------------------------
- * fill_segment_avx512 — exported; registered by Argon2AutoDetectImpl (opt.cpp).
+ * fill_segment_sse2 — exported; registered by Argon2AutoDetectImpl (opt.cpp).
  * ------------------------------------------------------------------------- */
-void fill_segment_avx512(const argon2_instance_t *instance,
-                         argon2_position_t position)
+void fill_segment_sse2(const argon2_instance_t *instance,
+                       argon2_position_t position)
 {
     block *ref_block = nullptr, *curr_block = nullptr;
     block address_block, input_block;
     uint64_t pseudo_rand, ref_index, ref_lane;
     uint32_t prev_offset, curr_offset;
     uint32_t starting_index, i;
-    __m512i state[ARGON2_512BIT_WORDS_IN_BLOCK];
+    __m128i state[ARGON2_OWORDS_IN_BLOCK];
     int data_independent_addressing;
 
     if (instance == nullptr) {
@@ -184,4 +190,5 @@ void fill_segment_avx512(const argon2_instance_t *instance,
     }
 }
 
-#endif /* ENABLE_ARGON2_AVX512 */
+#endif /* HAVE_GETCPUID */
+#endif /* ENABLE_ARGON2_SSE2 */

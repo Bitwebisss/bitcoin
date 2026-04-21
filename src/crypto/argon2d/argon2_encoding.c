@@ -19,8 +19,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
-#include "encoding.h"
-#include "core.h"
+#include <crypto/argon2d/argon2_encoding.h>
+#include <crypto/argon2d/argon2_core.h>
 
 #if defined(_MSC_VER)
 #  define ARGON2_FALLTHROUGH __fallthrough

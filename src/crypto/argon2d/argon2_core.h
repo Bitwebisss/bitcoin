@@ -18,7 +18,7 @@
 #ifndef ARGON2_CORE_H
 #define ARGON2_CORE_H
 
-#include "argon2.h"
+#include <crypto/argon2d/argon2.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -159,7 +159,7 @@ uint32_t index_alpha(const argon2_instance_t *instance,
  * an error code
  * @param context Pointer to current Argon2 context
  * @return ARGON2_OK if everything is all right, otherwise one of error codes
- * (all defined in <argon2.h>
+ * (all defined in <crypto/argon2d/argon2.h>
  */
 int validate_inputs(const argon2_context *context);
 

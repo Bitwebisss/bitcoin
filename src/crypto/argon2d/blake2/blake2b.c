@@ -19,8 +19,8 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "blake2.h"
-#include "blake2-impl.h"
+#include <crypto/argon2d/blake2/blake2.h>
+#include <crypto/argon2d/blake2/blake2-impl.h>
 
 void clear_internal_memory(void *v, size_t n);
 

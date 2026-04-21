@@ -38,7 +38,7 @@
 
 /* blake2-impl.h provides BLAKE2_INLINE, load64/store64 etc.
  * Future <>-migration: <crypto/argon2d/blake2/blake2-impl.h>            */
-#include "blake2-impl.h"
+#include <crypto/argon2d/blake2/blake2-impl.h>
 
 /* -------------------------------------------------------------------------
  * Rotation helpers.

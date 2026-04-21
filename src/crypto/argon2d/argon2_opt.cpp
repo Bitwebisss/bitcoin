@@ -21,10 +21,10 @@
  * This file contains ONLY the function-pointer dispatcher and CPUID detection.
  * No SIMD code lives here — each ISA variant is its own translation unit:
  *
- *   opt_sse2.cpp   — SSE2 baseline  (compiled with -msse2)
- *   opt_avx2.cpp   — AVX2           (compiled with -mavx2)
- *   opt_avx512.cpp — AVX-512F       (compiled with -mavx512f)
- *   ref.cpp        — pure-C reference, always compiled, always exported as
+ *   argon2_opt_sse2.cpp   — SSE2 baseline  (compiled with -msse2)
+ *   argon2_opt_avx2.cpp   — AVX2           (compiled with -mavx2)
+ *   argon2_opt_avx512.cpp — AVX-512F       (compiled with -mavx512f)
+ *   argon2_ref.cpp        — pure-C reference, always compiled, always exported as
  *                    fill_segment_ref(); used as the safe default before CPUID
  *                    detection runs, and on i686 without SSE2.
  *
@@ -40,8 +40,8 @@
 
 #include <cstdint>
 
-#include "argon2.h"
-#include "core.h"
+#include <crypto/argon2d/argon2.h>
+#include <crypto/argon2d/argon2_core.h>
 
 /* -------------------------------------------------------------------------
  * Forward declarations for all ISA variants.
@@ -94,7 +94,7 @@ static int AVX512Enabled(void)
 void (*argon2_fill_segment)(const argon2_instance_t *instance,
                             argon2_position_t position) = fill_segment_ref;
 
-/* Public entry point called by core.c — routes through the function pointer. */
+/* Public entry point called by argon2_core.c — routes through the function pointer. */
 void fill_segment(const argon2_instance_t *instance,
                   argon2_position_t position)
 {

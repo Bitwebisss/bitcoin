@@ -19,9 +19,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "argon2.h"
-#include "encoding.h"
-#include "core.h"
+#include <crypto/argon2d/argon2.h>
+#include <crypto/argon2d/argon2_encoding.h>
+#include <crypto/argon2d/argon2_core.h>
 
 const char *argon2_type2string(argon2_type type, int uppercase) {
     switch (type) {
