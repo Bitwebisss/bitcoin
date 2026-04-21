@@ -15,8 +15,8 @@
  * software. If not, they may be obtained at the above URLs.
  */
 
-#ifndef ARGON2_H
-#define ARGON2_H
+#ifndef BITCOIN_CRYPTO_ARGON2D_ARGON2_H
+#define BITCOIN_CRYPTO_ARGON2D_ARGON2_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -439,7 +439,7 @@ namespace argon2_implementation {
 enum UseImplementation : uint8_t {
     STANDARD   = 0,
     USE_SSE2   = 1 << 0, /* 0x01 */
-	USE_SSSE3  = 1 << 1, /* 0x02 */
+    USE_SSSE3  = 1 << 1, /* 0x02 */
     USE_AVX2   = 1 << 2, /* 0x04 */
     USE_AVX512 = 1 << 3, /* 0x08 */
     USE_ALL    = USE_SSE2 | USE_SSSE3 | USE_AVX2 | USE_AVX512,
@@ -453,4 +453,4 @@ inline std::string Argon2AutoDetect(
 }
 #endif
 
-#endif /* ARGON2_H */
+#endif /* BITCOIN_CRYPTO_ARGON2D_ARGON2_H */

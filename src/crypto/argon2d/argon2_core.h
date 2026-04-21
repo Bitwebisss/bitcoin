@@ -15,8 +15,8 @@
  * software. If not, they may be obtained at the above URLs.
  */
 
-#ifndef ARGON2_CORE_H
-#define ARGON2_CORE_H
+#ifndef BITCOIN_CRYPTO_ARGON2D_ARGON2_CORE_H
+#define BITCOIN_CRYPTO_ARGON2D_ARGON2_CORE_H
 
 #include <crypto/argon2d/argon2.h>
 #ifdef __cplusplus
@@ -232,4 +232,4 @@ int fill_memory_blocks(argon2_instance_t *instance);
 }
 #endif
 
-#endif
+#endif /* BITCOIN_CRYPTO_ARGON2D_ARGON2_CORE_H */

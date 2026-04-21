@@ -27,8 +27,8 @@
  * this file will be included as <crypto/argon2d/blake2/blamka-round-sse2.h>.
  */
 
-#ifndef BLAKE_ROUND_MKA_SSE2_H
-#define BLAKE_ROUND_MKA_SSE2_H
+#ifndef BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAMKA_ROUND_SSE2_H
+#define BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAMKA_ROUND_SSE2_H
 
 #include <emmintrin.h>          /* SSE2 — always available when this file is used */
 
@@ -139,4 +139,4 @@ static BLAKE2_INLINE __m128i fBlaMka_sse2(__m128i x, __m128i y)
         UNDIAGONALIZE_SSE2(A0, B0, C0, D0, A1, B1, C1, D1);                    \
     } while ((void)0, 0)
 
-#endif /* BLAKE_ROUND_MKA_SSE2_H */
+#endif /* BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAMKA_ROUND_SSE2_H */

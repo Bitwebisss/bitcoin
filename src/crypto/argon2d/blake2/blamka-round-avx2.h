@@ -25,8 +25,8 @@
  * this file will be included as <crypto/argon2d/blake2/blamka-round-avx2.h>.
  */
 
-#ifndef BLAKE_ROUND_MKA_AVX2_H
-#define BLAKE_ROUND_MKA_AVX2_H
+#ifndef BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAMKA_ROUND_AVX2_H
+#define BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAMKA_ROUND_AVX2_H
 
 #include <immintrin.h>          /* AVX2 — compiler defines __AVX2__ via -mavx2 */
 
@@ -180,4 +180,4 @@
         UNDIAGONALIZE_2_AVX2(A0, A1, B0, B1, C0, C1, D0, D1);                  \
     } while ((void)0, 0)
 
-#endif /* BLAKE_ROUND_MKA_AVX2_H */
+#endif /* BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAMKA_ROUND_AVX2_H */

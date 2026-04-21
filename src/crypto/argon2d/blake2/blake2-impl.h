@@ -15,8 +15,8 @@
  * software. If not, they may be obtained at the above URLs.
  */
 
-#ifndef PORTABLE_BLAKE2_IMPL_H
-#define PORTABLE_BLAKE2_IMPL_H
+#ifndef BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAKE2_IMPL_H
+#define BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAKE2_IMPL_H
 
 #include <stdint.h>
 #include <string.h>
@@ -151,4 +151,4 @@ static BLAKE2_INLINE uint64_t rotr64(const uint64_t w, const unsigned c) {
     return (w >> c) | (w << (64 - c));
 }
 
-#endif
+#endif /* BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAKE2_IMPL_H */

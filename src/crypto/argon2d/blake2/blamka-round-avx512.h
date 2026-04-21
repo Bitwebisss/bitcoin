@@ -16,8 +16,8 @@
  * Future <>-migration: <crypto/argon2d/blake2/blamka-round-avx512.h>
  */
 
-#ifndef BLAKE_ROUND_MKA_AVX512_H
-#define BLAKE_ROUND_MKA_AVX512_H
+#ifndef BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAMKA_ROUND_AVX512_H
+#define BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAMKA_ROUND_AVX512_H
 
 #include <immintrin.h>
 
@@ -121,4 +121,4 @@ static inline __m512i muladd_avx512(__m512i x, __m512i y)
         UNSWAP_QUARTERS_AVX512(C0, C1); UNSWAP_QUARTERS_AVX512(D0, D1);        \
     } while ((void)0, 0)
 
-#endif /* BLAKE_ROUND_MKA_AVX512_H */
+#endif /* BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAMKA_ROUND_AVX512_H */

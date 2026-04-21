@@ -15,8 +15,8 @@
  * software. If not, they may be obtained at the above URLs.
  */
 
-#ifndef PORTABLE_BLAKE2_H
-#define PORTABLE_BLAKE2_H
+#ifndef BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAKE2_H
+#define BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAKE2_H
 
 #include <crypto/argon2d/argon2.h>
 
@@ -86,4 +86,4 @@ ARGON2_LOCAL int argon2d_blake2b_long(void *out, size_t outlen, const void *in, 
 }
 #endif
 
-#endif
+#endif /* BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAKE2_H */
