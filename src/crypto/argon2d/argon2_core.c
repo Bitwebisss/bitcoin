@@ -33,7 +33,7 @@
 #include <string.h>
 
 #include <crypto/argon2d/argon2_core.h>
-#include <crypto/argon2d/argon2_thread>
+#include <crypto/argon2d/argon2_thread.h>
 #include <crypto/argon2d/blake2/blake2.h>
 #include <crypto/argon2d/blake2/blake2-impl.h>
 
