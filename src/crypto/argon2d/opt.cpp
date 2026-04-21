@@ -114,10 +114,12 @@ const char *Argon2AutoDetectImpl(uint8_t use_implementation)
         uint32_t eax, ebx, ecx, edx;
         int have_xsave, have_avx, enabled_avx;
         int have_avx2, have_avx512f;
+        int have_sse2;
 
         GetCPUID(1, 0, eax, ebx, ecx, edx);
         have_xsave  = (ecx >> 27) & 1;
         have_avx    = (ecx >> 28) & 1;
+        have_sse2   = (edx >> 26) & 1;
         enabled_avx = 0;
         if (have_xsave && have_avx) {
             enabled_avx = AVXEnabled();
@@ -142,7 +144,7 @@ const char *Argon2AutoDetectImpl(uint8_t use_implementation)
         } else
 #endif
 #if defined(ENABLE_ARGON2_SSE2)
-        if (use_implementation & 0x01) {
+        if ((use_implementation & 0x01) && have_sse2) {
             argon2_fill_segment = fill_segment_sse2;
             ret = "sse2";
         } else
