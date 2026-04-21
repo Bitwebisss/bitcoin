@@ -36,7 +36,7 @@
  * Target machines: Sandy Bridge, Ivy Bridge (SSSE3, no AVX2).
  * On Haswell+ the AVX2 path wins; this path is never selected there.
  *
- * Bit in use_implementation: 0x08 (see argon2_opt.cpp).
+ * Bit in use_implementation: 0x02 (see argon2_opt.cpp).
  */
 
 #ifdef ENABLE_ARGON2_SSSE3
