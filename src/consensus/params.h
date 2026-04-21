@@ -115,13 +115,9 @@ struct Params {
     int64_t nPowTargetSpacing;
     int64_t nPowTargetTimespan;
     /**LWMA3 diff algo Bitweb Params */
-    int64_t lwmaAveragingWindow;
-    /** Pre Mine Value + 50 coins */
-    int64_t PreMineValue;
+    int64_t lwmaAveragingWindow{576};
     /** is premine enabled in this netowork ? */
-    bool PreMineEnabled;
-    /** Pre Mine Block Height */
-    int PreMineBlockHeight;
+    bool PreMineEnabled{true};
     std::chrono::seconds PowTargetSpacing() const
     {
         return std::chrono::seconds{nPowTargetSpacing};

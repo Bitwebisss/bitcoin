@@ -131,6 +131,8 @@ unsigned int Lwma3CalculateNextWorkRequired(const CBlockIndex* pindexLast, const
     // 1,000 blocks for validation which might be a consideration. I would not go over N=576 and prefer 360
     // so that it can respond in 6 hours to hashrate changes.
 
+    assert(params.lwmaAveragingWindow > 0);
+
     const int64_t N = params.lwmaAveragingWindow;
 
     // Low diff blocks for diff initiation.

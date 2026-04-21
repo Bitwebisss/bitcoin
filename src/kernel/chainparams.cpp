@@ -104,9 +104,7 @@ public:
 //        consensus.nPowTargetTimespan = 5 * 60; // 5m
         consensus.nPowTargetSpacing = 5 * 60;
         consensus.lwmaAveragingWindow = 576;
-        consensus.PreMineValue = 4000050; // Amount of Premine exact amount + 50 coins.
         consensus.PreMineEnabled = true; // Is premine enabled at this network?
-        consensus.PreMineBlockHeight = 3; // Premine Block Height
 //        consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
@@ -213,9 +211,7 @@ public:
 //        consensus.nPowTargetTimespan = 5 * 60; // 5m
         consensus.nPowTargetSpacing = 5 * 60;
         consensus.lwmaAveragingWindow = 576;
-        consensus.PreMineValue = 4000050; // Amount of Premine exact amount + 50 coins.
         consensus.PreMineEnabled = true; // Is premine enabled at this network?
-        consensus.PreMineBlockHeight = 3; // Premine Block Height
 //        consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
@@ -309,9 +305,7 @@ public:
 //        consensus.nPowTargetTimespan = 5 * 60; // 5m
         consensus.nPowTargetSpacing = 5 * 60;
         consensus.lwmaAveragingWindow = 288;
-        consensus.PreMineValue = 4000050; // Amount of Premine exact amount + 50 coins.
         consensus.PreMineEnabled = true; // Is premine enabled at this network?
-        consensus.PreMineBlockHeight = 3; // Premine Block Height
 //        consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
 
@@ -449,9 +443,7 @@ public:
 //        consensus.nPowTargetTimespan = 5 * 60; // 5m
         consensus.nPowTargetSpacing = 5 * 60;
         consensus.lwmaAveragingWindow = 576;
-        consensus.PreMineValue = 4000050; // Amount of Premine exact amount + 50 coins.
         consensus.PreMineEnabled = true; // Is premine enabled at this network?
-        consensus.PreMineBlockHeight = 3; // Premine Block Height
 //        consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
         consensus.MinBIP9WarningHeight = 0;
@@ -525,9 +517,7 @@ public:
 //        consensus.nPowTargetTimespan = 5 * 60; // 5m
         consensus.nPowTargetSpacing = 5 * 60;
         consensus.lwmaAveragingWindow = 144;
-        consensus.PreMineValue = 4000050; // Amount of Premine exact amount + 50 coins.
         consensus.PreMineEnabled = opts.enable_premine; // Is premine enabled at this network?
-        consensus.PreMineBlockHeight = 3; // Premine Block Height
 //        consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
 
