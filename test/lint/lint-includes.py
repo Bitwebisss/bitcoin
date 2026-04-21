@@ -18,7 +18,6 @@ from lint_ignore_dirs import SHARED_EXCLUDED_SUBTREES
 
 
 EXCLUDED_DIRS = ["contrib/devtools/bitweb-tidy/",
-                 "src/crypto/argon2d/",
                 ] + SHARED_EXCLUDED_SUBTREES
 
 EXPECTED_BOOST_INCLUDES = [

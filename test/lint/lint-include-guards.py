@@ -20,7 +20,6 @@ HEADER_ID_SUFFIX = '_H'
 
 EXCLUDE_FILES_WITH_PREFIX = ['contrib/devtools/bitweb-tidy',
                              'src/crypto/ctaes',
-                             'src/crypto/argon2d',
                              'src/tinyformat.h',
                              'src/bench/nanobench.h',
                              'src/test/fuzz/FuzzedDataProvider.h'] + SHARED_EXCLUDED_SUBTREES
