@@ -16,13 +16,19 @@
  */
 
 /*
- * AVX-512F fill_segment — compiled separately with ${AVX512F_CXXFLAGS} (-mavx512f).
- * Analogous to sha256_x86_shani.cpp: CMakeLists adds this source only when
- * HAVE_AVX512F is set, and compiles it with AVX512F_CXXFLAGS via set_property.
- * The compiler defines __AVX512F__ when built with -mavx512f, so
- * blamka-round-opt.h selects the __m512i path automatically.
+ * AVX-512F fill_segment — compiled separately with ${ARGON2_AVX512F_CXXFLAGS}
+ * (-mavx512f).
+ *
+ * Self-contained: all Blake2b round primitives come from blamka-round-avx512.h,
+ * which contains only __m512i code.  The old blamka-round-opt.h is NOT
+ * included here.
+ *
+ * Future <>-migration: "blake2/blamka-round-avx512.h"
+ *                   → <crypto/argon2d/blake2/blamka-round-avx512.h>
  */
+
 #ifdef ENABLE_ARGON2_AVX512
+
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
@@ -30,10 +36,17 @@
 #include "argon2.h"
 #include "core.h"
 #include "blake2/blake2.h"
-#include "blake2/blamka-round-opt.h"   /* __AVX512F__ active → __m512i path */
+#include "blake2/blamka-round-avx512.h"  /* __m512i, BLAKE2_ROUND_1/2_AVX512 */
 
+/* -------------------------------------------------------------------------
+ * fill_block — AVX-512F / __m512i version.
+ *
+ * state[] holds ARGON2_512BIT_WORDS_IN_BLOCK (16) __m512i elements, covering
+ * the full 1024-byte Argon2 block (each __m512i = 8 × 64-bit words).
+ * ------------------------------------------------------------------------- */
 static void fill_block(__m512i *state, const block *ref_block,
-                       block *next_block, int with_xor) {
+                       block *next_block, int with_xor)
+{
     __m512i block_XY[ARGON2_512BIT_WORDS_IN_BLOCK];
     unsigned int i;
 
@@ -51,14 +64,16 @@ static void fill_block(__m512i *state, const block *ref_block,
         }
     }
 
+    /* Column pass — 2 iterations */
     for (i = 0; i < 2; ++i) {
-        BLAKE2_ROUND_1(
+        BLAKE2_ROUND_1_AVX512(
             state[8 * i + 0], state[8 * i + 1], state[8 * i + 2], state[8 * i + 3],
             state[8 * i + 4], state[8 * i + 5], state[8 * i + 6], state[8 * i + 7]);
     }
 
+    /* Row pass — 2 iterations */
     for (i = 0; i < 2; ++i) {
-        BLAKE2_ROUND_2(
+        BLAKE2_ROUND_2_AVX512(
             state[2 * 0 + i], state[2 * 1 + i], state[2 * 2 + i], state[2 * 3 + i],
             state[2 * 4 + i], state[2 * 5 + i], state[2 * 6 + i], state[2 * 7 + i]);
     }
@@ -69,7 +84,8 @@ static void fill_block(__m512i *state, const block *ref_block,
     }
 }
 
-static void next_addresses(block *address_block, block *input_block) {
+static void next_addresses(block *address_block, block *input_block)
+{
     __m512i zero_block[ARGON2_512BIT_WORDS_IN_BLOCK];
     __m512i zero2_block[ARGON2_512BIT_WORDS_IN_BLOCK];
     memset(zero_block,  0, sizeof(zero_block));
@@ -79,8 +95,12 @@ static void next_addresses(block *address_block, block *input_block) {
     fill_block(zero2_block, address_block, address_block, 0);
 }
 
+/* -------------------------------------------------------------------------
+ * fill_segment_avx512 — exported; registered by Argon2AutoDetectImpl (opt.cpp).
+ * ------------------------------------------------------------------------- */
 void fill_segment_avx512(const argon2_instance_t *instance,
-                         argon2_position_t position) {
+                         argon2_position_t position)
+{
     block *ref_block = NULL, *curr_block = NULL;
     block address_block, input_block;
     uint64_t pseudo_rand, ref_index, ref_lane;
@@ -130,6 +150,7 @@ void fill_segment_avx512(const argon2_instance_t *instance,
 
     for (i = starting_index; i < instance->segment_length;
          ++i, ++curr_offset, ++prev_offset) {
+
         if (curr_offset % instance->lane_length == 1) {
             prev_offset = curr_offset - 1;
         }
@@ -162,4 +183,5 @@ void fill_segment_avx512(const argon2_instance_t *instance,
         }
     }
 }
-#endif
+
+#endif /* ENABLE_ARGON2_AVX512 */

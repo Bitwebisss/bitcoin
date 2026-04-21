@@ -18,14 +18,14 @@
 /*
  * SSE2 fill_segment — compiled separately with ${ARGON2_SSE2_CXXFLAGS} (-msse2).
  *
- * This file is the SSE2 baseline for the Argon2id x86 optimised path,
- * analogous to sha256_sse4.cpp in the SHA-256 stack.
+ * Self-contained: all Blake2b round primitives come from blamka-round-sse2.h,
+ * which contains only __m128i code with no #if __AVX2__ / #if __AVX512F__
+ * dispatch.  The old blamka-round-opt.h is NOT included here; that header's
+ * #if !defined(__AVX2__) guard fires incorrectly when the base -march already
+ * defines __AVX2__ (e.g. AMD EPYC / Zen builds) even though -msse2 is used.
  *
- * Compiled WITHOUT -mavx2 / -mavx512f so blamka-round-opt.h selects the
- * __m128i path and defines the 8-argument BLAKE2_ROUND macro correctly.
- *
- * On i686 targets that lack SSE2 this file is simply not compiled
- * (HAVE_ARGON2_SSE2 will be false) and opt.cpp falls back to fill_segment_ref.
+ * Future <>-migration: "blake2/blamka-round-sse2.h"
+ *                   → <crypto/argon2d/blake2/blamka-round-sse2.h>
  */
 
 #ifdef ENABLE_ARGON2_SSE2
@@ -41,22 +41,14 @@
 #include "argon2.h"
 #include "core.h"
 #include "blake2/blake2.h"
-/*
- * Include the optimised header WITHOUT AVX2/AVX-512 compiler flags active.
- * The preprocessor chain in blamka-round-opt.h is:
- *   #if !__AVX512F__
- *     #if !__AVX2__
- *       ...defines __m128i fBlaMka, G1, G2, DIAGONALIZE, BLAKE2_ROUND (8-arg)
- */
-#include "blake2/blamka-round-opt.h"
+#include "blake2/blamka-round-sse2.h"   /* __m128i, BLAKE2_ROUND_SSE2 */
 
 /* -------------------------------------------------------------------------
  * fill_block — SSE2 / __m128i version.
  *
- * state[] holds ARGON2_OWORDS_IN_BLOCK = 64 __m128i elements (each 128-bit,
- * i.e. two 64-bit words), covering the full 1024-byte Argon2 block.
- * BLAKE2_ROUND operates on 8 __m128i values at a time (two logical rows /
- * columns of 4 pairs), iterated 8 × for columns then 8 × for rows.
+ * state[] holds ARGON2_OWORDS_IN_BLOCK (64) __m128i elements, covering the
+ * full 1024-byte Argon2 block (each __m128i = 2 × 64-bit words).
+ * BLAKE2_ROUND_SSE2 operates on 8 __m128i values at a time.
  * ------------------------------------------------------------------------- */
 static void fill_block(__m128i *state, const block *ref_block,
                        block *next_block, int with_xor)
@@ -78,16 +70,18 @@ static void fill_block(__m128i *state, const block *ref_block,
         }
     }
 
+    /* Column pass — 8 iterations × 8 elements */
     for (i = 0; i < 8; ++i) {
-        BLAKE2_ROUND(state[8 * i + 0], state[8 * i + 1], state[8 * i + 2],
-                     state[8 * i + 3], state[8 * i + 4], state[8 * i + 5],
-                     state[8 * i + 6], state[8 * i + 7]);
+        BLAKE2_ROUND_SSE2(
+            state[8 * i + 0], state[8 * i + 1], state[8 * i + 2], state[8 * i + 3],
+            state[8 * i + 4], state[8 * i + 5], state[8 * i + 6], state[8 * i + 7]);
     }
 
+    /* Row pass — 8 iterations × 8 elements (strided) */
     for (i = 0; i < 8; ++i) {
-        BLAKE2_ROUND(state[8 * 0 + i], state[8 * 1 + i], state[8 * 2 + i],
-                     state[8 * 3 + i], state[8 * 4 + i], state[8 * 5 + i],
-                     state[8 * 6 + i], state[8 * 7 + i]);
+        BLAKE2_ROUND_SSE2(
+            state[8 * 0 + i], state[8 * 1 + i], state[8 * 2 + i], state[8 * 3 + i],
+            state[8 * 4 + i], state[8 * 5 + i], state[8 * 6 + i], state[8 * 7 + i]);
     }
 
     for (i = 0; i < ARGON2_OWORDS_IN_BLOCK; i++) {
@@ -108,7 +102,7 @@ static void next_addresses(block *address_block, block *input_block)
 }
 
 /* -------------------------------------------------------------------------
- * fill_segment_sse2 — exported; registered by Argon2AutoDetectImpl in opt.cpp.
+ * fill_segment_sse2 — exported; registered by Argon2AutoDetectImpl (opt.cpp).
  * ------------------------------------------------------------------------- */
 void fill_segment_sse2(const argon2_instance_t *instance,
                        argon2_position_t position)
