@@ -232,4 +232,4 @@ int fill_memory_blocks(argon2_instance_t *instance);
 }
 #endif
 
-#endif /* BITCOIN_CRYPTO_ARGON2D_ARGON2_CORE_H */
+#endif // BITCOIN_CRYPTO_ARGON2D_ARGON2_CORE_H

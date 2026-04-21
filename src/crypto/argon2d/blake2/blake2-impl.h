@@ -151,4 +151,4 @@ static BLAKE2_INLINE uint64_t rotr64(const uint64_t w, const unsigned c) {
     return (w >> c) | (w << (64 - c));
 }
 
-#endif /* BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAKE2_IMPL_H */
+#endif // BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAKE2_IMPL_H

@@ -63,5 +63,5 @@ int argon2_thread_join(argon2_thread_handle_t handle);
 */
 void argon2_thread_exit(void);
 
-#endif /* BITCOIN_CRYPTO_ARGON2D_ARGON2_THREAD_H */
+#endif // BITCOIN_CRYPTO_ARGON2D_ARGON2_THREAD_H
 #endif

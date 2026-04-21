@@ -53,4 +53,4 @@ static BLAKE2_INLINE uint64_t fBlaMka(uint64_t x, uint64_t y) {
         G(v3, v4, v9, v14);                                                    \
     } while ((void)0, 0)
 
-#endif /* BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAMKA_ROUND_REF_H */
+#endif // BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAMKA_ROUND_REF_H

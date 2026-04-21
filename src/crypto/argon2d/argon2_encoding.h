@@ -55,4 +55,4 @@ size_t b64len(uint32_t len);
 /* Returns the length of the encoded number num */
 size_t numlen(uint32_t num);
 
-#endif /* BITCOIN_CRYPTO_ARGON2D_ARGON2_ENCODING_H */
+#endif // BITCOIN_CRYPTO_ARGON2D_ARGON2_ENCODING_H

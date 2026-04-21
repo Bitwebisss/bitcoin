@@ -453,4 +453,4 @@ inline std::string Argon2AutoDetect(
 }
 #endif
 
-#endif /* BITCOIN_CRYPTO_ARGON2D_ARGON2_H */
+#endif // BITCOIN_CRYPTO_ARGON2D_ARGON2_H

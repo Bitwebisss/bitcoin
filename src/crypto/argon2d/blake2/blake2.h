@@ -86,4 +86,4 @@ ARGON2_LOCAL int argon2d_blake2b_long(void *out, size_t outlen, const void *in, 
 }
 #endif
 
-#endif /* BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAKE2_H */
+#endif // BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAKE2_H
