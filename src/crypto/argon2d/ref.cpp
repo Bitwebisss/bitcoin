@@ -28,9 +28,9 @@
 
 #include <compat/cpuid.h>  /* defines HAVE_GETCPUID on x86 */
 
-#include <stdint.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cstdint>
+#include <cstring>
+#include <cstdlib>
 
 #include "argon2.h"
 #include "core.h"
@@ -97,7 +97,7 @@ static void next_addresses(block *address_block, block *input_block,
 void fill_segment_ref(const argon2_instance_t *instance,
                       argon2_position_t position)
 {
-    block *ref_block = NULL, *curr_block = NULL;
+    block *ref_block = nullptr, *curr_block = nullptr;
     block address_block, input_block, zero_block;
     uint64_t pseudo_rand, ref_index, ref_lane;
     uint32_t prev_offset, curr_offset;
@@ -105,7 +105,7 @@ void fill_segment_ref(const argon2_instance_t *instance,
     uint32_t i;
     int data_independent_addressing;
 
-    if (instance == NULL) {
+    if (instance == nullptr) {
         return;
     }
 

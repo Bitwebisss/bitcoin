@@ -38,7 +38,7 @@
 
 #if defined(HAVE_GETCPUID)
 
-#include <stdint.h>
+#include <cstdint>
 
 #include "argon2.h"
 #include "core.h"
