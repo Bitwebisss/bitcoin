@@ -40,8 +40,8 @@ BOOST_AUTO_TEST_CASE(argon2id_json_vectors_all_isa)
         BOOST_REQUIRE(!data.empty());
         BOOST_REQUIRE(!salt.empty());
 
-        uint256 expected_hash;
-        expected_hash.SetHex(expected_hex);
+        // uint256S парсит big-endian hex и возвращает uint256 (внутреннее little-endian)
+        uint256 expected_hash = uint256S(expected_hex);
 
         Argon2AutoDetect(argon2_implementation::STANDARD);
         uint256 hash_std;
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(argon2id_json_vectors_all_isa)
                       << "  data: " << data_hex << "\n"
                       << "  salt: " << salt_hex << "\n"
                       << "  expected: " << expected_hex << "\n"
-                      << "  actual:   " << HexStr({hash_std.rbegin(), hash_std.rend()}) << "\n";
+                      << "  actual:   " << hash_std.ToString() << "\n";
         }
 
         if (std_ok) {
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(argon2id_json_vectors_all_isa)
                     ++failed_count;
                     std::cerr << "Vector " << idx << " " << name << " mismatch:\n"
                               << "  expected: " << expected_hex << "\n"
-                              << "  actual:   " << HexStr({hash.rbegin(), hash.rend()}) << "\n";
+                              << "  actual:   " << hash.ToString() << "\n";
                 }
             };
             check_isa(argon2_implementation::USE_SSE2, "SSE2");
