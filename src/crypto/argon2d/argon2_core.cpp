@@ -267,15 +267,21 @@ static int fill_memory_blocks_st(argon2_instance_t *instance) {
 
 #ifdef _WIN32
 static unsigned __stdcall fill_segment_thr(void *thread_data)
-#else
-static void *fill_segment_thr(void *thread_data)
-#endif
 {
     argon2_thread_data *my_data = static_cast<argon2_thread_data *>(thread_data);
     fill_segment(my_data->instance_ptr, my_data->pos);
     argon2_thread_exit();
     return 0;
 }
+#else
+static void *fill_segment_thr(void *thread_data)
+{
+    argon2_thread_data *my_data = static_cast<argon2_thread_data *>(thread_data);
+    fill_segment(my_data->instance_ptr, my_data->pos);
+    argon2_thread_exit();
+    return nullptr;
+}
+#endif
 
 /* Multi-threaded version for p > 1 case */
 static int fill_memory_blocks_mt(argon2_instance_t *instance) {

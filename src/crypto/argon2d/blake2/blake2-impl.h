@@ -18,8 +18,8 @@
 #ifndef BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAKE2_IMPL_H
 #define BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAKE2_IMPL_H
 
-#include <stdint.h>
-#include <string.h>
+#include <cstdint>
+#include <cstring>
 
 #ifdef _WIN32
 #define BLAKE2_INLINE __inline

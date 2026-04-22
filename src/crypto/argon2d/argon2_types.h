@@ -30,9 +30,9 @@
 #ifndef BITCOIN_CRYPTO_ARGON2D_ARGON2_TYPES_H
 #define BITCOIN_CRYPTO_ARGON2D_ARGON2_TYPES_H
 
-#include <stdint.h>
-#include <stddef.h>
-#include <limits.h>
+#include <cstdint>
+#include <cstddef>
+#include <climits>
 
 /* Symbols visibility control */
 #ifdef A2_VISCTL
