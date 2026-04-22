@@ -67,7 +67,7 @@ static void fill_block(__m512i *state, const block *ref_block,
     /* Column pass — 2 iterations */
     for (i = 0; i < 2; ++i) {
         BLAKE2_ROUND_1_AVX512(
-            state[8 * i + 1], state[8 * i + 1], state[8 * i + 2], state[8 * i + 3],
+            state[8 * i + 0], state[8 * i + 1], state[8 * i + 2], state[8 * i + 3],
             state[8 * i + 4], state[8 * i + 5], state[8 * i + 6], state[8 * i + 7]);
     }
 
