@@ -15,9 +15,9 @@
  * software. If not, they may be obtained at the above URLs.
  */
 
-#include <cstdint.h>
-#include <cstring.h>
-#include <cstdio.h>
+#include <cstdint>
+#include <cstring>
+#include <cstdio>
 
 #include <crypto/argon2d/blake2/blake2.h>
 #include <crypto/argon2d/blake2/blake2-impl.h>

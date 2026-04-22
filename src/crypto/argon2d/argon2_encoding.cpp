@@ -15,9 +15,9 @@
  * software. If not, they may be obtained at the above URLs.
  */
 
-#include <cstdlib.h>
-#include <cstring.h>
-#include <climits.h>
+#include <cstdlib>
+#include <cstring>
+#include <climits>
 #include <crypto/argon2d/argon2_encoding.h>
 #include <crypto/argon2d/argon2_core.h>
 
