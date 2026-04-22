@@ -40,6 +40,9 @@ BOOST_AUTO_TEST_CASE(argon2id_json_vectors_all_isa)
         BOOST_REQUIRE(!data.empty());
         BOOST_REQUIRE(!salt.empty());
 
+        uint256 expected_hash;
+        expected_hash.SetHex(expected_hex);
+
         Argon2AutoDetect(argon2_implementation::STANDARD);
         uint256 hash_std;
         int rc = argon2id_hash_raw(t_cost, m_cost, parallelism,
@@ -47,7 +50,7 @@ BOOST_AUTO_TEST_CASE(argon2id_json_vectors_all_isa)
                                    salt.data(), salt.size(),
                                    hash_std.begin(), hash_len);
         BOOST_REQUIRE_MESSAGE(rc == ARGON2_OK, "STANDARD failed at vector " << idx);
-        bool std_ok = (hash_std.ToString() == expected_hex);
+        bool std_ok = (hash_std == expected_hash);
         BOOST_CHECK_MESSAGE(std_ok, "STANDARD mismatch at vector " << idx);
         if (!std_ok) {
             ++failed_count;
@@ -55,7 +58,7 @@ BOOST_AUTO_TEST_CASE(argon2id_json_vectors_all_isa)
                       << "  data: " << data_hex << "\n"
                       << "  salt: " << salt_hex << "\n"
                       << "  expected: " << expected_hex << "\n"
-                      << "  actual:   " << hash_std.ToString() << "\n";
+                      << "  actual:   " << HexStr({hash_std.rbegin(), hash_std.rend()}) << "\n";
         }
 
         if (std_ok) {
@@ -67,12 +70,12 @@ BOOST_AUTO_TEST_CASE(argon2id_json_vectors_all_isa)
                                             salt.data(), salt.size(),
                                             hash.begin(), hash_len);
                 BOOST_CHECK_MESSAGE(rc2 == ARGON2_OK, name << " failed at vector " << idx);
-                BOOST_CHECK_MESSAGE(hash.ToString() == expected_hex, name << " mismatch at vector " << idx);
-                if (hash.ToString() != expected_hex) {
+                BOOST_CHECK_MESSAGE(hash == expected_hash, name << " mismatch at vector " << idx);
+                if (hash != expected_hash) {
                     ++failed_count;
                     std::cerr << "Vector " << idx << " " << name << " mismatch:\n"
                               << "  expected: " << expected_hex << "\n"
-                              << "  actual:   " << hash.ToString() << "\n";
+                              << "  actual:   " << HexStr({hash.rbegin(), hash.rend()}) << "\n";
                 }
             };
             check_isa(argon2_implementation::USE_SSE2, "SSE2");
