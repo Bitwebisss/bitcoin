@@ -131,7 +131,7 @@ int argon2d_blake2b_init_key(blake2b_state *S, size_t outlen, const void *key,
         return -1;
     }
 
-    if ((key == 0) || (keylen == 0) || (keylen > BLAKE2B_KEYBYTES)) {
+    if ((key == nullptr) || (keylen == 0) || (keylen > BLAKE2B_KEYBYTES)) {
         blake2b_invalidate_state(S);
         return -1;
     }
