@@ -83,7 +83,7 @@ static inline __m512i muladd_avx512(__m512i x, __m512i y)
 #define SWAP_HALVES_AVX512(A0, A1)                                             \
     do {                                                                       \
         __m512i _t0 = _mm512_shuffle_i64x2((A0), (A1), _MM_SHUFFLE(1, 0, 1, 0)); \
-        __m512i _t1 = _mm512_shuffle_i64x2((A0), (A1), _MM_SHUFFLE(3, 3, 3, 2)); \
+        __m512i _t1 = _mm512_shuffle_i64x2((A0), (A1), _MM_SHUFFLE(3, 2, 3, 2)); \
         (A0) = _t0;  (A1) = _t1;                                               \
     } while ((void)0, 0)
 
