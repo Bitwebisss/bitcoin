@@ -19,7 +19,7 @@
 #define BITCOIN_CRYPTO_ARGON2D_ARGON2_H
 
 #include <crypto/argon2d/argon2_types.h>
-#include <cstring>
+#include <string>
 
 /*
  * Function that performs memory-hard hashing with certain degree of parallelism
