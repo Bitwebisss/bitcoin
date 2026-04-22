@@ -224,4 +224,21 @@ endfunction()
 
 add_all_test_targets()
 
+# Argon2id ISA availability – forward the same macros to test_bitweb
+if(HAVE_ARGON2_SSE2)
+  target_compile_definitions(test_bitweb PRIVATE ENABLE_ARGON2_SSE2)
+endif()
+if(HAVE_ARGON2_SSSE3)
+  target_compile_definitions(test_bitweb PRIVATE ENABLE_ARGON2_SSSE3)
+endif()
+if(HAVE_ARGON2_AVX2)
+  target_compile_definitions(test_bitweb PRIVATE ENABLE_ARGON2_AVX2)
+endif()
+if(HAVE_ARGON2_AVX512)
+  target_compile_definitions(test_bitweb PRIVATE ENABLE_ARGON2_AVX512)
+endif()
+if(HAVE_ARGON2_NEON)
+  target_compile_definitions(test_bitweb PRIVATE ENABLE_ARGON2_NEON)
+endif()
+
 install_binary_component(test_bitweb INTERNAL)
