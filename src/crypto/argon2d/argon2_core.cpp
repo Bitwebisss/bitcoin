@@ -28,9 +28,9 @@
 /* for explicit_bzero() on glibc */
 #define _DEFAULT_SOURCE
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #include <crypto/argon2d/argon2_core.h>
 #include <crypto/argon2d/argon2_thread.h>
@@ -85,7 +85,7 @@ static void store_block(void *output, const block *src) {
 int allocate_memory(const argon2_context *context, uint8_t **memory,
                     size_t num, size_t size) {
     size_t memory_size = num*size;
-    if (memory == NULL) {
+    if (memory == nullptr) {
         return ARGON2_MEMORY_ALLOCATION_ERROR;
     }
 
@@ -101,7 +101,7 @@ int allocate_memory(const argon2_context *context, uint8_t **memory,
         *memory = static_cast<uint8_t *>(malloc(memory_size));
     }
 
-    if (*memory == NULL) {
+    if (*memory == nullptr) {
         return ARGON2_MEMORY_ALLOCATION_ERROR;
     }
 
@@ -149,7 +149,7 @@ void clear_internal_memory(void *v, size_t n) {
 }
 
 void finalize(const argon2_context *context, argon2_instance_t *instance) {
-    if (context != NULL && instance != NULL) {
+    if (context != nullptr && instance != nullptr) {
         block blockhash;
         uint32_t l;
 
@@ -280,21 +280,21 @@ static void *fill_segment_thr(void *thread_data)
 /* Multi-threaded version for p > 1 case */
 static int fill_memory_blocks_mt(argon2_instance_t *instance) {
     uint32_t r, s;
-    argon2_thread_handle_t *thread = NULL;
-    argon2_thread_data *thr_data = NULL;
+    argon2_thread_handle_t *thread = nullptr;
+    argon2_thread_data *thr_data = nullptr;
     int rc = ARGON2_OK;
 
     /* 1. Allocating space for threads */
     thread = static_cast<argon2_thread_handle_t *>(
         calloc(instance->lanes, sizeof(argon2_thread_handle_t)));
-    if (thread == NULL) {
+    if (thread == nullptr) {
         rc = ARGON2_MEMORY_ALLOCATION_ERROR;
         goto fail;
     }
 
     thr_data = static_cast<argon2_thread_data *>(
         calloc(instance->lanes, sizeof(argon2_thread_data)));
-    if (thr_data == NULL) {
+    if (thr_data == nullptr) {
         rc = ARGON2_MEMORY_ALLOCATION_ERROR;
         goto fail;
     }
@@ -349,10 +349,10 @@ static int fill_memory_blocks_mt(argon2_instance_t *instance) {
     }
 
 fail:
-    if (thread != NULL) {
+    if (thread != nullptr) {
         free(thread);
     }
-    if (thr_data != NULL) {
+    if (thr_data != nullptr) {
         free(thr_data);
     }
     return rc;
@@ -361,7 +361,7 @@ fail:
 #endif /* ARGON2_NO_THREADS */
 
 int fill_memory_blocks(argon2_instance_t *instance) {
-    if (instance == NULL || instance->lanes == 0) {
+    if (instance == nullptr || instance->lanes == 0) {
         return ARGON2_INCORRECT_PARAMETER;
     }
 #if defined(ARGON2_NO_THREADS)
@@ -373,11 +373,11 @@ int fill_memory_blocks(argon2_instance_t *instance) {
 }
 
 int validate_inputs(const argon2_context *context) {
-    if (NULL == context) {
+    if (nullptr == context) {
         return ARGON2_INCORRECT_PARAMETER;
     }
 
-    if (NULL == context->out) {
+    if (nullptr == context->out) {
         return ARGON2_OUTPUT_PTR_NULL;
     }
 
@@ -391,7 +391,7 @@ int validate_inputs(const argon2_context *context) {
     }
 
     /* Validate password (required param) */
-    if (NULL == context->pwd) {
+    if (nullptr == context->pwd) {
         if (0 != context->pwdlen) {
             return ARGON2_PWD_PTR_MISMATCH;
         }
@@ -406,7 +406,7 @@ int validate_inputs(const argon2_context *context) {
     }
 
     /* Validate salt (required param) */
-    if (NULL == context->salt) {
+    if (nullptr == context->salt) {
         if (0 != context->saltlen) {
             return ARGON2_SALT_PTR_MISMATCH;
         }
@@ -421,7 +421,7 @@ int validate_inputs(const argon2_context *context) {
     }
 
     /* Validate secret (optional param) */
-    if (NULL == context->secret) {
+    if (nullptr == context->secret) {
         if (0 != context->secretlen) {
             return ARGON2_SECRET_PTR_MISMATCH;
         }
@@ -435,7 +435,7 @@ int validate_inputs(const argon2_context *context) {
     }
 
     /* Validate associated data (optional param) */
-    if (NULL == context->ad) {
+    if (nullptr == context->ad) {
         if (0 != context->adlen) {
             return ARGON2_AD_PTR_MISMATCH;
         }
@@ -488,11 +488,11 @@ int validate_inputs(const argon2_context *context) {
         return ARGON2_THREADS_TOO_MANY;
     }
 
-    if (NULL != context->allocate_cbk && NULL == context->free_cbk) {
+    if (nullptr != context->allocate_cbk && nullptr == context->free_cbk) {
         return ARGON2_FREE_MEMORY_CBK_NULL;
     }
 
-    if (NULL == context->allocate_cbk && NULL != context->free_cbk) {
+    if (nullptr == context->allocate_cbk && nullptr != context->free_cbk) {
         return ARGON2_ALLOCATE_MEMORY_CBK_NULL;
     }
 
@@ -527,7 +527,7 @@ void initial_hash(uint8_t *blockhash, argon2_context *context,
     blake2b_state BlakeHash;
     uint8_t value[sizeof(uint32_t)];
 
-    if (NULL == context || NULL == blockhash) {
+    if (nullptr == context || nullptr == blockhash) {
         return;
     }
 
@@ -554,7 +554,7 @@ void initial_hash(uint8_t *blockhash, argon2_context *context,
     store32(&value, context->pwdlen);
     argon2d_blake2b_update(&BlakeHash, (const uint8_t *)&value, sizeof(value));
 
-    if (context->pwd != NULL) {
+    if (context->pwd != nullptr) {
         argon2d_blake2b_update(&BlakeHash, (const uint8_t *)context->pwd,
                        context->pwdlen);
 
@@ -567,7 +567,7 @@ void initial_hash(uint8_t *blockhash, argon2_context *context,
     store32(&value, context->saltlen);
     argon2d_blake2b_update(&BlakeHash, (const uint8_t *)&value, sizeof(value));
 
-    if (context->salt != NULL) {
+    if (context->salt != nullptr) {
         argon2d_blake2b_update(&BlakeHash, (const uint8_t *)context->salt,
                        context->saltlen);
     }
@@ -575,7 +575,7 @@ void initial_hash(uint8_t *blockhash, argon2_context *context,
     store32(&value, context->secretlen);
     argon2d_blake2b_update(&BlakeHash, (const uint8_t *)&value, sizeof(value));
 
-    if (context->secret != NULL) {
+    if (context->secret != nullptr) {
         argon2d_blake2b_update(&BlakeHash, (const uint8_t *)context->secret,
                        context->secretlen);
 
@@ -588,7 +588,7 @@ void initial_hash(uint8_t *blockhash, argon2_context *context,
     store32(&value, context->adlen);
     argon2d_blake2b_update(&BlakeHash, (const uint8_t *)&value, sizeof(value));
 
-    if (context->ad != NULL) {
+    if (context->ad != nullptr) {
         argon2d_blake2b_update(&BlakeHash, (const uint8_t *)context->ad,
                        context->adlen);
     }
@@ -600,7 +600,7 @@ int initialize(argon2_instance_t *instance, argon2_context *context) {
     uint8_t blockhash[ARGON2_PREHASH_SEED_LENGTH];
     int result = ARGON2_OK;
 
-    if (instance == NULL || context == NULL)
+    if (instance == nullptr || context == nullptr)
         return ARGON2_INCORRECT_PARAMETER;
     instance->context_ptr = context;
 

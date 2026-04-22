@@ -15,9 +15,9 @@
  * software. If not, they may be obtained at the above URLs.
  */
 
-#include <stdint.h>
-#include <string.h>
-#include <stdio.h>
+#include <cstdint.h>
+#include <cstring.h>
+#include <cstdio.h>
 
 #include <crypto/argon2d/blake2/blake2.h>
 #include <crypto/argon2d/blake2/blake2-impl.h>
@@ -76,7 +76,7 @@ int argon2d_blake2b_init_param(blake2b_state *S, const blake2b_param *P) {
     const unsigned char *p = (const unsigned char *)P;
     unsigned int i;
 
-    if (NULL == P || NULL == S) {
+    if (nullptr == P || nullptr == S) {
         return -1;
     }
 
@@ -93,7 +93,7 @@ int argon2d_blake2b_init_param(blake2b_state *S, const blake2b_param *P) {
 int argon2d_blake2b_init(blake2b_state *S, size_t outlen) {
     blake2b_param P;
 
-    if (S == NULL) {
+    if (S == nullptr) {
         return -1;
     }
 
@@ -122,7 +122,7 @@ int argon2d_blake2b_init_key(blake2b_state *S, size_t outlen, const void *key,
                      size_t keylen) {
     blake2b_param P;
 
-    if (S == NULL) {
+    if (S == nullptr) {
         return -1;
     }
 
@@ -231,7 +231,7 @@ int argon2d_blake2b_update(blake2b_state *S, const void *in, size_t inlen) {
     }
 
     /* Sanity check */
-    if (S == NULL || in == NULL) {
+    if (S == nullptr || in == nullptr) {
         return -1;
     }
 
@@ -268,7 +268,7 @@ int argon2d_blake2b_final(blake2b_state *S, void *out, size_t outlen) {
     unsigned int i;
 
     /* Sanity checks */
-    if (S == NULL || out == NULL || outlen < S->outlen) {
+    if (S == nullptr || out == nullptr || outlen < S->outlen) {
         return -1;
     }
 
@@ -299,15 +299,15 @@ int argon2d_blake2b(void *out, size_t outlen, const void *in, size_t inlen,
     int ret = -1;
 
     /* Verify parameters */
-    if (NULL == in && inlen > 0) {
+    if (nullptr == in && inlen > 0) {
         goto fail;
     }
 
-    if (NULL == out || outlen == 0 || outlen > BLAKE2B_OUTBYTES) {
+    if (nullptr == out || outlen == 0 || outlen > BLAKE2B_OUTBYTES) {
         goto fail;
     }
 
-    if ((NULL == key && keylen > 0) || keylen > BLAKE2B_KEYBYTES) {
+    if ((nullptr == key && keylen > 0) || keylen > BLAKE2B_KEYBYTES) {
         goto fail;
     }
 
@@ -373,14 +373,14 @@ int argon2d_blake2b_long(void *pout, size_t outlen, const void *in, size_t inlen
         while (toproduce > BLAKE2B_OUTBYTES) {
             memcpy(in_buffer, out_buffer, BLAKE2B_OUTBYTES);
             TRY(argon2d_blake2b(out_buffer, BLAKE2B_OUTBYTES, in_buffer,
-                        BLAKE2B_OUTBYTES, NULL, 0));
+                        BLAKE2B_OUTBYTES, nullptr, 0));
             memcpy(out, out_buffer, BLAKE2B_OUTBYTES / 2);
             out += BLAKE2B_OUTBYTES / 2;
             toproduce -= BLAKE2B_OUTBYTES / 2;
         }
 
         memcpy(in_buffer, out_buffer, BLAKE2B_OUTBYTES);
-        TRY(argon2d_blake2b(out_buffer, toproduce, in_buffer, BLAKE2B_OUTBYTES, NULL,
+        TRY(argon2d_blake2b(out_buffer, toproduce, in_buffer, BLAKE2B_OUTBYTES, nullptr,
                     0));
         memcpy(out, out_buffer, toproduce);
     }

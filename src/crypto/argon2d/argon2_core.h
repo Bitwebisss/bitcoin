@@ -201,7 +201,7 @@ int initialize(argon2_instance_t *instance, argon2_context *context);
  * @param instance Pointer to current instance of Argon2
  * @pre instance->state must point to necessary amount of memory
  * @pre context->out must point to outlen bytes of memory
- * @pre if context->free_cbk is not NULL, it should point to a function that
+ * @pre if context->free_cbk is not nullptr, it should point to a function that
  * deallocates memory
  */
 void finalize(const argon2_context *context, argon2_instance_t *instance);
