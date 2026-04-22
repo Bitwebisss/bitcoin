@@ -42,6 +42,7 @@ uint256 CBlockHeader::GetArgon2idPoWHash() const
     static constexpr uint32_t ARGON2ID_TIME_COST   = 3;
     static constexpr uint32_t ARGON2ID_MEM_COST_KB = 1024;
     static constexpr uint32_t ARGON2ID_PARALLELISM = 1;
+    static constexpr uint32_t ARGON2ID_VERSION = ARGON2_VERSION_13;
     static constexpr size_t   ARGON2ID_HASH_LEN    = 32;
 
     // Serialize the block header (80 bytes: version, hashPrevBlock,
@@ -59,7 +60,10 @@ uint256 CBlockHeader::GetArgon2idPoWHash() const
         ARGON2ID_PARALLELISM,
         ss.data(), ss.size(),  /* password */
         ss.data(), ss.size(),  /* salt     */
-        hash.begin(), ARGON2ID_HASH_LEN
+        hash.begin(), ARGON2ID_HASH_LEN,
+        nullptr, 0,
+        Argon2_id,
+        ARGON2ID_VERSION
     );
 
     // argon2id_hash_raw must not fail for well-formed parameters.
