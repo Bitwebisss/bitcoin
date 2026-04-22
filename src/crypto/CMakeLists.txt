@@ -119,3 +119,19 @@ if(HAVE_ARGON2_AVX512)
     COMPILE_OPTIONS ${ARGON2_AVX512F_CXXFLAGS}
   )
 endif()
+
+# Argon2id NEON optimised implementation (AArch64 and ARMv7+NEON).
+# Compiled separately so NEON flags apply only to this translation unit.
+# On AArch64, ARGON2_NEON_CXXFLAGS is empty — NEON is the mandatory baseline.
+# On ARMv7+NEON, ARGON2_NEON_CXXFLAGS is -mfpu=neon.
+# On x86 and all other architectures, HAVE_ARGON2_NEON is false and this
+# block is skipped entirely; opt.cpp remains the sole dispatcher on x86.
+if(HAVE_ARGON2_NEON)
+  target_compile_definitions(bitcoin_crypto PRIVATE ENABLE_ARGON2_NEON)
+  target_sources(bitcoin_crypto PRIVATE argon2d/argon2_opt_neon.cpp)
+  if(ARGON2_NEON_CXXFLAGS)
+    set_property(SOURCE argon2d/argon2_opt_neon.cpp PROPERTY
+      COMPILE_OPTIONS ${ARGON2_NEON_CXXFLAGS}
+    )
+  endif()
+endif()

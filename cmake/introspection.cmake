@@ -211,6 +211,60 @@ if(NOT MSVC)
     CXXFLAGS ${ARM_SHANI_CXXFLAGS}
   )
 
+  # --------------------------------------------------------------------------
+  # Check for ARM NEON intrinsics — portable subset (AArch64 + ARMv7+NEON).
+  #
+  # Probes only intrinsics available on both 64-bit and 32-bit ARM NEON:
+  #   vmovn_u64, vmull_u32, vaddq_u64, veorq_u64 — widening-multiply G step.
+  # vqtbl1q_u8 is intentionally NOT probed here (AArch64-only).
+  #
+  # Step 1: compile without extra flags.
+  #   On AArch64, NEON is mandatory — arm_neon.h just works.
+  #   On any other baseline-NEON target this also catches it.
+  # Step 2: if step 1 fails, try -mfpu=neon (ARMv7 where NEON is optional).
+  # --------------------------------------------------------------------------
+  check_cxx_source_compiles("
+    #include <arm_neon.h>
+    #include <stdint.h>
+    int main()
+    {
+      uint64x2_t a = vdupq_n_u64(UINT64_C(0));
+      uint64x2_t b = vdupq_n_u64(UINT64_C(1));
+      uint32x2_t lo = vmovn_u64(a);
+      uint64x2_t ml = vmull_u32(lo, lo);
+      uint64x2_t r  = veorq_u64(vaddq_u64(a, b), vaddq_u64(ml, ml));
+      (void)r;
+      return 0;
+    }
+    " HAVE_ARGON2_NEON_NATIVE
+  )
+  if(HAVE_ARGON2_NEON_NATIVE)
+    set(HAVE_ARGON2_NEON TRUE)
+    set(ARGON2_NEON_CXXFLAGS "")
+  else()
+    set(ARGON2_NEON_ARMV7_CXXFLAGS -mfpu=neon)
+    check_cxx_source_compiles_with_flags("
+      #include <arm_neon.h>
+      #include <stdint.h>
+      int main()
+      {
+        uint64x2_t a = vdupq_n_u64(UINT64_C(0));
+        uint64x2_t b = vdupq_n_u64(UINT64_C(1));
+        uint32x2_t lo = vmovn_u64(a);
+        uint64x2_t ml = vmull_u32(lo, lo);
+        uint64x2_t r  = veorq_u64(vaddq_u64(a, b), vaddq_u64(ml, ml));
+        (void)r;
+        return 0;
+      }
+      " HAVE_ARGON2_NEON_ARMV7
+      CXXFLAGS ${ARGON2_NEON_ARMV7_CXXFLAGS}
+    )
+    if(HAVE_ARGON2_NEON_ARMV7)
+      set(HAVE_ARGON2_NEON TRUE)
+      set(ARGON2_NEON_CXXFLAGS ${ARGON2_NEON_ARMV7_CXXFLAGS})
+    endif()
+  endif()
+
   # Check for Argon2 SSE2 intrinsics.
   # SSE2 is mandatory on x86-64 (ABI baseline) so -msse2 is a no-op there.
   # On i686 without SSE2 this check will fail and opt_sse2.cpp is skipped;

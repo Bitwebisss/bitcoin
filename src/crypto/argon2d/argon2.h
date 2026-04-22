@@ -235,14 +235,14 @@ typedef enum Argon2_version {
  * Function that gives the string representation of an argon2_type.
  * @param type The argon2_type that we want the string for
  * @param uppercase Whether the string should have the first letter uppercase
- * @return NULL if invalid type, otherwise the string representation.
+ * @return The string corresponding to the argon2_type. NULL if invalid type.
  */
 ARGON2_PUBLIC const char *argon2_type2string(argon2_type type, int uppercase);
 
 /*
  * Function that performs memory-hard hashing with certain degree of parallelism
  * @param  context  Pointer to the Argon2 internal structure
- * @return Error code if smth is wrong, ARGON2_OK otherwise
+ * @return Error code if there is a failure, otherwise ARGON2_OK
  */
 ARGON2_PUBLIC int argon2_ctx(argon2_context *context, argon2_type type);
 
@@ -437,11 +437,15 @@ ARGON2_PUBLIC size_t argon2_encodedlen(uint32_t t_cost, uint32_t m_cost,
 namespace argon2_implementation {
 enum UseImplementation : uint8_t {
     STANDARD   = 0,
-    USE_SSE2   = 1 << 0, /* 0x01 */
-    USE_SSSE3  = 1 << 1, /* 0x02 */
-    USE_AVX2   = 1 << 2, /* 0x04 */
-    USE_AVX512 = 1 << 3, /* 0x08 */
-    USE_ALL    = USE_SSE2 | USE_SSSE3 | USE_AVX2 | USE_AVX512,
+    USE_SSE2   = 1 << 0, /* 0x01 — x86: SSE2 baseline                 */
+    USE_SSSE3  = 1 << 1, /* 0x02 — x86: SSSE3 (Sandy/Ivy Bridge)      */
+    USE_AVX2   = 1 << 2, /* 0x04 — x86: AVX2 (Haswell+)               */
+    USE_AVX512 = 1 << 3, /* 0x08 — x86: AVX-512F (Skylake-X+)         */
+    USE_NEON   = 1 << 4, /* 0x10 — ARM: NEON (AArch64 / ARMv7+NEON)   */
+    /* Bits 0x01–0x08 are only tested on x86 (opt.cpp / HAVE_GETCPUID).
+     * Bit 0x10 is only tested on non-x86 (ref.cpp / !HAVE_GETCPUID).
+     * Passing USE_ALL on any architecture is therefore always safe. */
+    USE_ALL    = USE_SSE2 | USE_SSSE3 | USE_AVX2 | USE_AVX512 | USE_NEON,
 };
 }
 

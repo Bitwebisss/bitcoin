@@ -23,7 +23,13 @@
  * detection upgrades to SSE2 / SSSE3 / AVX2 / AVX-512.
  *
  * On non-x86 targets (no HAVE_GETCPUID) this file also provides the public
- * fill_segment() and Argon2AutoDetectImpl() entry points, just as before.
+ * fill_segment() and Argon2AutoDetectImpl() entry points, with an optional
+ * NEON fast-path when ENABLE_ARGON2_NEON is defined (AArch64 or ARMv7+NEON).
+ *
+ * The non-x86 dispatcher uses the same function-pointer pattern as the x86
+ * opt.cpp dispatcher: s_fill_segment defaults to fill_segment_ref and is
+ * upgraded by Argon2AutoDetectImpl() when a faster implementation is
+ * available.
  */
 
 #include <compat/cpuid.h>  /* defines HAVE_GETCPUID on x86 */
@@ -185,18 +191,46 @@ void fill_segment_ref(const argon2_instance_t *instance,
 
 /* -------------------------------------------------------------------------
  * Non-x86 public entry points.
+ *
  * On x86, fill_segment() and Argon2AutoDetectImpl() live in opt.cpp.
+ *
+ * On non-x86 (ARM, RISC-V, MIPS, …) this block provides both entry points.
+ * The function pointer s_fill_segment defaults to fill_segment_ref and is
+ * upgraded to fill_segment_neon when ENABLE_ARGON2_NEON is defined and the
+ * caller passes a use_implementation value with bit 0x10 (USE_NEON) set.
+ *
+ * USE_NEON (0x10) is separate from the x86 bits (0x01–0x08).  Passing
+ * USE_ALL (0x1F after adding USE_NEON) from context.cpp is safe: on x86
+ * opt.cpp never checks bit 0x10; on ARM ref.cpp never checks bits 0x01–0x08.
  * ------------------------------------------------------------------------- */
 #if !defined(HAVE_GETCPUID)
+
+/* Forward declaration — defined in argon2_opt_neon.cpp when compiled. */
+#if defined(ENABLE_ARGON2_NEON)
+void fill_segment_neon(const argon2_instance_t *instance,
+                       argon2_position_t position);
+#endif
+
+static void (*s_fill_segment)(const argon2_instance_t *,
+                              argon2_position_t) = fill_segment_ref;
 
 void fill_segment(const argon2_instance_t *instance,
                   argon2_position_t position)
 {
-    fill_segment_ref(instance, position);
+    s_fill_segment(instance, position);
 }
 
 const char *Argon2AutoDetectImpl(uint8_t use_implementation)
 {
+    s_fill_segment = fill_segment_ref;
+
+#if defined(ENABLE_ARGON2_NEON)
+    if (use_implementation & 0x10) { /* argon2_implementation::USE_NEON */
+        s_fill_segment = fill_segment_neon;
+        return "neon";
+    }
+#endif
+
     (void)use_implementation;
     return "reference";
 }
