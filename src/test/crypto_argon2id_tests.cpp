@@ -62,13 +62,30 @@ BOOST_AUTO_TEST_CASE(argon2id_json_vectors_all_isa)
             }
         };
 
+        // Always test the STANDARD (reference) implementation.
         check_isa(argon2_implementation::STANDARD, "STANDARD");
-        check_isa(argon2_implementation::USE_SSE2,   "SSE2");
-        check_isa(argon2_implementation::USE_SSSE3,  "SSSE3");
-        check_isa(argon2_implementation::USE_AVX2,   "AVX2");
+
+        // Test x86 SIMD implementations only if they were compiled in.
+#if defined(ENABLE_ARGON2_SSE2)
+        check_isa(argon2_implementation::USE_SSE2, "SSE2");
+#endif
+#if defined(ENABLE_ARGON2_SSSE3)
+        check_isa(argon2_implementation::USE_SSSE3, "SSSE3");
+#endif
+#if defined(ENABLE_ARGON2_AVX2)
+        check_isa(argon2_implementation::USE_AVX2, "AVX2");
+#endif
+#if defined(ENABLE_ARGON2_AVX512)
         check_isa(argon2_implementation::USE_AVX512, "AVX512");
+#endif
+
+        // Test ARM NEON implementation only if compiled in.
+#if defined(ENABLE_ARGON2_NEON)
+        check_isa(argon2_implementation::USE_NEON, "NEON");
+#endif
     }
 
+    // Restore automatic ISA detection for subsequent tests.
     Argon2AutoDetect();
 
     BOOST_REQUIRE_EQUAL(failed_count, 0);
@@ -89,7 +106,7 @@ BOOST_AUTO_TEST_CASE(argon2id_negative_test)
     std::vector<uint8_t> expected = ParseHex(vec["expected_hash"].get_str());
     BOOST_REQUIRE(!data.empty() && !salt.empty() && expected.size() == 32);
 
-    // Corrupt the first byte
+    // Corrupt the first byte of the expected hash.
     expected[0] ^= 0xFF;
 
     Argon2AutoDetect(argon2_implementation::STANDARD);
