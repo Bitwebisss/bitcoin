@@ -235,4 +235,4 @@ rotr64_63_neon(uint64x2_t x)
         UNDIAGONALIZE_NEON(A0, B0, C0, D0, A1, B1, C1, D1);       \
     } while ((void)0, 0)
 
-#endif /* BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAMKA_ROUND_NEON_H */
+#endif // BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAMKA_ROUND_NEON_H

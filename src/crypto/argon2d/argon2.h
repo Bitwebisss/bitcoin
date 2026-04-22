@@ -21,10 +21,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <limits.h>
-
-#if defined(__cplusplus)
-extern "C" {
-#endif
+#include <string>
 
 /* Symbols visibility control */
 #ifdef A2_VISCTL
@@ -93,7 +90,7 @@ extern "C" {
 #define ARGON2_FLAG_CLEAR_SECRET (UINT32_C(1) << 1)
 
 /* Global flag to determine if we are wiping internal memory buffers. This flag
- * is defined in argon2_core.c and defaults to 1 (wipe internal memory). */
+ * is defined in argon2_core.cpp and defaults to 1 (wipe internal memory). */
 extern int FLAG_clear_internal_memory;
 
 /* Error codes */
@@ -430,10 +427,6 @@ ARGON2_PUBLIC size_t argon2_encodedlen(uint32_t t_cost, uint32_t m_cost,
                                        uint32_t parallelism, uint32_t saltlen,
                                        uint32_t hashlen, argon2_type type);
 
-
-#if defined(__cplusplus)
-}
-#include <string>
 namespace argon2_implementation {
 enum UseImplementation : uint8_t {
     STANDARD   = 0,
@@ -457,6 +450,5 @@ inline std::string Argon2AutoDetect(
 {
     return std::string(Argon2AutoDetectImpl(static_cast<uint8_t>(use_implementation)));
 }
-#endif
 
 #endif // BITCOIN_CRYPTO_ARGON2D_ARGON2_H

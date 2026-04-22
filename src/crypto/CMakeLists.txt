@@ -21,23 +21,23 @@ add_library(bitcoin_crypto STATIC EXCLUDE_FROM_ALL
   siphash.cpp
   ../support/cleanse.cpp
   # Argon2id proof-of-work
-  #   ref.cpp    — pure-C reference; always compiled; exports fill_segment_ref()
+  #   ref.cpp    — pure-C++ reference; always compiled; exports fill_segment_ref()
   #                (used as safe default on all platforms, including i686 w/o SSE2)
   #   opt.cpp    — x86 CPUID dispatcher; no SIMD code
   #   opt_sse2/avx2/avx512 — ISA variants, each compiled with their own flags
-  argon2d/argon2.c
-  argon2d/argon2_core.c
-  argon2d/argon2_encoding.c
-  argon2d/argon2_thread.c
+  argon2d/argon2.cpp
+  argon2d/argon2_core.cpp
+  argon2d/argon2_encoding.cpp
+  argon2d/argon2_thread.cpp
   argon2d/argon2_ref.cpp
   argon2d/argon2_opt.cpp
-  argon2d/blake2/blake2b.c
+  argon2d/blake2/blake2b.cpp
 )
 
 # Suppress -Wtype-limits in argon2 core — ARGON2_MAX_MEMORY comparisons are
 # intentionally kept for correctness on 32-bit; always-false on 64-bit is expected.
-set_property(SOURCE argon2d/argon2_core.c PROPERTY
-  COMPILE_OPTIONS $<$<C_COMPILER_ID:GNU,Clang,AppleClang>:-Wno-type-limits>
+set_property(SOURCE argon2d/argon2_core.cpp PROPERTY
+  COMPILE_OPTIONS $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wno-type-limits>
 )
 
 target_link_libraries(bitcoin_crypto
@@ -80,7 +80,7 @@ endif()
 # Argon2id SSE2 baseline (x86).
 # Compiled separately so -msse2 applies only to this translation unit.
 # On i686 without SSE2, HAVE_ARGON2_SSE2 is false; opt.cpp falls back to
-# fill_segment_ref (pure-C reference from ref.cpp).
+# fill_segment_ref (pure-C++ reference from ref.cpp).
 if(HAVE_ARGON2_SSE2)
   target_compile_definitions(bitcoin_crypto PRIVATE ENABLE_ARGON2_SSE2)
   target_sources(bitcoin_crypto PRIVATE argon2d/argon2_opt_sse2.cpp)

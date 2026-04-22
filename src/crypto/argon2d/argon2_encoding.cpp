@@ -468,4 +468,3 @@ size_t numlen(uint32_t num) {
     }
     return len;
 }
-

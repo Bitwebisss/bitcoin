@@ -20,10 +20,6 @@
 
 #include <crypto/argon2d/argon2.h>
 
-#if defined(__cplusplus)
-extern "C" {
-#endif
-
 enum blake2b_constant {
     BLAKE2B_BLOCKBYTES = 128,
     BLAKE2B_OUTBYTES = 64,
@@ -81,9 +77,5 @@ ARGON2_LOCAL int argon2d_blake2b(void *out, size_t outlen, const void *in, size_
 /* Argon2 Team - Begin Code */
 ARGON2_LOCAL int argon2d_blake2b_long(void *out, size_t outlen, const void *in, size_t inlen);
 /* Argon2 Team - End Code */
-
-#if defined(__cplusplus)
-}
-#endif
 
 #endif // BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAKE2_H
