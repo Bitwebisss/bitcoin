@@ -18,7 +18,7 @@
 #ifndef BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAKE2_H
 #define BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAKE2_H
 
-#include <crypto/argon2d/argon2.h>
+#include <crypto/argon2d/argon2_types.h>
 
 enum blake2b_constant {
     BLAKE2B_BLOCKBYTES = 128,

@@ -18,7 +18,7 @@
 #ifndef BITCOIN_CRYPTO_ARGON2D_ARGON2_ENCODING_H
 #define BITCOIN_CRYPTO_ARGON2D_ARGON2_ENCODING_H
 
-#include <crypto/argon2d/argon2.h>
+#include <crypto/argon2d/argon2_types.h>
 
 #define ARGON2_MAX_DECODED_LANES UINT32_C(255)
 #define ARGON2_MIN_DECODED_SALT_LEN UINT32_C(8)

@@ -15,7 +15,6 @@
  * software. If not, they may be obtained at the above URLs.
  */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
@@ -243,6 +242,32 @@ static const char *decode_decimal(const char *str, unsigned long *v) {
     return str;
 }
 
+/*
+ * Locale-independent conversion of an unsigned long to a decimal C string.
+ * Writes the NUL-terminated result into buf (which must be at least 21 bytes).
+ * Avoids sprintf/snprintf entirely to satisfy the locale-dependence linter.
+ */
+static void uint_to_str(char *buf, size_t buf_size, unsigned long x)
+{
+    char tmp[20];
+    size_t i = 0;
+    size_t j;
+    (void)buf_size;
+    if (x == 0) {
+        buf[0] = '0';
+        buf[1] = '\0';
+        return;
+    }
+    while (x > 0) {
+        tmp[i++] = (char)('0' + (int)(x % 10));
+        x /= 10;
+    }
+    for (j = 0; j < i; j++) {
+        buf[j] = tmp[i - 1 - j];
+    }
+    buf[i] = '\0';
+}
+
 /* ==================================================================== */
 /*
  * Code specific to Argon2.
@@ -394,7 +419,7 @@ int encode_string(char *dst, size_t dst_len, argon2_context *ctx,
 #define SX(x)                                                                  \
     do {                                                                       \
         char tmp[30];                                                          \
-        sprintf(tmp, "%lu", (unsigned long)(x));                               \
+        uint_to_str(tmp, sizeof(tmp), (unsigned long)(x));                     \
         SS(tmp);                                                               \
     } while ((void)0, 0)
 

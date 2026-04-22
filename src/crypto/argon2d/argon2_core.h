@@ -18,7 +18,7 @@
 #ifndef BITCOIN_CRYPTO_ARGON2D_ARGON2_CORE_H
 #define BITCOIN_CRYPTO_ARGON2D_ARGON2_CORE_H
 
-#include <crypto/argon2d/argon2.h>
+#include <crypto/argon2d/argon2_types.h>
 
 #define CONST_CAST(x) (x)(uintptr_t)
 
