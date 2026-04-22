@@ -10,6 +10,7 @@
 #include <uint256.h>
 #include <util/strencodings.h>
 
+#include <algorithm>
 #include <iostream>
 #include <vector>
 
@@ -71,6 +72,38 @@ BOOST_AUTO_TEST_CASE(argon2id_json_vectors_all_isa)
     Argon2AutoDetect();
 
     BOOST_REQUIRE_EQUAL(failed_count, 0);
+}
+
+// Negative test: deliberately corrupt the expected hash and verify that
+// the computed hash does *not* match. This guards against false positives.
+BOOST_AUTO_TEST_CASE(argon2id_negative_test)
+{
+    UniValue tests = read_json(json_tests::argon2id_vectors);
+    BOOST_REQUIRE(!tests.isNull());
+    BOOST_REQUIRE(tests.isArray());
+    BOOST_REQUIRE_GT(tests.size(), 0);
+
+    const UniValue& vec = tests[0];
+    std::vector<uint8_t> data = ParseHex(vec["data"].get_str());
+    std::vector<uint8_t> salt = ParseHex(vec["salt"].get_str());
+    std::vector<uint8_t> expected = ParseHex(vec["expected_hash"].get_str());
+    BOOST_REQUIRE(!data.empty() && !salt.empty() && expected.size() == 32);
+
+    // Corrupt the first byte
+    expected[0] ^= 0xFF;
+
+    Argon2AutoDetect(argon2_implementation::STANDARD);
+    uint256 hash;
+    int rc = argon2id_hash_raw(3, 1024, 1,
+                               data.data(), data.size(),
+                               salt.data(), salt.size(),
+                               hash.begin(), 32);
+    BOOST_REQUIRE_EQUAL(rc, ARGON2_OK);
+
+    std::vector<uint8_t> actual(hash.begin(), hash.end());
+    BOOST_CHECK(actual != expected); // must not match
+
+    Argon2AutoDetect();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
