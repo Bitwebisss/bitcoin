@@ -37,52 +37,37 @@ BOOST_AUTO_TEST_CASE(argon2id_json_vectors_all_isa)
 
         std::vector<uint8_t> data = ParseHex(data_hex);
         std::vector<uint8_t> salt = ParseHex(salt_hex);
+        std::vector<uint8_t> expected = ParseHex(expected_hex);
         BOOST_REQUIRE(!data.empty());
         BOOST_REQUIRE(!salt.empty());
+        BOOST_REQUIRE(expected.size() == hash_len);
 
-        // uint256S парсит big-endian hex и возвращает uint256 (внутреннее little-endian)
-        uint256 expected_hash = uint256S(expected_hex);
+        // Лямбда для проверки одной ISA
+        auto check_isa = [&](argon2_implementation::UseImplementation impl, const std::string& name) {
+            Argon2AutoDetect(impl);
+            uint256 hash;
+            int rc = argon2id_hash_raw(t_cost, m_cost, parallelism,
+                                       data.data(), data.size(),
+                                       salt.data(), salt.size(),
+                                       hash.begin(), hash_len);
+            BOOST_REQUIRE_MESSAGE(rc == ARGON2_OK, name << " failed at vector " << idx);
+            std::vector<uint8_t> actual(hash.begin(), hash.end());
+            if (!std::equal(actual.begin(), actual.end(), expected.begin())) {
+                ++failed_count;
+                std::cerr << "Vector " << idx << " " << name << " mismatch:\n"
+                          << "  data: " << data_hex << "\n"
+                          << "  salt: " << salt_hex << "\n"
+                          << "  expected: " << expected_hex << "\n"
+                          << "  actual:   " << HexStr(actual) << "\n";
+            }
+        };
 
-        Argon2AutoDetect(argon2_implementation::STANDARD);
-        uint256 hash_std;
-        int rc = argon2id_hash_raw(t_cost, m_cost, parallelism,
-                                   data.data(), data.size(),
-                                   salt.data(), salt.size(),
-                                   hash_std.begin(), hash_len);
-        BOOST_REQUIRE_MESSAGE(rc == ARGON2_OK, "STANDARD failed at vector " << idx);
-        bool std_ok = (hash_std == expected_hash);
-        BOOST_CHECK_MESSAGE(std_ok, "STANDARD mismatch at vector " << idx);
-        if (!std_ok) {
-            ++failed_count;
-            std::cerr << "Vector " << idx << " STANDARD mismatch:\n"
-                      << "  data: " << data_hex << "\n"
-                      << "  salt: " << salt_hex << "\n"
-                      << "  expected: " << expected_hex << "\n"
-                      << "  actual:   " << hash_std.ToString() << "\n";
-        }
-
-        if (std_ok) {
-            auto check_isa = [&](argon2_implementation::UseImplementation impl, const std::string& name) {
-                Argon2AutoDetect(impl);
-                uint256 hash;
-                int rc2 = argon2id_hash_raw(t_cost, m_cost, parallelism,
-                                            data.data(), data.size(),
-                                            salt.data(), salt.size(),
-                                            hash.begin(), hash_len);
-                BOOST_CHECK_MESSAGE(rc2 == ARGON2_OK, name << " failed at vector " << idx);
-                BOOST_CHECK_MESSAGE(hash == expected_hash, name << " mismatch at vector " << idx);
-                if (hash != expected_hash) {
-                    ++failed_count;
-                    std::cerr << "Vector " << idx << " " << name << " mismatch:\n"
-                              << "  expected: " << expected_hex << "\n"
-                              << "  actual:   " << hash.ToString() << "\n";
-                }
-            };
-            check_isa(argon2_implementation::USE_SSE2, "SSE2");
-            check_isa(argon2_implementation::USE_SSSE3, "SSSE3");
-            check_isa(argon2_implementation::USE_AVX2, "AVX2");
-            check_isa(argon2_implementation::USE_AVX512, "AVX512");
-        }
+        // Проверяем все ISA (STANDARD и оптимизированные)
+        check_isa(argon2_implementation::STANDARD, "STANDARD");
+        check_isa(argon2_implementation::USE_SSE2,   "SSE2");
+        check_isa(argon2_implementation::USE_SSSE3,  "SSSE3");
+        check_isa(argon2_implementation::USE_AVX2,   "AVX2");
+        check_isa(argon2_implementation::USE_AVX512, "AVX512");
     }
 
     Argon2AutoDetect();
