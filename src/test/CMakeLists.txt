@@ -36,6 +36,7 @@ add_executable(test_bitweb
   compilerbug_tests.cpp
   compress_tests.cpp
   crypto_tests.cpp
+  crypto_argon2id_tests.cpp
   cuckoocache_tests.cpp
   dbwrapper_tests.cpp
   denialofservice_tests.cpp
@@ -144,6 +145,7 @@ target_json_data_sources(test_bitweb
   data/sighash.json
   data/tx_invalid.json
   data/tx_valid.json
+  data/argon2id_vectors.json
 )
 target_raw_data_sources(test_bitweb NAMESPACE test::data
   data/asmap.raw
