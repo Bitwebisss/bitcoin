@@ -430,7 +430,6 @@ ARGON2_PUBLIC size_t argon2_encodedlen(uint32_t t_cost, uint32_t m_cost,
                                        uint32_t parallelism, uint32_t saltlen,
                                        uint32_t hashlen, argon2_type type);
 
-ARGON2_PUBLIC const char *Argon2AutoDetectImpl(uint8_t use_implementation);
 
 #if defined(__cplusplus)
 }
@@ -445,6 +444,9 @@ enum UseImplementation : uint8_t {
     USE_ALL    = USE_SSE2 | USE_SSSE3 | USE_AVX2 | USE_AVX512,
 };
 }
+
+const char *Argon2AutoDetectImpl(uint8_t use_implementation);
+
 inline std::string Argon2AutoDetect(
     argon2_implementation::UseImplementation use_implementation =
         argon2_implementation::USE_ALL)
