@@ -140,17 +140,42 @@ rotr64_63_neon(uint64x2_t x)
  *
  * The 8 registers A0,B0,C0,D0,A1,B1,C1,D1 cover a 4×4 matrix of uint64
  * values (each register holds 2 consecutive values in a uint64x2_t).
- * DIAGONALIZE rotates B by 1, C by 2, D by 3 positions within the matrix,
- * as required by Blake2b's diagonal step.
  *
- * vextq_u8 — extract vector from pair of vectors starting at byte offset 8.
- * This is a standard NEON instruction available on ARMv7 and AArch64.
+ * Register layout: A0={v0,v1}, A1={v2,v3}, B0={v4,v5}, B1={v6,v7},
+ *                  C0={v8,v9}, C1={v10,v11}, D0={v12,v13}, D1={v14,v15}
+ *
+ * DIAGONALIZE rotates B by +1, C by +2, D by +3 positions, producing
+ * the operand order required by Blake2b's diagonal step:
+ *   G(v0,v5,v10,v15), G(v1,v6,v11,v12),
+ *   G(v2,v7,v8, v13), G(v3,v4,v9, v14)
+ *
+ * After the diagonal G passes, UNDIAGONALIZE reverses each rotation:
+ *   B: undo +1 → rotate by +3  (= vextq from B1→B0 side)
+ *   C: undo +2 → swap again
+ *   D: undo +3 → rotate by +1  (= vextq from D0→D1 side)
+ *
+ * vextq_u8(a, b, 8): extract 16 bytes starting at byte 8 from concat(a,b)
+ *   = { a[1], b[0] } when a,b are uint64x2_t pairs.
+ *
+ * DIAGONALIZE correctness (tracking D as example):
+ *   D0={v12,v13}, D1={v14,v15}  →  want D0'={v15,v12}, D1'={v13,v14}
+ *   _t0 = vextq(D0,D1) = {v13,v14}
+ *   _t1 = vextq(D1,D0) = {v15,v12}
+ *   D0=_t1={v15,v12} ✓   D1=_t0={v13,v14} ✓
+ *
+ * UNDIAGONALIZE correctness (tracking D):
+ *   D0'={v15,v12}, D1'={v13,v14}  →  want D0={v12,v13}, D1={v14,v15}
+ *   _t0 = vextq(D0',D1') = {D0'[1],D1'[0]} = {v12,v13}
+ *   _t1 = vextq(D1',D0') = {D1'[1],D0'[0]} = {v14,v15}
+ *   D0=_t0={v12,v13} ✓   D1=_t1={v14,v15} ✓
+ *
+ * Key: DIAGONALIZE uses (D0,D1)→_t1 for D0; UNDIAGONALIZE uses (D0',D1')→_t0
+ * for D0. The vextq argument order is OPPOSITE between the two macros.
  * ------------------------------------------------------------------------- */
 #define DIAGONALIZE_NEON(A0, B0, C0, D0, A1, B1, C1, D1)         \
     do {                                                          \
         uint64x2_t _t0, _t1;                                      \
-        /* B: rotate by 1 — swap the two 64-bit halves across    \
-         * the (B0, B1) pair using 8-byte extract.               */ \
+        /* B: rotate by +1 */                                     \
         _t0 = vreinterpretq_u64_u8(                               \
             vextq_u8(vreinterpretq_u8_u64(B0),                    \
                      vreinterpretq_u8_u64(B1), 8));               \
@@ -158,9 +183,9 @@ rotr64_63_neon(uint64x2_t x)
             vextq_u8(vreinterpretq_u8_u64(B1),                    \
                      vreinterpretq_u8_u64(B0), 8));               \
         B0 = _t0;  B1 = _t1;                                      \
-        /* C: rotate by 2 — swap the two registers entirely. */   \
+        /* C: rotate by +2 — swap the two registers entirely. */  \
         _t0 = C0;  C0 = C1;  C1 = _t0;                           \
-        /* D: rotate by 3 (= rotate back by 1) */                 \
+        /* D: rotate by +3 (= rotate back by 1)               */  \
         _t0 = vreinterpretq_u64_u8(                               \
             vextq_u8(vreinterpretq_u8_u64(D0),                    \
                      vreinterpretq_u8_u64(D1), 8));               \
@@ -173,7 +198,7 @@ rotr64_63_neon(uint64x2_t x)
 #define UNDIAGONALIZE_NEON(A0, B0, C0, D0, A1, B1, C1, D1)       \
     do {                                                          \
         uint64x2_t _t0, _t1;                                      \
-        /* B: undo rotate by 1 (= rotate by 3) */                 \
+        /* B: undo +1 (= rotate by +3) */                         \
         _t0 = vreinterpretq_u64_u8(                               \
             vextq_u8(vreinterpretq_u8_u64(B1),                    \
                      vreinterpretq_u8_u64(B0), 8));               \
@@ -181,15 +206,17 @@ rotr64_63_neon(uint64x2_t x)
             vextq_u8(vreinterpretq_u8_u64(B0),                    \
                      vreinterpretq_u8_u64(B1), 8));               \
         B0 = _t0;  B1 = _t1;                                      \
-        /* C: undo rotate by 2 — swap again. */                   \
+        /* C: undo +2 — swap again. */                            \
         _t0 = C0;  C0 = C1;  C1 = _t0;                           \
-        /* D: undo rotate by 3 (= rotate by 1) */                 \
+        /* D: undo +3 (= rotate by +1)                         */ \
+        /* NOTE: vextq argument order is D0,D1 here (opposite  */ \
+        /* of DIAGONALIZE which used D0,D1 → _t1 for D0).     */ \
         _t0 = vreinterpretq_u64_u8(                               \
-            vextq_u8(vreinterpretq_u8_u64(D1),                    \
-                     vreinterpretq_u8_u64(D0), 8));               \
-        _t1 = vreinterpretq_u64_u8(                               \
             vextq_u8(vreinterpretq_u8_u64(D0),                    \
                      vreinterpretq_u8_u64(D1), 8));               \
+        _t1 = vreinterpretq_u64_u8(                               \
+            vextq_u8(vreinterpretq_u8_u64(D1),                    \
+                     vreinterpretq_u8_u64(D0), 8));               \
         D0 = _t0;  D1 = _t1;                                      \
     } while ((void)0, 0)
 
