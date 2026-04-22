@@ -19,7 +19,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <crypto/argon2d/argon2.h>
 #include <crypto/argon2d/argon2_encoding.h>
 #include <crypto/argon2d/argon2_core.h>
 
