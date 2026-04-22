@@ -244,28 +244,41 @@ static const char *decode_decimal(const char *str, unsigned long *v) {
 
 /*
  * Locale-independent conversion of an unsigned long to a decimal C string.
- * Writes the NUL-terminated result into buf (which must be at least 21 bytes).
+ * Writes the NUL-terminated result into buf[buf_size].
+ * buf_size must be at least 21 to hold the largest possible unsigned long
+ * value (20 digits) plus the NUL terminator.
+ * Returns  0 on success.
+ * Returns -1 if buf_size is too small to hold the result (encoding fails).
  * Avoids sprintf/snprintf entirely to satisfy the locale-dependence linter.
  */
-static void uint_to_str(char *buf, size_t buf_size, unsigned long x)
+static int uint_to_str(char *buf, size_t buf_size, unsigned long x)
 {
+    /* Intermediate buffer: unsigned long is at most 20 decimal digits. */
     char tmp[20];
     size_t i = 0;
     size_t j;
-    (void)buf_size;
+
     if (x == 0) {
+        if (buf_size < 2) {
+            return -1;
+        }
         buf[0] = '0';
         buf[1] = '\0';
-        return;
+        return 0;
     }
     while (x > 0) {
         tmp[i++] = (char)('0' + (int)(x % 10));
         x /= 10;
     }
+    /* Need i digits + NUL terminator. */
+    if (buf_size < i + 1) {
+        return -1;
+    }
     for (j = 0; j < i; j++) {
         buf[j] = tmp[i - 1 - j];
     }
     buf[i] = '\0';
+    return 0;
 }
 
 /* ==================================================================== */
@@ -418,8 +431,11 @@ int encode_string(char *dst, size_t dst_len, argon2_context *ctx,
 
 #define SX(x)                                                                  \
     do {                                                                       \
-        char tmp[30];                                                          \
-        uint_to_str(tmp, sizeof(tmp), (unsigned long)(x));                     \
+        /* 21 bytes: up to 20 decimal digits for unsigned long + NUL. */       \
+        char tmp[21];                                                          \
+        if (uint_to_str(tmp, sizeof(tmp), (unsigned long)(x)) != 0) {         \
+            return ARGON2_ENCODING_FAIL;                                       \
+        }                                                                      \
         SS(tmp);                                                               \
     } while ((void)0, 0)
 
