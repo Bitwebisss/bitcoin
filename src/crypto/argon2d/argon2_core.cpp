@@ -403,9 +403,7 @@ int validate_inputs(const argon2_context *context) {
         }
     }
 
-    if (ARGON2_MIN_PWD_LENGTH > context->pwdlen) {
-      return ARGON2_PWD_TOO_SHORT;
-    }
+    // REMOVED: check for ARGON2_MIN_PWD_LENGTH (always 0) to avoid -Wtype-limits
 
     if (ARGON2_MAX_PWD_LENGTH < context->pwdlen) {
         return ARGON2_PWD_TOO_LONG;
@@ -432,9 +430,8 @@ int validate_inputs(const argon2_context *context) {
             return ARGON2_SECRET_PTR_MISMATCH;
         }
     } else {
-        if (ARGON2_MIN_SECRET > context->secretlen) {
-            return ARGON2_SECRET_TOO_SHORT;
-        }
+        // REMOVED: check for ARGON2_MIN_SECRET (always 0) to avoid -Wtype-limits
+
         if (ARGON2_MAX_SECRET < context->secretlen) {
             return ARGON2_SECRET_TOO_LONG;
         }
@@ -446,9 +443,8 @@ int validate_inputs(const argon2_context *context) {
             return ARGON2_AD_PTR_MISMATCH;
         }
     } else {
-        if (ARGON2_MIN_AD_LENGTH > context->adlen) {
-            return ARGON2_AD_TOO_SHORT;
-        }
+        // REMOVED: check for ARGON2_MIN_AD_LENGTH (always 0) to avoid -Wtype-limits
+
         if (ARGON2_MAX_AD_LENGTH < context->adlen) {
             return ARGON2_AD_TOO_LONG;
         }
