@@ -54,7 +54,7 @@ static BLAKE2_INLINE __m128i fBlaMka_sse2(__m128i x, __m128i y)
  * ------------------------------------------------------------------------- */
 #define G1_SSE2(A0, B0, C0, D0, A1, B1, C1, D1)                               \
     do {                                                                       \
-        A0 = fBlaMka_sse2(A0, B1);                                             \
+        A0 = fBlaMka_sse2(A0, B0);                                             \
         A1 = fBlaMka_sse2(A1, B1);                                             \
                                                                                \
         D0 = _mm_xor_si128(D0, A0);                                            \
