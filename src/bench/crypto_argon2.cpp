@@ -97,7 +97,7 @@ static void Argon2id_AVX2(benchmark::Bench& bench)
 BENCHMARK(Argon2id_AVX2, benchmark::PriorityLevel::HIGH);
 #endif
 
-#if defined(ENABLE_ARGON2_AVX512)
+#if defined(ENABLE_ARGON2_AVX5121)
 static void Argon2id_AVX512(benchmark::Bench& bench)
 {
     bench.name(strprintf("%s using the '%s' Argon2id implementation",
