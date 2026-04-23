@@ -31,13 +31,14 @@
 
 #include <crypto/argon2d/argon2.h>
 #include <test/data/argon2_api_test_vectors.json.h>
-#include <test/util/json.h>
+#include <univalue.h>
 #include <util/strencodings.h>
 
 #include <algorithm>
 #include <cstring>
 #include <functional>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -138,12 +139,32 @@ static void ForEachISA(
 #endif
 }
 
+/**
+ * Read the argon2 API test vectors from the embedded JSON string.
+ *
+ * The file is a JSON object with keys "raw_vectors", "encoded_vectors", etc.
+ * The standard read_json() helper asserts that the root is an array, so we
+ * parse directly here and check for an object.
+ *
+ * Throws std::runtime_error if parsing fails.
+ */
+static UniValue ReadArgon2ApiVectors()
+{
+    const std::string& jsondata = json_tests::argon2_api_test_vectors;
+    UniValue v;
+    if (!v.read(jsondata) || !v.isObject()) {
+        throw std::runtime_error(
+            "Failed to parse argon2_api_test_vectors.json as a JSON object");
+    }
+    return v;
+}
+
 // ---------------------------------------------------------------------------
 // Test 1 – _hash_raw: all types × all ISAs against Python reference vectors
 // ---------------------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(argon2_raw_all_types_all_isa)
 {
-    UniValue root = read_json(json_tests::argon2_api_test_vectors);
+    UniValue root = ReadArgon2ApiVectors();
     const UniValue& vecs = root["raw_vectors"];
     BOOST_REQUIRE(vecs.isArray());
     BOOST_REQUIRE_GT(vecs.size(), 0);
@@ -201,7 +222,7 @@ BOOST_AUTO_TEST_CASE(argon2_raw_all_types_all_isa)
 // ---------------------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(argon2_encoded_format_check)
 {
-    UniValue root = read_json(json_tests::argon2_api_test_vectors);
+    UniValue root = ReadArgon2ApiVectors();
     const UniValue& vecs = root["encoded_vectors"];
     BOOST_REQUIRE(vecs.isArray());
     BOOST_REQUIRE_GT(vecs.size(), 0);
@@ -271,7 +292,7 @@ BOOST_AUTO_TEST_CASE(argon2_encoded_format_check)
 // ---------------------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(argon2_verify_python_encoded_vectors)
 {
-    UniValue root = read_json(json_tests::argon2_api_test_vectors);
+    UniValue root = ReadArgon2ApiVectors();
     const UniValue& vecs = root["encoded_vectors"];
     BOOST_REQUIRE(vecs.isArray());
     BOOST_REQUIRE_GT(vecs.size(), 0);
@@ -359,7 +380,7 @@ BOOST_AUTO_TEST_CASE(argon2_verify_roundtrip)
 // ---------------------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(argon2_generic_hash_raw)
 {
-    UniValue root = read_json(json_tests::argon2_api_test_vectors);
+    UniValue root = ReadArgon2ApiVectors();
     const UniValue& vecs = root["generic_vectors"];
     BOOST_REQUIRE(vecs.isArray());
     BOOST_REQUIRE_GT(vecs.size(), 0);
@@ -409,7 +430,7 @@ BOOST_AUTO_TEST_CASE(argon2_generic_hash_raw)
 // ---------------------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(argon2_generic_hash_encoded_and_verify)
 {
-    UniValue root = read_json(json_tests::argon2_api_test_vectors);
+    UniValue root = ReadArgon2ApiVectors();
     const UniValue& vecs = root["generic_vectors"];
     BOOST_REQUIRE(vecs.isArray());
     BOOST_REQUIRE_GT(vecs.size(), 0);
@@ -470,7 +491,7 @@ BOOST_AUTO_TEST_CASE(argon2_generic_hash_encoded_and_verify)
 // ---------------------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(argon2_ctx_api)
 {
-    UniValue root = read_json(json_tests::argon2_api_test_vectors);
+    UniValue root = ReadArgon2ApiVectors();
     const UniValue& vecs = root["raw_vectors"];
     BOOST_REQUIRE(vecs.isArray());
     BOOST_REQUIRE_GT(vecs.size(), 0);
@@ -804,14 +825,14 @@ BOOST_AUTO_TEST_CASE(argon2_invalid_params)
 // ---------------------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(argon2_negative_verify)
 {
-    UniValue root = read_json(json_tests::argon2_api_test_vectors);
+    UniValue root = ReadArgon2ApiVectors();
     const UniValue& vecs = root["encoded_vectors"];
     BOOST_REQUIRE(vecs.isArray());
     BOOST_REQUIRE_GT(vecs.size(), 0);
 
     Argon2AutoDetect(argon2_implementation::STANDARD);
 
-    for (const std::string& ts : {"argon2d", "argon2i", "argon2id"}) {
+    for (const std::string ts : {"argon2d", "argon2i", "argon2id"}) {
         // Find the first vector matching this type
         for (size_t idx = 0; idx < vecs.size(); ++idx) {
             if (vecs[idx]["type"].get_str() != ts) continue;
