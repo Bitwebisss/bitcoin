@@ -593,3 +593,69 @@ jobs:
             CIRRUS_PR_FLAG="-e CIRRUS_PR=1"
           fi
           docker run --rm $CIRRUS_PR_FLAG -v "$(pwd)":/bitweb "$CONTAINER_NAME"
+
+  bench-arm32:
+    name: 'Bench ARM32 (NEON)'
+    needs: runners
+    runs-on: ${{ needs.runners.outputs.provider == 'cirrus' && 'ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-sm' || 'ubuntu-24.04-arm' }}
+    if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
+    timeout-minutes: 120
+
+    env:
+      DANGER_CI_ON_HOST_FOLDERS: 1
+      FILE_ENV: './ci/test/00_setup_env_arm_bench.sh'
+
+    steps:
+      - *CHECKOUT
+
+      - name: Configure environment
+        uses: ./.github/actions/configure-environment
+
+      - name: Restore caches
+        uses: ./.github/actions/restore-caches
+
+      - name: Configure Docker
+        uses: ./.github/actions/configure-docker
+        with:
+          cache-provider: gha
+
+      - name: CI script
+        run: ./ci/test_run_all.sh
+
+      - name: Save caches
+        uses: ./.github/actions/save-caches
+
+  bench-macos-arm64:
+    name: 'Bench macOS ARM64'
+    runs-on: macos-14
+    if: ${{ vars.SKIP_BRANCH_PUSH != 'true' || github.event_name == 'pull_request' }}
+    timeout-minutes: 120
+
+    env:
+      DANGER_RUN_CI_ON_HOST: 1
+      BASE_ROOT_DIR: ${{ github.workspace }}
+      FILE_ENV: './ci/test/00_setup_env_mac_native_bench.sh'
+
+    steps:
+      - *CHECKOUT
+
+      - name: Clang version
+        run: |
+          sudo xcode-select --switch /Applications/Xcode_15.0.app
+          clang --version
+
+      - name: Install Homebrew packages
+        env:
+          HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
+        run: |
+          brew install --quiet python@3 || brew link --overwrite python@3
+          brew install --quiet coreutils ninja pkgconf gnu-getopt ccache boost libevent zeromq qt@6 qrencode capnp
+
+      - name: Install Python packages
+        run: |
+          git clone -b v2.1.0 https://github.com/capnproto/pycapnp
+          pip3 install ./pycapnp -C force-bundled-libcapnp=True --break-system-packages
+          pip3 install --break-system-packages argon2-cffi
+
+      - name: CI script
+        run: ./ci/test_run_all.sh
