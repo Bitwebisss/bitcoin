@@ -20,8 +20,6 @@
 
 #include <crypto/argon2d/argon2_types.h>
 
-#define CONST_CAST(x) (x)(uintptr_t)
-
 /**********************Argon2 internal constants*******************************/
 
 enum argon2_core_constants {

@@ -131,9 +131,13 @@ int argon2_hash(const uint32_t t_cost, const uint32_t m_cost,
 
     context.out = (uint8_t *)out;
     context.outlen = (uint32_t)hashlen;
-    context.pwd = CONST_CAST(uint8_t *)pwd;
+    // pwd/salt are const in the public API but argon2_context stores non-const
+    // pointers so that ARGON2_FLAG_CLEAR_PASSWORD / _CLEAR_SECRET can wipe them
+    // after pre-hashing.  const_cast is the correct C++ spelling of this
+    // intentional const-removal; the via-uintptr_t C macro is gone.
+    context.pwd = const_cast<uint8_t*>(static_cast<const uint8_t*>(pwd));
     context.pwdlen = (uint32_t)pwdlen;
-    context.salt = CONST_CAST(uint8_t *)salt;
+    context.salt = const_cast<uint8_t*>(static_cast<const uint8_t*>(salt));
     context.saltlen = (uint32_t)saltlen;
     context.secret = nullptr;
     context.secretlen = 0;

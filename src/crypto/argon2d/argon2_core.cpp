@@ -69,14 +69,14 @@ void xor_block(block *dst, const block *src) {
 static void load_block(block *dst, const void *input) {
     unsigned i;
     for (i = 0; i < ARGON2_QWORDS_IN_BLOCK; ++i) {
-        dst->v[i] = load64((const uint8_t *)input + i * sizeof(dst->v[i]));
+        dst->v[i] = load64(static_cast<const uint8_t*>(input) + i * sizeof(dst->v[i]));
     }
 }
 
 static void store_block(void *output, const block *src) {
     unsigned i;
     for (i = 0; i < ARGON2_QWORDS_IN_BLOCK; ++i) {
-        store64((uint8_t *)output + i * sizeof(src->v[i]), src->v[i]);
+        store64(static_cast<uint8_t*>(output) + i * sizeof(src->v[i]), src->v[i]);
     }
 }
 
@@ -173,7 +173,7 @@ void finalize(const argon2_context *context, argon2_instance_t *instance) {
             clear_internal_memory(blockhash_bytes, ARGON2_BLOCK_SIZE);
         }
 
-        free_memory(context, (uint8_t *)instance->memory,
+        free_memory(context, reinterpret_cast<uint8_t*>(instance->memory),
                     instance->memory_blocks, sizeof(block));
     }
 }
@@ -331,7 +331,7 @@ static int fill_memory_blocks_mt(argon2_instance_t *instance) {
                 memcpy(&(thr_data[l].pos), &position,
                        sizeof(argon2_position_t));
                 if (argon2_thread_create(&thread[l], &fill_segment_thr,
-                                         (void *)&thr_data[l])) {
+                                         &thr_data[l])) {
                     /* Wait for already running threads */
                     for (ll = 0; ll < l; ++ll)
                         argon2_thread_join(thread[ll]);
@@ -536,28 +536,28 @@ void initial_hash(uint8_t *blockhash, argon2_context *context,
     argon2d_blake2b_init(&BlakeHash, ARGON2_PREHASH_DIGEST_LENGTH);
 
     store32(&value, context->lanes);
-    argon2d_blake2b_update(&BlakeHash, (const uint8_t *)&value, sizeof(value));
+    argon2d_blake2b_update(&BlakeHash, value, sizeof(value));
 
     store32(&value, context->outlen);
-    argon2d_blake2b_update(&BlakeHash, (const uint8_t *)&value, sizeof(value));
+    argon2d_blake2b_update(&BlakeHash, value, sizeof(value));
 
     store32(&value, context->m_cost);
-    argon2d_blake2b_update(&BlakeHash, (const uint8_t *)&value, sizeof(value));
+    argon2d_blake2b_update(&BlakeHash, value, sizeof(value));
 
     store32(&value, context->t_cost);
-    argon2d_blake2b_update(&BlakeHash, (const uint8_t *)&value, sizeof(value));
+    argon2d_blake2b_update(&BlakeHash, value, sizeof(value));
 
     store32(&value, context->version);
-    argon2d_blake2b_update(&BlakeHash, (const uint8_t *)&value, sizeof(value));
+    argon2d_blake2b_update(&BlakeHash, value, sizeof(value));
 
-    store32(&value, (uint32_t)type);
-    argon2d_blake2b_update(&BlakeHash, (const uint8_t *)&value, sizeof(value));
+    store32(&value, static_cast<uint32_t>(type));
+    argon2d_blake2b_update(&BlakeHash, value, sizeof(value));
 
     store32(&value, context->pwdlen);
-    argon2d_blake2b_update(&BlakeHash, (const uint8_t *)&value, sizeof(value));
+    argon2d_blake2b_update(&BlakeHash, value, sizeof(value));
 
     if (context->pwd != nullptr) {
-        argon2d_blake2b_update(&BlakeHash, (const uint8_t *)context->pwd,
+        argon2d_blake2b_update(&BlakeHash, context->pwd,
                        context->pwdlen);
 
         if (context->flags & ARGON2_FLAG_CLEAR_PASSWORD) {
@@ -567,18 +567,18 @@ void initial_hash(uint8_t *blockhash, argon2_context *context,
     }
 
     store32(&value, context->saltlen);
-    argon2d_blake2b_update(&BlakeHash, (const uint8_t *)&value, sizeof(value));
+    argon2d_blake2b_update(&BlakeHash, value, sizeof(value));
 
     if (context->salt != nullptr) {
-        argon2d_blake2b_update(&BlakeHash, (const uint8_t *)context->salt,
+        argon2d_blake2b_update(&BlakeHash, context->salt,
                        context->saltlen);
     }
 
     store32(&value, context->secretlen);
-    argon2d_blake2b_update(&BlakeHash, (const uint8_t *)&value, sizeof(value));
+    argon2d_blake2b_update(&BlakeHash, value, sizeof(value));
 
     if (context->secret != nullptr) {
-        argon2d_blake2b_update(&BlakeHash, (const uint8_t *)context->secret,
+        argon2d_blake2b_update(&BlakeHash, context->secret,
                        context->secretlen);
 
         if (context->flags & ARGON2_FLAG_CLEAR_SECRET) {
@@ -588,10 +588,10 @@ void initial_hash(uint8_t *blockhash, argon2_context *context,
     }
 
     store32(&value, context->adlen);
-    argon2d_blake2b_update(&BlakeHash, (const uint8_t *)&value, sizeof(value));
+    argon2d_blake2b_update(&BlakeHash, value, sizeof(value));
 
     if (context->ad != nullptr) {
-        argon2d_blake2b_update(&BlakeHash, (const uint8_t *)context->ad,
+        argon2d_blake2b_update(&BlakeHash, context->ad,
                        context->adlen);
     }
 
@@ -607,10 +607,16 @@ int initialize(argon2_instance_t *instance, argon2_context *context) {
     instance->context_ptr = context;
 
     /* 1. Memory allocation */
-    result = allocate_memory(context, (uint8_t **)&(instance->memory),
-                             instance->memory_blocks, sizeof(block));
-    if (result != ARGON2_OK) {
-        return result;
+    {
+        uint8_t* raw_memory = nullptr;
+        result = allocate_memory(context, &raw_memory,
+                                 instance->memory_blocks, sizeof(block));
+        if (result != ARGON2_OK) {
+            return result;
+        }
+        // reinterpret_cast is safe: allocate_memory returns malloc'd memory
+        // aligned for any type; block is a plain array of uint64_t.
+        instance->memory = reinterpret_cast<block*>(raw_memory);
     }
 
     /* 2. Initial hashing */

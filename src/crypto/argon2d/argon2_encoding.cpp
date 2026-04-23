@@ -136,17 +136,17 @@ static size_t to_base64(char *dst, size_t dst_len, const void *src,
     }
     acc = 0;
     acc_len = 0;
-    buf = (const unsigned char *)src;
+    buf = static_cast<const unsigned char *>(src);
     while (src_len-- > 0) {
         acc = (acc << 8) + (*buf++);
         acc_len += 8;
         while (acc_len >= 6) {
             acc_len -= 6;
-            *dst++ = (char)b64_byte_to_char((acc >> acc_len) & 0x3F);
+            *dst++ = static_cast<char>(b64_byte_to_char((acc >> acc_len) & 0x3F));
         }
     }
     if (acc_len > 0) {
-        *dst++ = (char)b64_byte_to_char((acc << (6 - acc_len)) & 0x3F);
+        *dst++ = static_cast<char>(b64_byte_to_char((acc << (6 - acc_len)) & 0x3F));
     }
     *dst++ = 0;
     return olen;
@@ -170,7 +170,7 @@ static const char *from_base64(void *dst, size_t *dst_len, const char *src) {
     unsigned char *buf;
     unsigned acc, acc_len;
 
-    buf = (unsigned char *)dst;
+    buf = static_cast<unsigned char *>(dst);
     len = 0;
     acc = 0;
     acc_len = 0;
@@ -267,7 +267,7 @@ static int uint_to_str(char *buf, size_t buf_size, unsigned long x)
         return 0;
     }
     while (x > 0) {
-        tmp[i++] = (char)('0' + (int)(x % 10));
+        tmp[i++] = static_cast<char>('0' + static_cast<int>(x % 10));
         x /= 10;
     }
     /* Need i digits + NUL terminator. */
