@@ -71,6 +71,8 @@ int argon2_ctx(argon2_context *context, argon2_type type) {
     instance.lanes = context->lanes;
     instance.threads = context->threads;
     instance.type = type;
+    instance.print_internals = 0;
+    instance.context_ptr = nullptr;
 
     if (instance.threads > instance.lanes) {
         instance.threads = instance.lanes;
@@ -129,16 +131,16 @@ int argon2_hash(const uint32_t t_cost, const uint32_t m_cost,
         return ARGON2_MEMORY_ALLOCATION_ERROR;
     }
 
-    context.out = (uint8_t *)out;
-    context.outlen = (uint32_t)hashlen;
+    context.out = out;
+    context.outlen = static_cast<uint32_t>(hashlen);
     // pwd/salt are const in the public API but argon2_context stores non-const
     // pointers so that ARGON2_FLAG_CLEAR_PASSWORD / _CLEAR_SECRET can wipe them
     // after pre-hashing.  const_cast is the correct C++ spelling of this
     // intentional const-removal; the via-uintptr_t C macro is gone.
     context.pwd = const_cast<uint8_t*>(static_cast<const uint8_t*>(pwd));
-    context.pwdlen = (uint32_t)pwdlen;
+    context.pwdlen = static_cast<uint32_t>(pwdlen);
     context.salt = const_cast<uint8_t*>(static_cast<const uint8_t*>(salt));
-    context.saltlen = (uint32_t)saltlen;
+    context.saltlen = static_cast<uint32_t>(saltlen);
     context.secret = nullptr;
     context.secretlen = 0;
     context.ad = nullptr;
@@ -275,7 +277,7 @@ int argon2_verify(const char *encoded, const void *pwd, const size_t pwdlen,
     }
 
     /* No field can be longer than the encoded length */
-    max_field_len = (uint32_t)encoded_len;
+    max_field_len = static_cast<uint32_t>(encoded_len);
 
     ctx.saltlen = max_field_len;
     ctx.outlen = max_field_len;
@@ -287,8 +289,8 @@ int argon2_verify(const char *encoded, const void *pwd, const size_t pwdlen,
         goto fail;
     }
 
-    ctx.pwd = (uint8_t *)pwd;
-    ctx.pwdlen = (uint32_t)pwdlen;
+    ctx.pwd = const_cast<uint8_t*>(static_cast<const uint8_t*>(pwd));
+    ctx.pwdlen = static_cast<uint32_t>(pwdlen);
 
     ret = decode_string(&ctx, encoded, type);
     if (ret != ARGON2_OK) {
@@ -303,7 +305,7 @@ int argon2_verify(const char *encoded, const void *pwd, const size_t pwdlen,
         goto fail;
     }
 
-    ret = argon2_verify_ctx(&ctx, (char *)desired_result, type);
+    ret = argon2_verify_ctx(&ctx, reinterpret_cast<char*>(desired_result), type);
     if (ret != ARGON2_OK) {
         goto fail;
     }
@@ -350,7 +352,7 @@ int argon2_verify_ctx(argon2_context *context, const char *hash,
         return ret;
     }
 
-    if (argon2_compare((uint8_t *)hash, context->out, context->outlen)) {
+    if (argon2_compare(reinterpret_cast<const uint8_t*>(hash), context->out, context->outlen)) {
         return ARGON2_VERIFY_MISMATCH;
     }
 
