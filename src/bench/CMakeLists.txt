@@ -83,6 +83,27 @@ if(ENABLE_WALLET)
   target_link_libraries(bench_bitweb bitcoin_wallet)
 endif()
 
+# Argon2id ISA availability — forward the same HAVE_ARGON2_* cache variables
+# that introspection.cmake sets to ENABLE_ARGON2_* compile definitions on
+# bench_bitweb, mirroring what test_bitweb does.  This ensures that
+# crypto_argon2.cpp only registers benchmark variants that were actually
+# compiled into the argon2 library and can run on the target CPU.
+if(HAVE_ARGON2_SSE2)
+  target_compile_definitions(bench_bitweb PRIVATE ENABLE_ARGON2_SSE2)
+endif()
+if(HAVE_ARGON2_SSSE3)
+  target_compile_definitions(bench_bitweb PRIVATE ENABLE_ARGON2_SSSE3)
+endif()
+if(HAVE_ARGON2_AVX2)
+  target_compile_definitions(bench_bitweb PRIVATE ENABLE_ARGON2_AVX2)
+endif()
+if(HAVE_ARGON2_AVX512)
+  target_compile_definitions(bench_bitweb PRIVATE ENABLE_ARGON2_AVX512)
+endif()
+if(HAVE_ARGON2_NEON)
+  target_compile_definitions(bench_bitweb PRIVATE ENABLE_ARGON2_NEON)
+endif()
+
 add_test(NAME bench_sanity_check
   COMMAND bench_bitweb -sanity-check
 )
