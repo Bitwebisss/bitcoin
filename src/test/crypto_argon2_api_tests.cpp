@@ -455,11 +455,14 @@ BOOST_AUTO_TEST_CASE(argon2_generic_hash_encoded_and_verify)
                                             static_cast<uint32_t>(hlen), type);
         std::vector<char> enc_buf(enc_len);
 
-        // Encoded-only output: pass nullptr for the raw hash buffer
+        // argon2_hash requires a valid output length even when only the encoded
+        // string is needed (hashlen must be >= 4).  We provide a dummy buffer
+        // and length to satisfy the function, then verify the encoded result.
+        std::vector<uint8_t> dummy_hash(hlen);
         int rc = argon2_hash(t, m, p,
                               data.data(), data.size(),
                               salt.data(), salt.size(),
-                              /*hash=*/nullptr, /*hashlen=*/0,
+                              dummy_hash.data(), hlen,   // valid raw output
                               enc_buf.data(), enc_len,
                               type, ARGON2_VERSION_NUMBER);
         BOOST_REQUIRE_MESSAGE(rc == ARGON2_OK,
