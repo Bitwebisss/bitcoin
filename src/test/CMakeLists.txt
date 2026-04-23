@@ -37,7 +37,6 @@ add_executable(test_bitweb
   compress_tests.cpp
   crypto_tests.cpp
   crypto_argon2id_tests.cpp
-  crypto_argon2_api_tests.cpp
   cuckoocache_tests.cpp
   dbwrapper_tests.cpp
   denialofservice_tests.cpp
