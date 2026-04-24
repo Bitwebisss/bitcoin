@@ -161,6 +161,10 @@ class PruneTest(BitcoinTestFramework):
         # Then mine enough full blocks to create more than 550MiB of data
         set_mocktime_for_large_blocks(self.nodes[0:5], 645)
         mine_large_blocks(self.nodes[0], 645)
+        self.wait_until(
+            lambda: all(len(n.getpeerinfo()) > 0 for n in self.nodes[0:5]),
+            timeout=120
+        )
         self.sync_blocks(self.nodes[0:5])  # FIX: sync before reset so nodes accept future-timestamp blocks
         reset_mocktime(self.nodes[0:5])
 
