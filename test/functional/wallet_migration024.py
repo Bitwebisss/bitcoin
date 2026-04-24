@@ -81,8 +81,8 @@ class WalletMigration024Test(BitcoinTestFramework):
         # ------------------------------------------------------------------
         self.log.info("Test that migrating a non-existent wallet fails")
         assert_raises_rpc_error(
-            -18,
-            "Wallet not found",
+            -4,
+            "Wallet does not exist",
             node.migratewallet,
             "no_such_wallet_xyz",
         )
