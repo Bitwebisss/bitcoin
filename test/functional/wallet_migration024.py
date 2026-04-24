@@ -41,7 +41,6 @@ class WalletMigration024Test(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         # migratewallet reads the legacy BDB file via the BERKELEY_RO driver
         # and writes the result as SQLite, so both must be compiled in.
-        self.skip_if_no_bdb()
         self.skip_if_no_sqlite()
 
     # ------------------------------------------------------------------
