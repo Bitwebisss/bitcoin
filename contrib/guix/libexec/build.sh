@@ -260,7 +260,7 @@ mkdir -p "$DISTSRC"
     case "$HOST" in
         *mingw*)
             cmake --build build -j "$JOBS" -t deploy ${V:+--verbose}
-            mv build/bitweb-win64-setup.exe "${OUTDIR}/${DISTNAME}-win64-setup-unsigned.exe"
+            mv build/bitweb-win64-setup.exe "${OUTDIR}/${DISTNAME}-win64-setup.exe"
             ;;
     esac
 
@@ -319,8 +319,8 @@ mkdir -p "$DISTSRC"
                     | xargs -0r touch --no-dereference --date="@${SOURCE_DATE_EPOCH}"
                 find "${DISTNAME}" -not -name "*.dbg" \
                     | sort \
-                    | zip -X@ "${OUTDIR}/${DISTNAME}-${HOST//x86_64-w64-mingw32/win64}-unsigned.zip" \
-                    || ( rm -f "${OUTDIR}/${DISTNAME}-${HOST//x86_64-w64-mingw32/win64}-unsigned.zip" && exit 1 )
+                    | zip -X@ "${OUTDIR}/${DISTNAME}-${HOST//x86_64-w64-mingw32/win64}.zip" \
+                    || ( rm -f "${OUTDIR}/${DISTNAME}-${HOST//x86_64-w64-mingw32/win64}.zip" && exit 1 )
                 find "${DISTNAME}" -name "*.dbg" -print0 \
                     | xargs -0r touch --no-dereference --date="@${SOURCE_DATE_EPOCH}"
                 find "${DISTNAME}" -name "*.dbg" \
@@ -344,48 +344,12 @@ mkdir -p "$DISTSRC"
                 find "${DISTNAME}" -print0 \
                     | sort --zero-terminated \
                     | tar --create --no-recursion --mode='u+rw,go+r-w,a+X' --null --files-from=- \
-                    | gzip -9n > "${OUTDIR}/${DISTNAME}-${HOST}-unsigned.tar.gz" \
-                    || ( rm -f "${OUTDIR}/${DISTNAME}-${HOST}-unsigned.tar.gz" && exit 1 )
+                    | gzip -9n > "${OUTDIR}/${DISTNAME}-${HOST}.tar.gz" \
+                    || ( rm -f "${OUTDIR}/${DISTNAME}-${HOST}.tar.gz" && exit 1 )
                 ;;
         esac
     )  # $DISTSRC/installed
 
-    # Finally make tarballs for codesigning
-    case "$HOST" in
-        *mingw*)
-            cp -rf --target-directory=. contrib/windeploy
-            (
-                cd ./windeploy
-                mkdir -p unsigned
-                cp --target-directory=unsigned/ "${OUTDIR}/${DISTNAME}-win64-setup-unsigned.exe"
-                cp -r --target-directory=unsigned/ "${INSTALLPATH}"
-                find unsigned/ -name "*.dbg" -print0 \
-                    | xargs -0r rm
-                find . -print0 \
-                    | sort --zero-terminated \
-                    | tar --create --no-recursion --mode='u+rw,go+r-w,a+X' --null --files-from=- \
-                    | gzip -9n > "${OUTDIR}/${DISTNAME}-win64-codesigning.tar.gz" \
-                    || ( rm -f "${OUTDIR}/${DISTNAME}-win64-codesigning.tar.gz" && exit 1 )
-            )
-            ;;
-        *darwin*)
-            cmake --build build --target deploy ${V:+--verbose}
-            mv build/dist/Bitweb-Core.zip "${OUTDIR}/${DISTNAME}-${HOST}-unsigned.zip"
-            mkdir -p "unsigned-app-${HOST}"
-            cp  --target-directory="unsigned-app-${HOST}" \
-                contrib/macdeploy/detached-sig-create.sh
-            mv --target-directory="unsigned-app-${HOST}" build/dist
-            cp -r --target-directory="unsigned-app-${HOST}" "${INSTALLPATH}"
-            (
-                cd "unsigned-app-${HOST}"
-                find . -print0 \
-                    | sort --zero-terminated \
-                    | tar --create --no-recursion --mode='u+rw,go+r-w,a+X' --null --files-from=- \
-                    | gzip -9n > "${OUTDIR}/${DISTNAME}-${HOST}-codesigning.tar.gz" \
-                    || ( rm -f "${OUTDIR}/${DISTNAME}-${HOST}-codesigning.tar.gz" && exit 1 )
-            )
-            ;;
-    esac
 )  # $DISTSRC
 
 rm -rf "$ACTUAL_OUTDIR"
