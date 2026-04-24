@@ -5,8 +5,8 @@
 """Test migratewallet RPC using a pre-built legacy wallet fixture (v0.24).
 
 Fixture file test/functional/data/legacy_wallet_v24.dat was created on a
-v0.24 Bitweb node. The node is started with -walletcrosschain because the
-genesis block hash changed between v0.24 and the current version.
+v0.24 Bitweb mainnet node. The test runs on mainnet chain so the wallet's
+genesis hash matches. -noconnect prevents peer connections to real network.
 """
 
 import os
@@ -25,8 +25,9 @@ class WalletMigration024Test(BitcoinTestFramework):
 
     def set_test_params(self):
         self.setup_clean_chain = True
+        self.chain = 'main'
         self.num_nodes = 1
-        self.extra_args = [["-walletcrosschain"]]
+        self.extra_args = [["-noconnect"]]
         self.wallet_names = []
 
     def skip_test_if_missing_module(self):
