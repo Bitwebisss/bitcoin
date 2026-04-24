@@ -29,7 +29,7 @@ GITHUB_REPO = "Bitwebisss/bitweb"
 
 SHA256_SUMS = {
     "c5747e0bd4f69faa94c1bf9e04aa2e03e27817dec8cdf1f3ca61d9a218cde575": {"tag": "60229ed3d5e7", "archive": "bitweb-60229ed3d5e7-x86_64-linux-gnu.tar.gz"},
-    "046131f9d123596bd80af8d24bb1c4687799789e77a629e4131128469cf6b31d": {"tag": "60229ed3d5e7", "archive": "bitweb-60229ed3d5e7-win64.zip"},
+    "046131f9d123596bd80af8d24bb1c4687799789e77a629e4131128469cf6b31d": {"tag": "60229ed3d5e7", "archive": "bitweb-60229ed3d5e71-win64.zip"},
 }
 
 
