@@ -25,9 +25,9 @@ class WalletMigration024Test(BitcoinTestFramework):
 
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.chain = ""
+        self.chain = ""  # main
         self.num_nodes = 1
-        self.extra_args = [["-noconnect"]]
+        self.extra_args = [["-noconnect", "-walletcrosschain"]]
         self.wallet_names = []
 
     def skip_test_if_missing_module(self):
