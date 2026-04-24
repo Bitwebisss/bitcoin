@@ -24,9 +24,8 @@ from test_framework.util import (
     assert_raises_rpc_error,
 )
 
-# Directory that contains this test file.
-# Mirrors the convention used in rpc_getblockstats.py and other data-driven
-# tests: fixture files live in   test/functional/data/
+# Fixture files live in test/functional/data/ — same convention as
+# rpc_getblockstats.py and other data-driven tests.
 TESTSDIR = os.path.dirname(os.path.realpath(__file__))
 
 
@@ -37,11 +36,6 @@ class WalletMigration024Test(BitcoinTestFramework):
         self.num_nodes = 1
         # No default wallet — we manage wallets manually.
         self.wallet_names = []
-
-    def skip_test_if_missing_module(self):
-        # migratewallet reads the legacy BDB file via the BERKELEY_RO driver
-        # and writes the result as SQLite, so both must be compiled in.
-        self.skip_if_no_sqlite()
 
     # ------------------------------------------------------------------
     # Helpers
@@ -55,8 +49,7 @@ class WalletMigration024Test(BitcoinTestFramework):
         """
         Copy a wallet.dat fixture into the node's wallets directory.
 
-        Bitcoin Core expects the layout:
-            <wallets_path>/<wallet_name>/wallet.dat
+        Expected layout: <wallets_path>/<wallet_name>/wallet.dat
         """
         dst_dir = self.nodes[0].wallets_path / wallet_name
         dst_dir.mkdir(parents=True, exist_ok=True)
