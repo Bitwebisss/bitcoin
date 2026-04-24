@@ -245,7 +245,7 @@ BASE_SCRIPTS = [
     'wallet_multisig_descriptor_psbt.py',
     'wallet_miniscript_decaying_multisig_descriptor_psbt.py',
     'wallet_txn_doublespend.py',
-    'wallet_backwards_compatibility.py',
+    # 'wallet_backwards_compatibility.py', doesn't make sense we start from 0.30.2.
     'wallet_txn_clone.py --mineblock',
     'feature_notifications.py',
     'rpc_getblockfilter.py',
@@ -281,7 +281,7 @@ BASE_SCRIPTS = [
     'wallet_importdescriptors.py',
     'wallet_crosschain.py',
     'mining_basic.py',
-#    'mining_mainnet.py',
+    # 'mining_mainnet.py', test need rework for lwma algo, but really does not make any sense due handle other test.
     'feature_signet.py',
     'p2p_mutated_blocks.py',
     'rpc_named_arguments.py',
@@ -328,7 +328,7 @@ BASE_SCRIPTS = [
     'feature_fastprune.py',
     'feature_framework_miniwallet.py',
     'mempool_unbroadcast.py',
-    'mempool_compatibility.py',
+    # 'mempool_compatibility.py', doesn't make sense we start from 0.30.2, but will make sense at migration from 0.30.2 to 0.31.x
     'mempool_accept_wtxid.py',
     'mempool_dust.py',
     'mempool_sigoplimit.py',
@@ -347,7 +347,7 @@ BASE_SCRIPTS = [
     'feature_anchors.py',
     'mempool_datacarrier.py',
     'feature_coinstatsindex.py',
-    'feature_coinstatsindex_compatibility.py',
+    # 'feature_coinstatsindex_compatibility.py', doesn't make sense we start from 0.30.2.
     'wallet_orphanedreward.py',
     'wallet_timelock.py',
     'p2p_permissions.py',
@@ -368,7 +368,7 @@ BASE_SCRIPTS = [
     'feature_help.py',
     'feature_framework_startup_failures.py',
     'feature_shutdown.py',
-    'wallet_migration.py',
+    # 'wallet_migration.py', doesn't make sense for now we start from 0.30.2.
     'p2p_ibd_txrelay.py',
     'p2p_seednode.py',
     # Don't append tests at the end to avoid merge conflicts
