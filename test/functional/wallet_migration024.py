@@ -2,7 +2,12 @@
 # Copyright (c) 2018-present The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test migratewallet RPC using a pre-built legacy wallet fixture (v0.24)."""
+"""Test migratewallet RPC using a pre-built legacy wallet fixture (v0.24).
+
+Fixture file test/functional/data/legacy_wallet_v24.dat was created on a
+v0.24 Bitweb node. The node is started with -walletcrosschain because the
+genesis block hash changed between v0.24 and the current version.
+"""
 
 import os
 import shutil
@@ -21,6 +26,7 @@ class WalletMigration024Test(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
+        self.extra_args = [["-walletcrosschain"]]
         self.wallet_names = []
 
     def skip_test_if_missing_module(self):
@@ -43,10 +49,6 @@ class WalletMigration024Test(BitcoinTestFramework):
         # ------------------------------------------------------------------
         self.log.info("Test migrating a v0.24 legacy wallet fixture")
         self.install_wallet("legacy_v24", "legacy_wallet_v24.dat")
-
-        # Load the wallet explicitly before migration — required so that
-        # all key/script data is fully initialised when migratewallet runs.
-        node.loadwallet("legacy_v24")
 
         result = node.migratewallet("legacy_v24")
 
