@@ -22,14 +22,15 @@
  *   - AArch64 (ARMv8-A 64-bit) — NEON is mandatory baseline.
  *   - ARMv7 with NEON          — compiled with -mfpu=neon.
  *
- * Incompatibility fixed vs. the libsodium-derived source:
- *   vqtbl1q_u8 is AArch64-only (single-register 128-bit table lookup).
- *   rotr24 and rotr16 now use portable vshrq_n_u64 + vshlq_n_u64 + vorrq_u64,
- *   which are available on both targets and compile to efficient code.
+ * rotr24 / rotr16:
+ *   On AArch64 and Apple Silicon (__aarch64__ / __arm64__):
+ *     vqtbl1q_u8 — single-register 128-bit table lookup, one instruction.
+ *   On ARMv7+NEON:
+ *     portable shift+OR — vqtbl1q_u8 is AArch64-only and would SIGILL on ARMv7.
  *
- * All other primitives used here (vmovn_u64, vmull_u32, vaddq_u64, veorq_u64,
+ * All other primitives (vmovn_u64, vmull_u32, vaddq_u64, veorq_u64,
  * vreinterpretq_u64_u32, vrev64q_u32, vshrq_n_u64, vshlq_n_u64, vorrq_u64,
- * vextq_u8, vld1q_u64, vst1q_u64) are available on ARMv7 NEON and AArch64.
+ * vextq_u8, vld1q_u8, vld1q_u64, vst1q_u64) are available on both targets.
  *
  * Must be included only from a translation unit compiled with NEON support
  * (no extra flags on AArch64; -mfpu=neon on ARMv7).
@@ -44,10 +45,6 @@
  * fBlaMka_neon — modified G mixing function used by Argon2.
  *
  * Computes: x + y + 2*(lo32(x) * lo32(y))
- *
- * vmull_u32 is a widening multiply: lower 32 bits of each 64-bit lane
- * are multiplied, producing a 64-bit product. The result is doubled via
- * vaddq_u64(z, z).
  * ------------------------------------------------------------------------- */
 static inline uint64x2_t
 fBlaMka_neon(uint64x2_t x, uint64x2_t y)
@@ -59,19 +56,15 @@ fBlaMka_neon(uint64x2_t x, uint64x2_t y)
 }
 
 /* -------------------------------------------------------------------------
- * Rotation helpers — portable subset.
+ * Rotation helpers.
  *
- * rotr32: swap the two 32-bit halves within each 64-bit lane.
- *         vrev64q_u32 reverses 32-bit elements within each 64-bit group.
- *         Available on ARMv7 NEON and AArch64.
+ * rotr32: vrev64q_u32 — portable, available on ARMv7 NEON and AArch64.
  *
- * rotr24 / rotr16: portable shift+OR.
- *         The original libsodium code used vqtbl1q_u8 (single-register
- *         128-bit table lookup), which is AArch64-only.  The shift+OR
- *         form is correct on both 32-bit and 64-bit ARM, and modern
- *         AArch64 compilers still emit efficient code for it.
+ * rotr24 / rotr16:
+ *   AArch64 / Apple Silicon: vqtbl1q_u8 (one instruction).
+ *   ARMv7+NEON:              shift+OR   (vqtbl1q_u8 is AArch64-only).
  *
- * rotr63: (x >> 63) XOR (x + x)  — same as upstream reference.
+ * rotr63: shift+XOR — portable on both targets.
  * ------------------------------------------------------------------------- */
 static inline uint64x2_t
 rotr64_32_neon(uint64x2_t x)
@@ -82,13 +75,31 @@ rotr64_32_neon(uint64x2_t x)
 static inline uint64x2_t
 rotr64_24_neon(uint64x2_t x)
 {
+#if defined(__aarch64__) || defined(__arm64__)
+    static const uint8_t rot24_tbl[16] = {
+        3, 4, 5, 6, 7, 0, 1, 2,
+        11, 12, 13, 14, 15, 8, 9, 10
+    };
+    const uint8x16_t tbl = vld1q_u8(rot24_tbl);
+    return vreinterpretq_u64_u8(vqtbl1q_u8(vreinterpretq_u8_u64(x), tbl));
+#else
     return vorrq_u64(vshrq_n_u64(x, 24), vshlq_n_u64(x, 40));
+#endif
 }
 
 static inline uint64x2_t
 rotr64_16_neon(uint64x2_t x)
 {
+#if defined(__aarch64__) || defined(__arm64__)
+    static const uint8_t rot16_tbl[16] = {
+        2, 3, 4, 5, 6, 7, 0, 1,
+        10, 11, 12, 13, 14, 15, 8, 9
+    };
+    const uint8x16_t tbl = vld1q_u8(rot16_tbl);
+    return vreinterpretq_u64_u8(vqtbl1q_u8(vreinterpretq_u8_u64(x), tbl));
+#else
     return vorrq_u64(vshrq_n_u64(x, 16), vshlq_n_u64(x, 48));
+#endif
 }
 
 static inline uint64x2_t
