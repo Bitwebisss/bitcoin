@@ -3295,7 +3295,6 @@ int CWallet::GetTxDepthInMainChain(const CWalletTx& wtx) const
     }
 }
 
-/*
 int CWallet::GetTxBlocksToMaturity(const CWalletTx& wtx) const
 {
     AssertLockHeld(cs_wallet);
@@ -3307,39 +3306,6 @@ int CWallet::GetTxBlocksToMaturity(const CWalletTx& wtx) const
     assert(chain_depth >= 0); // coinbase tx should not be conflicted
     return std::max(0, (COINBASE_MATURITY+1) - chain_depth);
 }
-*/
-
-/* Bitweb Params */
-int CWallet::GetTxBlocksToMaturity(const CWalletTx& wtx) const
-{
-    AssertLockHeld(cs_wallet);
-
-    if (!wtx.IsCoinBase()) {
-        return 0;
-    }
-
-    int chain_depth = GetTxDepthInMainChain(wtx);
-    assert(chain_depth >= 0); // coinbase tx should not be conflicted
-
-    if (auto* conf = wtx.state<TxStateConfirmed>()) {
-        const int h = conf->confirmed_block_height;
-        const auto& consensusParams = Params().GetConsensus();
-
-        if (consensusParams.extCoinbaseMaturity) {
-            static constexpr int PREMINE_ACTIVATION = 200;
-            static constexpr int PREMINE_PERIOD_END = PREMINE_ACTIVATION + EXT_COINBASE_MATURITY;
-
-            if (h >= PREMINE_ACTIVATION && h < PREMINE_PERIOD_END) {
-                return std::max(0, (PREMINE_PERIOD_END - h) + COINBASE_MATURITY + 1 - chain_depth);
-            }
-        }
-
-        return std::max(0, (COINBASE_MATURITY+1) - chain_depth);
-    }
-
-    return 0;
-}
-/* Bitweb Params */
 
 bool CWallet::IsTxImmatureCoinBase(const CWalletTx& wtx) const
 {
