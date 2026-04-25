@@ -20,11 +20,22 @@
 
 #include <cstdint>
 #include <optional>
+#include <set>
 #include <utility>
 #include <vector>
 
 namespace wallet {
 static constexpr int32_t WALLET_SCHEMA_VERSION = 0;
+
+// Known legacy Bitweb network magic values (ReadBE32(pchMessageStart)).
+// Wallets with these application_ids are auto-migrated to the current chain
+// magic on load. This is safe: application_id lives in bytes 68-71 of the
+// SQLite file header and is entirely separate from table data and descriptors.
+// Wallets from unrecognized chains (BTC, LTC, …) are still rejected as before.
+// Add new entries here whenever a Bitweb release changes pchMessageStart.
+static const std::set<uint32_t> BITWEB_LEGACY_MAGICS = {
+    0xcaaed9feU, // Bitweb 0.24 mainnet  (ca ae d9 fe)
+};
 
 static std::span<const std::byte> SpanFromBlob(sqlite3_stmt* stmt, int col)
 {
@@ -197,8 +208,29 @@ bool SQLiteDatabase::Verify(bilingual_str& error)
     uint32_t app_id = static_cast<uint32_t>(read_result.value());
     uint32_t net_magic = ReadBE32(Params().MessageStart().data());
     if (app_id != net_magic) {
-        error = strprintf(_("SQLiteDatabase: Unexpected application id. Expected %u, got %u"), net_magic, app_id);
-        return false;
+        if (app_id == 0) {
+            // Wallet was created before application_id support was introduced.
+            // Update it to the current chain magic.
+            // Safe: only modifies bytes 68-71 of the SQLite file header;
+            // table data and descriptors are not affected.
+            LogPrintf("SQLiteDatabase: wallet '%s' has no application_id, "
+                      "updating to current chain magic %u\n", m_file_path, net_magic);
+            SetPragma(m_db, "application_id", strprintf("%d", static_cast<int32_t>(net_magic)),
+                      "Unable to set application_id");
+        } else if (BITWEB_LEGACY_MAGICS.count(app_id)) {
+            // Wallet from a known older Bitweb release — update magic and continue.
+            // Safe: only modifies bytes 68-71 of the SQLite file header;
+            // table data and descriptors are not affected.
+            LogPrintf("SQLiteDatabase: wallet '%s' has legacy Bitweb application_id %u, "
+                      "updating to current chain magic %u\n", m_file_path, app_id, net_magic);
+            SetPragma(m_db, "application_id", strprintf("%d", static_cast<int32_t>(net_magic)),
+                      "Unable to update application_id");
+        } else {
+            // Unknown chain (BTC, LTC, other altcoin) — reject to protect the user.
+            error = strprintf(_("SQLiteDatabase: Unexpected application id. Expected %u, got %u"),
+                              net_magic, app_id);
+            return false;
+        }
     }
 
     // Check our schema version
