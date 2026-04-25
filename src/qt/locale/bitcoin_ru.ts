@@ -1144,7 +1144,7 @@ The migration process will create a backup of the wallet before migrating. This 
         <translation type="unfinished">При переносе кошелёк будет преобразован в один или несколько дескрипторных кошельков. Потребуется создать новую резервную копию кошелька.
 Если кошелёк содержит скрипты "только для просмотра", будет создан новый кошелёк, содержащий эти скрипты.
 Если кошелёк содержит исполняемые, но не отслеживаемые скрипты, будет создан отдельный новый кошелёк с этими скриптами.
-Перед началом переноса будет создана резервная копия кошелька. Файл резервной копии будет называться &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak и находиться в каталоге данного кошелька. В случае некорректного переноса резервную копию можно восстановить с помощью функции "Восстановить кошелёк".</translation>
+Перед началом переноса будет создана резервная копия кошелька. Файл резервной копии будет называться &lt;wallet name&gt;-&lt;timestamp&gt;.legacy.bak и находиться в директории данного кошелька. В случае некорректного переноса резервную копию можно восстановить с помощью функции "Восстановить кошелёк".</translation>
     </message>
     <message>
         <source>Migrate Wallet</source>
@@ -1374,7 +1374,7 @@ The migration process will create a backup of the wallet before migrating. This 
     <name>FreespaceChecker</name>
     <message>
         <source>A new data directory will be created.</source>
-        <translation type="unfinished">Будет создан новый каталог данных.</translation>
+        <translation type="unfinished">Будет создана новая директория данных.</translation>
     </message>
     <message>
         <source>name</source>
@@ -1382,15 +1382,15 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
     <message>
         <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
-        <translation type="unfinished">Каталог уже существует. Добавьте %1, если хотите создать здесь новый каталог.</translation>
+        <translation type="unfinished">Директория уже существует. Добавьте %1, если хотите создать здесь новою директорию.</translation>
     </message>
     <message>
         <source>Path already exists, and is not a directory.</source>
-        <translation type="unfinished">Путь уже существует и не является каталогом.</translation>
+        <translation type="unfinished">Путь уже существует и не является директорией.</translation>
     </message>
     <message>
         <source>Cannot create data directory here.</source>
-        <translation type="unfinished">Не удалось создать каталог данных здесь.</translation>
+        <translation type="unfinished">Не удалось создать директорию данных здесь.</translation>
     </message>
 </context>
 <context>
@@ -1459,11 +1459,11 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
     <message>
         <source>Use the default data directory</source>
-        <translation type="unfinished">Использовать каталог данных по умолчанию</translation>
+        <translation type="unfinished">Использовать директорию данных по умолчанию</translation>
     </message>
     <message>
         <source>Use a custom data directory:</source>
-        <translation type="unfinished">Использовать другой каталог данных:</translation>
+        <translation type="unfinished">Использовать другую директорию данных:</translation>
     </message>
     <message numerus="yes">
         <source>%n GB of space available</source>
@@ -1491,15 +1491,15 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
     <message>
         <source>Choose data directory</source>
-        <translation type="unfinished">Выбрать каталог данных</translation>
+        <translation type="unfinished">Выбрать директорию данных</translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
-        <translation type="unfinished">В этом каталоге будет храниться не менее %1 ГБ данных, и со временем этот объём будет расти.</translation>
+        <translation type="unfinished">В этой директории будет храниться не менее %1 ГБ данных, и со временем этот объём будет расти.</translation>
     </message>
     <message>
         <source>Approximately %1 GB of data will be stored in this directory.</source>
-        <translation type="unfinished">В этом каталоге будет храниться около %1 ГБ данных.</translation>
+        <translation type="unfinished">В этой директории будет храниться около %1 ГБ данных.</translation>
     </message>
     <message numerus="yes">
         <source>(sufficient to restore backups %n day(s) old)</source>
@@ -1516,11 +1516,11 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
-        <translation type="unfinished">Кошелёк также будет храниться в этом каталоге.</translation>
+        <translation type="unfinished">Кошелёк также будет храниться в этой директории.</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
-        <translation type="unfinished">Ошибка: невозможно создать указанный каталог данных "%1".</translation>
+        <translation type="unfinished">Ошибка: невозможно создать указанною директорию данных "%1".</translation>
     </message>
     <message>
         <source>Error</source>
@@ -1667,7 +1667,7 @@ The migration process will create a backup of the wallet before migrating. This 
     </message>
     <message>
         <source>Open the %1 configuration file from the working directory.</source>
-        <translation type="unfinished">Открыть файл конфигурации %1 из рабочего каталога.</translation>
+        <translation type="unfinished">Открыть файл конфигурации %1 из рабочей директории.</translation>
     </message>
     <message>
         <source>Open Configuration File</source>
@@ -2284,19 +2284,19 @@ If you are receiving this error you should request the merchant provide a BIP21 
     </message>
     <message>
         <source>Datadir</source>
-        <translation type="unfinished">Каталог данных</translation>
+        <translation type="unfinished">Директория данных</translation>
     </message>
     <message>
         <source>To specify a non-default location of the data directory use the '%1' option.</source>
-        <translation type="unfinished">Для указания нестандартного пути к каталогу данных используйте параметр "%1".</translation>
+        <translation type="unfinished">Для указания нестандартного пути к директории данных используйте параметр "%1".</translation>
     </message>
     <message>
         <source>Blocksdir</source>
-        <translation type="unfinished">Каталог блоков</translation>
+        <translation type="unfinished">Директория блоков</translation>
     </message>
     <message>
         <source>To specify a non-default location of the blocks directory use the '%1' option.</source>
-        <translation type="unfinished">Для указания нестандартного пути к каталогу блоков используйте параметр "%1".</translation>
+        <translation type="unfinished">Для указания нестандартного пути к директории блоков используйте параметр "%1".</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -2466,7 +2466,7 @@ If you are receiving this error you should request the merchant provide a BIP21 
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation type="unfinished">Открыть файл журнала отладки %1 из текущего каталога данных. Для больших файлов это может занять несколько секунд.</translation>
+        <translation type="unfinished">Открыть файл журнала отладки %1 из текущей директории данных. Для больших файлов это может занять несколько секунд.</translation>
     </message>
     <message>
         <source>Decrease font size</source>
@@ -4151,7 +4151,7 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>Disk space for %s may not accommodate the block files. Approximately %u GB of data will be stored in this directory.</source>
-        <translation type="unfinished">Дисковое пространство для %s может не вместить файлы блоков. В этом каталоге будет храниться приблизительно %u ГБ данных.</translation>
+        <translation type="unfinished">Дисковое пространство для %s может не вместить файлы блоков. В этой директории будет храниться приблизительно %u ГБ данных.</translation>
     </message>
     <message>
         <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
@@ -4223,7 +4223,7 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>Rename of '%s' -&gt; '%s' failed. You should resolve this by manually moving or deleting the invalid snapshot directory %s, otherwise you will encounter the same error again on the next startup.</source>
-        <translation type="unfinished">Не удалось переименовать "%s" -&gt; "%s". Устраните это, вручную переместив или удалив недействительный каталог снимка %s, иначе при следующем запуске вы столкнётесь с той же ошибкой.</translation>
+        <translation type="unfinished">Не удалось переименовать "%s" -&gt; "%s". Устраните это, вручную переместив или удалив недействительнаю директорию снимка %s, иначе при следующем запуске вы столкнётесь с той же ошибкой.</translation>
     </message>
     <message>
         <source>SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported</source>
@@ -4295,7 +4295,7 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>Cannot obtain a lock on directory %s. %s is probably already running.</source>
-        <translation type="unfinished">Невозможно заблокировать каталог %s. Вероятно, %s уже запущен.</translation>
+        <translation type="unfinished">Невозможно заблокировать директорию %s. Вероятно, %s уже запущен.</translation>
     </message>
     <message>
         <source>Cannot resolve -%s address: '%s'</source>
@@ -4340,7 +4340,7 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Failed to remove snapshot chainstate dir (%s). Manually remove it before restarting.
 </source>
-        <translation type="unfinished">Не удалось удалить каталог состояния блокчейна снимка (%s). Удалите его вручную перед перезапуском.
+        <translation type="unfinished">Не удалось удалить директорию состояния блокчейна снимка (%s). Удалите его вручную перед перезапуском.
 </translation>
     </message>
     <message>
@@ -4409,7 +4409,7 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>Rename of '%s' -&gt; '%s' failed. Cannot clean up the background chainstate leveldb directory.</source>
-        <translation type="unfinished">Не удалось переименовать "%s" -&gt; "%s". Невозможно очистить каталог leveldb фонового состояния блокчейна.</translation>
+        <translation type="unfinished">Не удалось переименовать "%s" -&gt; "%s". Невозможно очистить директорию leveldb фонового состояния блокчейна.</translation>
     </message>
     <message>
         <source>Specified -blockmaxweight (%d) exceeds consensus maximum block weight (%d)</source>
@@ -4507,7 +4507,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Cannot write to directory '%s'; check permissions.</source>
-        <translation type="unfinished">Невозможно записать в каталог "%s"; проверьте права доступа.</translation>
+        <translation type="unfinished">Невозможно записать в директорию "%s"; проверьте права доступа.</translation>
     </message>
     <message>
         <source>Config setting for %s only applied on %s network when in [%s] section.</source>
@@ -4775,7 +4775,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
-        <translation type="unfinished">Начальный блок отсутствует или некорректен. Возможно, указан неверный каталог данных для выбранной сети?</translation>
+        <translation type="unfinished">Начальный блок отсутствует или некорректен. Возможно, указана неверная директория данных для выбранной сети?</translation>
     </message>
     <message>
         <source>Initialization sanity check failed. %s is shutting down.</source>
@@ -4943,23 +4943,23 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>Specified -walletdir "%s" does not exist</source>
-        <translation type="unfinished">Указанный каталог кошелька -walletdir "%s" не существует</translation>
+        <translation type="unfinished">Указанная директория кошелька -walletdir "%s" не существует</translation>
     </message>
     <message>
         <source>Specified -walletdir "%s" is a relative path</source>
-        <translation type="unfinished">Указанный каталог кошелька -walletdir "%s" является относительным путём</translation>
+        <translation type="unfinished">Указанная директория кошелька -walletdir "%s" является относительным путём</translation>
     </message>
     <message>
         <source>Specified -walletdir "%s" is not a directory</source>
-        <translation type="unfinished">Указанный путь -walletdir "%s" не является каталогом</translation>
+        <translation type="unfinished">Указанный путь -walletdir "%s" не является директорией</translation>
     </message>
     <message>
         <source>Specified blocks directory "%s" does not exist.</source>
-        <translation type="unfinished">Указанный каталог блоков "%s" не существует.</translation>
+        <translation type="unfinished">Указанная директория блоков "%s" не существует.</translation>
     </message>
     <message>
         <source>Specified data directory "%s" does not exist.</source>
-        <translation type="unfinished">Указанный каталог данных "%s" не существует.</translation>
+        <translation type="unfinished">Указанная директория данных "%s" не существует.</translation>
     </message>
     <message>
         <source>Starting network threads…</source>
@@ -4979,7 +4979,7 @@ Unable to restore backup of wallet.</source>
     </message>
     <message>
         <source>The %s path uses exFAT, which is known to have intermittent corruption problems on macOS. Move this directory to a different filesystem to avoid data loss.</source>
-        <translation type="unfinished">Путь %s использует файловую систему exFAT, которая имеет известные проблемы с периодическим повреждением данных на macOS. Переместите этот каталог на другую файловую систему во избежание потери данных.</translation>
+        <translation type="unfinished">Путь %s использует файловую систему exFAT, которая имеет известные проблемы с периодическим повреждением данных на macOS. Переместите эту директорию на другую файловую систему во избежание потери данных.</translation>
     </message>
     <message>
         <source>The source code is available from %s.</source>

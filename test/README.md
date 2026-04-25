@@ -29,6 +29,10 @@ See [/doc/fuzzing.md](/doc/fuzzing.md)
 
 #### Dependencies and prerequisites
 
+All tests what do Proof Of Work check requires
+
+- `sudo apt-get install python3-argon2` or `sudo pip install argon2-cffi`
+
 The ZMQ functional test requires a python ZMQ library. To install it:
 
 - on Unix, run `sudo apt-get install python3-zmq`
