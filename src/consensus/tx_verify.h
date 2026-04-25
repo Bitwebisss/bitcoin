@@ -6,6 +6,7 @@
 #define BITCOIN_CONSENSUS_TX_VERIFY_H
 
 #include <consensus/amount.h>
+#include <consensus/params.h>
 
 #include <cstdint>
 #include <vector>
