@@ -28,6 +28,4 @@ useable
 viewIn
 wit
 asert
-pacth
 reencode
-medias

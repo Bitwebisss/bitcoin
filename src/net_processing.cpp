@@ -2987,7 +2987,7 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
     }
 
     // Bitweb Params
-    // Bitweb pacth for Argon2id extend the timeout after each successfully validated
+    // Bitweb patch for Argon2id extend the timeout after each successfully validated
     // batch during REDOWNLOAD phase and normal IBD headers sync. Headers reaching this
     // point have already passed CheckHeadersPoW and ProcessNewBlockHeaders,
     // so the peer has proven it is doing real work. Resetting the deadline

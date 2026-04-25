@@ -370,7 +370,7 @@ about:
     [Git Blame feature](https://docs.github.com/en/repositories/working-with-files/using-files/viewing-and-understanding-files). Simply
     look up who last modified the code you are changing and see if you can find
     them and give them a nudge. Don't be incessant about the nudging, though.
-  - Finally, if all else fails, ask on project related social medias or elsewhere for someone to give your pull request
+  - Finally, if all else fails, ask on project related social media or elsewhere for someone to give your pull request
     a look. If you think you've been waiting for an unreasonably long time (say,
     more than a month) for no particular reason (a few lines changed, etc.),
     this is totally fine. Try to return the favor when someone else is asking
