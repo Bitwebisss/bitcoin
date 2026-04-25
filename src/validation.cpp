@@ -369,6 +369,7 @@ void Chainstate::MaybeUpdateMempoolForReorg(
             }
         }
 
+        /*
         // If the transaction spends any coinbase outputs, it must be mature.
         if (it->GetSpendsCoinbase()) {
             for (const CTxIn& txin : tx.vin) {
@@ -384,6 +385,7 @@ void Chainstate::MaybeUpdateMempoolForReorg(
         // Transaction is still valid and cached LockPoints are updated.
         return false;
         */
+
         /* Bitweb Params */
         if (it->GetSpendsCoinbase()) {
             const auto& consensusParams = m_chainman.GetParams().GetConsensus();
