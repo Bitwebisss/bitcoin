@@ -185,11 +185,11 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
 
         /* Bitweb Params */
         if (coin.IsCoinBase()) {
-            static constexpr int PREMINE_ACTIVATION = 500;
-            static constexpr int PREMINE_PERIOD_END = PREMINE_ACTIVATION + EXT_COINBASE_MATURITY;
+            static constexpr int EXT_MATURITY_START = 500;
+            static constexpr int EXT_MATURITY_END = EXT_MATURITY_START + EXT_COINBASE_MATURITY;
 
-            if (coin.nHeight >= PREMINE_ACTIVATION && coin.nHeight < PREMINE_PERIOD_END) {
-                if (nSpendHeight - coin.nHeight < (PREMINE_PERIOD_END - coin.nHeight) + COINBASE_MATURITY) {
+            if (coin.nHeight >= EXT_MATURITY_START && coin.nHeight < EXT_MATURITY_END) {
+                if (nSpendHeight - coin.nHeight < (EXT_MATURITY_END - coin.nHeight) + COINBASE_MATURITY) {
                     return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "bad-txns-premature-spend-of-coinbase",
                         strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
                 }
