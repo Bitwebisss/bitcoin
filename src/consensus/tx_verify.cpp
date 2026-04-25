@@ -8,6 +8,7 @@
 #include <coins.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
+#include <consensus/params.h>
 #include <consensus/validation.h>
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
@@ -161,7 +162,7 @@ int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& i
     return nSigOps;
 }
 
-bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee)
+bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee, const Consensus::Params& consensusParams)
 {
     // are the actual inputs available?
     if (!inputs.HaveInputs(tx)) {
@@ -175,11 +176,34 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
         const Coin& coin = inputs.AccessCoin(prevout);
         assert(!coin.IsSpent());
 
+        /*
         // If prev is coinbase, check that it's matured
         if (coin.IsCoinBase() && nSpendHeight - coin.nHeight < COINBASE_MATURITY) {
             return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "bad-txns-premature-spend-of-coinbase",
                 strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
         }
+        */
+        /* Bitweb Params */
+        if (coin.IsCoinBase()) {
+            if (consensusParams.extCoinbaseMaturity) {
+                static constexpr int PREMINE_ACTIVATION = 200;
+                static constexpr int PREMINE_PERIOD_END = PREMINE_ACTIVATION + EXT_COINBASE_MATURITY;
+
+                if (coin.nHeight >= PREMINE_ACTIVATION && coin.nHeight < PREMINE_PERIOD_END) {
+                    if (nSpendHeight - coin.nHeight < (PREMINE_PERIOD_END - coin.nHeight) + COINBASE_MATURITY) {
+                        return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "bad-txns-premature-spend-of-coinbase",
+                            strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
+                    }
+                    continue;
+                }
+            }
+
+            if (nSpendHeight - coin.nHeight < COINBASE_MATURITY) {
+                return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "bad-txns-premature-spend-of-coinbase",
+                    strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
+            }
+        }
+        /* Bitweb Params */
 
         // Check for negative or overflow input values
         nValueIn += coin.out.nValue;

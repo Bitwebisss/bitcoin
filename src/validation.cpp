@@ -383,6 +383,39 @@ void Chainstate::MaybeUpdateMempoolForReorg(
         }
         // Transaction is still valid and cached LockPoints are updated.
         return false;
+        */
+        /* Bitweb Params */
+        if (it->GetSpendsCoinbase()) {
+            const auto& consensusParams = m_chainman.GetParams().GetConsensus();
+
+            for (const CTxIn& txin : tx.vin) {
+                if (m_mempool->exists(txin.prevout.hash)) continue;
+                const Coin& coin{CoinsTip().AccessCoin(txin.prevout)};
+                assert(!coin.IsSpent());
+                const auto mempool_spend_height{m_chain.Tip()->nHeight + 1};
+
+                if (coin.IsCoinBase()) {
+                    if (consensusParams.extCoinbaseMaturity) {
+                        static constexpr int PREMINE_ACTIVATION = 200;
+                        static constexpr int PREMINE_PERIOD_END = PREMINE_ACTIVATION + EXT_COINBASE_MATURITY;
+
+                        if (coin.nHeight >= PREMINE_ACTIVATION && coin.nHeight < PREMINE_PERIOD_END) {
+                            if (mempool_spend_height - coin.nHeight < (PREMINE_PERIOD_END - coin.nHeight) + COINBASE_MATURITY) {
+                                return true;
+                            }
+                            continue;
+                        }
+                    }
+
+                    if (mempool_spend_height - coin.nHeight < COINBASE_MATURITY) {
+                        return true;
+                    }
+                }
+            }
+        }
+        // Transaction is still valid and cached LockPoints are updated.
+        return false;
+        /* Bitweb Params */
     };
 
     // We also need to remove any now-immature transactions

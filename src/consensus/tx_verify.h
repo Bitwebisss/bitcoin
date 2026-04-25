@@ -24,7 +24,15 @@ namespace Consensus {
  * @param[out] txfee Set to the transaction fee if successful.
  * Preconditions: tx.IsCoinBase() is false.
  */
+ 
+/*
 [[nodiscard]] bool CheckTxInputs(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee);
+*/
+
+/* Bitweb Params Remove me after block x */
+[[nodiscard]] bool CheckTxInputs(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee, const Consensus::Params& consensusParams);
+/* Bitweb Params Remove me after block x */
+
 } // namespace Consensus
 
 /** Auxiliary functions for transaction validation (ideally should not be exposed) */

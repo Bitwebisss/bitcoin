@@ -116,6 +116,8 @@ struct Params {
     int64_t nPowTargetTimespan;
     /**LWMA3 diff algo Bitweb Params */
     int64_t lwmaAveragingWindow{576};
+	/** is extCoinbaseMaturity enabled? */
+    bool extCoinbaseMaturity{true};
     /** is premine enabled in this netowork ? */
     bool PreMineEnabled{true};
     std::chrono::seconds PowTargetSpacing() const

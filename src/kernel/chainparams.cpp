@@ -104,6 +104,7 @@ public:
 //        consensus.nPowTargetTimespan = 5 * 60; // 5m
         consensus.nPowTargetSpacing = 5 * 60;
         consensus.lwmaAveragingWindow = 576;
+        consensus.extCoinbaseMaturity = true;
         consensus.PreMineEnabled = true; // Is premine enabled at this network?
 //        consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
@@ -211,6 +212,7 @@ public:
 //        consensus.nPowTargetTimespan = 5 * 60; // 5m
         consensus.nPowTargetSpacing = 5 * 60;
         consensus.lwmaAveragingWindow = 576;
+        consensus.extCoinbaseMaturity = false;
         consensus.PreMineEnabled = true; // Is premine enabled at this network?
 //        consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
@@ -305,6 +307,7 @@ public:
 //        consensus.nPowTargetTimespan = 5 * 60; // 5m
         consensus.nPowTargetSpacing = 5 * 60;
         consensus.lwmaAveragingWindow = 288;
+        consensus.extCoinbaseMaturity = false;
         consensus.PreMineEnabled = true; // Is premine enabled at this network?
 //        consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
@@ -443,6 +446,7 @@ public:
 //        consensus.nPowTargetTimespan = 5 * 60; // 5m
         consensus.nPowTargetSpacing = 5 * 60;
         consensus.lwmaAveragingWindow = 576;
+        consensus.extCoinbaseMaturity = false;
         consensus.PreMineEnabled = true; // Is premine enabled at this network?
 //        consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
@@ -517,6 +521,7 @@ public:
 //        consensus.nPowTargetTimespan = 5 * 60; // 5m
         consensus.nPowTargetSpacing = 5 * 60;
         consensus.lwmaAveragingWindow = 144;
+        consensus.extCoinbaseMaturity = false;
         consensus.PreMineEnabled = opts.enable_premine; // Is premine enabled at this network?
 //        consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
