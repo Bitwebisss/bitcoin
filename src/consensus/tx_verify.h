@@ -6,7 +6,7 @@
 #define BITCOIN_CONSENSUS_TX_VERIFY_H
 
 #include <consensus/amount.h>
-#include <consensus/params.h>  // Bitweb Params remove or comment when logic removed
+#include <consensus/params.h>  // Bitweb Params: remove or comment when logic removed
 
 #include <cstdint>
 #include <vector>
@@ -25,14 +25,16 @@ namespace Consensus {
  * @param[out] txfee Set to the transaction fee if successful.
  * Preconditions: tx.IsCoinBase() is false.
  */
-/* Bitweb Params remove or comment when logic removed */
-[[nodiscard]] bool CheckTxInputs(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee, const Consensus::Params& consensusParams);
-/* Bitweb Params remove or comment when logic removed */
 
-/* // uncoment when ext maturity logic removed
+/* Bitweb Params: remove or comment when logic removed */
+[[nodiscard]] bool CheckTxInputs(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee, const Consensus::Params& consensusParams);
+/* Bitweb Params end */
+
+/* uncomment when ext maturity logic removed:
 [[nodiscard]] bool CheckTxInputs(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee);
-} // namespace Consensus
 */
+
+} // namespace Consensus
 
 /** Auxiliary functions for transaction validation (ideally should not be exposed) */
 
@@ -76,6 +78,7 @@ bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime);
 std::pair<int, int64_t> CalculateSequenceLocks(const CTransaction &tx, int flags, std::vector<int>& prevHeights, const CBlockIndex& block);
 
 bool EvaluateSequenceLocks(const CBlockIndex& block, std::pair<int, int64_t> lockPair);
+
 /**
  * Check if transaction is final per BIP 68 sequence numbers and can be included in a block.
  * Consensus critical. Takes as input a list of heights at which tx's inputs (in order) confirmed.
