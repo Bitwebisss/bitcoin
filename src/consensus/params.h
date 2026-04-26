@@ -114,8 +114,6 @@ struct Params {
     bool fPowNoRetargeting;
     int64_t nPowTargetSpacing;
     int64_t nPowTargetTimespan;
-    /** ExtCoinbaseMaturity enable or dissable */
-    bool ExtCoinbaseMaturity{true};
     /**LWMA3 diff algo Bitweb Params */
     int64_t lwmaAveragingWindow{576};
     /** is premine enabled in this netowork ? */

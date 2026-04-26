@@ -8,7 +8,6 @@
 #include <coins.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
-#include <consensus/params.h>  // Bitweb Params remove or comment when logic removed
 #include <consensus/validation.h>
 #include <primitives/transaction.h>
 #include <script/interpreter.h>
@@ -162,53 +161,7 @@ int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& i
     return nSigOps;
 }
 
-/*  uncoment when ext maturity logic removed */
-//bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee)
-//{
-//    // are the actual inputs available?
-//    if (!inputs.HaveInputs(tx)) {
-//        return state.Invalid(TxValidationResult::TX_MISSING_INPUTS, "bad-txns-inputs-missingorspent",
-//                         strprintf("%s: inputs missing/spent", __func__));
-//    }
-//
-//    CAmount nValueIn = 0;
-//    for (unsigned int i = 0; i < tx.vin.size(); ++i) {
-//        const COutPoint &prevout = tx.vin[i].prevout;
-//        const Coin& coin = inputs.AccessCoin(prevout);
-//        assert(!coin.IsSpent());
-//
-//        // If prev is coinbase, check that it's matured
-//        if (coin.IsCoinBase() && nSpendHeight - coin.nHeight < COINBASE_MATURITY) {
-//            return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "bad-txns-premature-spend-of-coinbase",
-//                strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
-//        }
-//
-//        // Check for negative or overflow input values
-//        nValueIn += coin.out.nValue;
-//        if (!MoneyRange(coin.out.nValue) || !MoneyRange(nValueIn)) {
-//            return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-inputvalues-outofrange");
-//        }
-//    }
-//
-//    const CAmount value_out = tx.GetValueOut();
-//    if (nValueIn < value_out) {
-//        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-in-belowout",
-//            strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(value_out)));
-//    }
-//
-//    // Tally transaction fees
-//    const CAmount txfee_aux = nValueIn - value_out;
-//    if (!MoneyRange(txfee_aux)) {
-//        return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-fee-outofrange");
-//    }
-//
-//    txfee = txfee_aux;
-//    return true;
-//}
-
-/* Bitweb Params: added consensusParams to control ExtCoinbaseMaturity behaviour.
-   Remove consensusParams argument and ext maturity block when logic removed. */
-bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee, const Consensus::Params& consensusParams)
+bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, CAmount& txfee)
 {
     // are the actual inputs available?
     if (!inputs.HaveInputs(tx)) {
@@ -222,30 +175,33 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
         const Coin& coin = inputs.AccessCoin(prevout);
         assert(!coin.IsSpent());
 
+        /*
         // If prev is coinbase, check that it's matured
-        if (coin.IsCoinBase()) {
-            /* Bitweb Params: extended maturity for premine range, only on networks
-               where ExtCoinbaseMaturity is enabled (mainnet). Remove this block
-               together with the consensusParams argument when logic removed. */
-            if (consensusParams.ExtCoinbaseMaturity) {
-                static constexpr int EXT_MATURITY_START = 500;
-                static constexpr int EXT_MATURITY_END = EXT_MATURITY_START + EXT_COINBASE_MATURITY;
+        if (coin.IsCoinBase() && nSpendHeight - coin.nHeight < COINBASE_MATURITY) {
+            return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "bad-txns-premature-spend-of-coinbase",
+                strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
+        }
+        */
 
-                if (coin.nHeight >= EXT_MATURITY_START && coin.nHeight < EXT_MATURITY_END) {
-                    if (nSpendHeight - coin.nHeight < (EXT_MATURITY_END - coin.nHeight) + COINBASE_MATURITY) {
-                        return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "bad-txns-premature-spend-of-coinbase",
-                            strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
-                    }
-                    continue;
+        /* Bitweb Params */
+        if (coin.IsCoinBase()) {
+            static constexpr int EXT_MATURITY_START = 500;
+            static constexpr int EXT_MATURITY_END = EXT_MATURITY_START + EXT_COINBASE_MATURITY;
+
+            if (coin.nHeight >= EXT_MATURITY_START && coin.nHeight < EXT_MATURITY_END) {
+                if (nSpendHeight - coin.nHeight < (EXT_MATURITY_END - coin.nHeight) + COINBASE_MATURITY) {
+                    return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "bad-txns-premature-spend-of-coinbase",
+                        strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
                 }
+                continue;
             }
-            /* Bitweb Params end */
 
             if (nSpendHeight - coin.nHeight < COINBASE_MATURITY) {
                 return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "bad-txns-premature-spend-of-coinbase",
                     strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
             }
         }
+        /* Bitweb Params */
 
         // Check for negative or overflow input values
         nValueIn += coin.out.nValue;
@@ -269,4 +225,3 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
     txfee = txfee_aux;
     return true;
 }
-/* Bitweb Params end */

@@ -295,105 +295,6 @@ static bool IsCurrentForFeeEstimation(Chainstate& active_chainstate) EXCLUSIVE_L
     return true;
 }
 
-//  uncoment when ext maturity logic removed
-//void Chainstate::MaybeUpdateMempoolForReorg(
-//    DisconnectedBlockTransactions& disconnectpool,
-//    bool fAddToMempool)
-//{
-//    if (!m_mempool) return;
-//
-//    AssertLockHeld(cs_main);
-//    AssertLockHeld(m_mempool->cs);
-//    std::vector<Txid> vHashUpdate;
-//    {
-//        // disconnectpool is ordered so that the front is the most recently-confirmed
-//        // transaction (the last tx of the block at the tip) in the disconnected chain.
-//        // Iterate disconnectpool in reverse, so that we add transactions
-//        // back to the mempool starting with the earliest transaction that had
-//        // been previously seen in a block.
-//        const auto queuedTx = disconnectpool.take();
-//        auto it = queuedTx.rbegin();
-//        while (it != queuedTx.rend()) {
-//            // ignore validation errors in resurrected transactions
-//            if (!fAddToMempool || (*it)->IsCoinBase() ||
-//                AcceptToMemoryPool(*this, *it, GetTime(),
-//                    /*bypass_limits=*/true, /*test_accept=*/false).m_result_type !=
-//                        MempoolAcceptResult::ResultType::VALID) {
-//                // If the transaction doesn't make it in to the mempool, remove any
-//                // transactions that depend on it (which would now be orphans).
-//                m_mempool->removeRecursive(**it, MemPoolRemovalReason::REORG);
-//            } else if (m_mempool->exists((*it)->GetHash())) {
-//                vHashUpdate.push_back((*it)->GetHash());
-//            }
-//            ++it;
-//        }
-//    }
-//
-//    // AcceptToMemoryPool/addNewTransaction all assume that new mempool entries have
-//    // no in-mempool children, which is generally not true when adding
-//    // previously-confirmed transactions back to the mempool.
-//    // UpdateTransactionsFromBlock finds descendants of any transactions in
-//    // the disconnectpool that were added back and cleans up the mempool state.
-//    m_mempool->UpdateTransactionsFromBlock(vHashUpdate);
-//
-//    // Predicate to use for filtering transactions in removeForReorg.
-//    // Checks whether the transaction is still final and, if it spends a coinbase output, mature.
-//    // Also updates valid entries' cached LockPoints if needed.
-//    // If false, the tx is still valid and its lockpoints are updated.
-//    // If true, the tx would be invalid in the next block; remove this entry and all of its descendants.
-//    // Note that TRUC rules are not applied here, so reorgs may cause violations of TRUC inheritance or
-//    // topology restrictions.
-//    const auto filter_final_and_mature = [&](CTxMemPool::txiter it)
-//        EXCLUSIVE_LOCKS_REQUIRED(m_mempool->cs, ::cs_main) {
-//        AssertLockHeld(m_mempool->cs);
-//        AssertLockHeld(::cs_main);
-//        const CTransaction& tx = it->GetTx();
-//
-//        // The transaction must be final.
-//        if (!CheckFinalTxAtTip(*Assert(m_chain.Tip()), tx)) return true;
-//
-//        const LockPoints& lp = it->GetLockPoints();
-//        // CheckSequenceLocksAtTip checks if the transaction will be final in the next block to be
-//        // created on top of the new chain.
-//        if (TestLockPointValidity(m_chain, lp)) {
-//            if (!CheckSequenceLocksAtTip(m_chain.Tip(), lp)) {
-//                return true;
-//            }
-//        } else {
-//            const CCoinsViewMemPool view_mempool{&CoinsTip(), *m_mempool};
-//            const std::optional<LockPoints> new_lock_points{CalculateLockPointsAtTip(m_chain.Tip(), view_mempool, tx)};
-//            if (new_lock_points.has_value() && CheckSequenceLocksAtTip(m_chain.Tip(), *new_lock_points)) {
-//                // Now update the mempool entry lockpoints as well.
-//                it->UpdateLockPoints(*new_lock_points);
-//            } else {
-//                return true;
-//            }
-//        }
-//
-//        // If the transaction spends any coinbase outputs, it must be mature.
-//        if (it->GetSpendsCoinbase()) {
-//            for (const CTxIn& txin : tx.vin) {
-//                if (m_mempool->exists(txin.prevout.hash)) continue;
-//                const Coin& coin{CoinsTip().AccessCoin(txin.prevout)};
-//                assert(!coin.IsSpent());
-//                const auto mempool_spend_height{m_chain.Tip()->nHeight + 1};
-//                if (coin.IsCoinBase() && mempool_spend_height - coin.nHeight < COINBASE_MATURITY) {
-//                    return true;
-//                }
-//            }
-//        }
-//        // Transaction is still valid and cached LockPoints are updated.
-//        return false;
-//    };
-//
-//    // We also need to remove any now-immature transactions
-//    m_mempool->removeForReorg(m_chain, filter_final_and_mature);
-//    // Re-limit mempool size, in case we added any transactions
-//    LimitMempoolSize(*m_mempool, this->CoinsTip());
-//}
-//  uncoment when ext maturity logic removed
-
-/* Bitweb Params: remove or comment when logic removed */
 void Chainstate::MaybeUpdateMempoolForReorg(
     DisconnectedBlockTransactions& disconnectpool,
     bool fAddToMempool)
@@ -468,7 +369,24 @@ void Chainstate::MaybeUpdateMempoolForReorg(
             }
         }
 
+        /*
         // If the transaction spends any coinbase outputs, it must be mature.
+        if (it->GetSpendsCoinbase()) {
+            for (const CTxIn& txin : tx.vin) {
+                if (m_mempool->exists(txin.prevout.hash)) continue;
+                const Coin& coin{CoinsTip().AccessCoin(txin.prevout)};
+                assert(!coin.IsSpent());
+                const auto mempool_spend_height{m_chain.Tip()->nHeight + 1};
+                if (coin.IsCoinBase() && mempool_spend_height - coin.nHeight < COINBASE_MATURITY) {
+                    return true;
+                }
+            }
+        }
+        // Transaction is still valid and cached LockPoints are updated.
+        return false;
+        */
+
+        /* Bitweb Params */
         if (it->GetSpendsCoinbase()) {
             for (const CTxIn& txin : tx.vin) {
                 if (m_mempool->exists(txin.prevout.hash)) continue;
@@ -477,20 +395,15 @@ void Chainstate::MaybeUpdateMempoolForReorg(
                 const auto mempool_spend_height{m_chain.Tip()->nHeight + 1};
 
                 if (coin.IsCoinBase()) {
-                    /* Bitweb Params: extended maturity for premine range.
-                       Remove this block when ext maturity logic removed. */
-                    if (m_chainman.GetParams().GetConsensus().ExtCoinbaseMaturity) {
-                        static constexpr int EXT_MATURITY_START = 500;
-                        static constexpr int EXT_MATURITY_END   = EXT_MATURITY_START + EXT_COINBASE_MATURITY;
+                    static constexpr int EXT_MATURITY_START = 500;
+                    static constexpr int EXT_MATURITY_END   = EXT_MATURITY_START + EXT_COINBASE_MATURITY;
 
-                        if (coin.nHeight >= EXT_MATURITY_START && coin.nHeight < EXT_MATURITY_END) {
-                            if (mempool_spend_height - coin.nHeight < (EXT_MATURITY_END - coin.nHeight) + COINBASE_MATURITY) {
-                                return true;
-                            }
-                            continue;
+                    if (coin.nHeight >= EXT_MATURITY_START && coin.nHeight < EXT_MATURITY_END) {
+                        if (mempool_spend_height - coin.nHeight < (EXT_MATURITY_END - coin.nHeight) + COINBASE_MATURITY) {
+                            return true;
                         }
+                        continue;
                     }
-                    /* Bitweb Params end */
 
                     if (mempool_spend_height - coin.nHeight < COINBASE_MATURITY) {
                         return true;
@@ -500,6 +413,7 @@ void Chainstate::MaybeUpdateMempoolForReorg(
         }
         // Transaction is still valid and cached LockPoints are updated.
         return false;
+        /* Bitweb Params */
     };
 
     // We also need to remove any now-immature transactions
@@ -507,7 +421,6 @@ void Chainstate::MaybeUpdateMempoolForReorg(
     // Re-limit mempool size, in case we added any transactions
     LimitMempoolSize(*m_mempool, this->CoinsTip());
 }
-/* Bitweb Params: remove or comment when logic removed */
 
 /**
 * Checks to avoid mempool polluting consensus critical paths since cached

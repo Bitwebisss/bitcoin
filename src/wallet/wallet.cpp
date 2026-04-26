@@ -3295,7 +3295,6 @@ int CWallet::GetTxDepthInMainChain(const CWalletTx& wtx) const
     }
 }
 
-/*  uncoment when ext maturity logic removed */
 /*
 int CWallet::GetTxBlocksToMaturity(const CWalletTx& wtx) const
 {
@@ -3310,33 +3309,32 @@ int CWallet::GetTxBlocksToMaturity(const CWalletTx& wtx) const
 }
 */
 
-/* Bitweb Params remove or comment when logic removed */
+/* Bitweb Params */
 int CWallet::GetTxBlocksToMaturity(const CWalletTx& wtx) const
 {
     AssertLockHeld(cs_wallet);
+
     if (!wtx.IsCoinBase()) {
         return 0;
     }
-    int chain_depth = GetTxDepthInMainChain(wtx);
-    assert(chain_depth >= 0);
 
-    /* Bitweb Params */
-    const auto& consensus = m_chain->GetParams().GetConsensus();
-    if (consensus.ExtCoinbaseMaturity) {
-        if (auto* conf = wtx.state<TxStateConfirmed>()) {
-            const int h = conf->confirmed_block_height;
-            static constexpr int EXT_MATURITY_START = 500;
-            static constexpr int EXT_MATURITY_END   = EXT_MATURITY_START + EXT_COINBASE_MATURITY;
-            if (h >= EXT_MATURITY_START && h < EXT_MATURITY_END) {
-                return std::max(0, (EXT_MATURITY_END - h) + COINBASE_MATURITY + 1 - chain_depth);
-            }
+    int chain_depth = GetTxDepthInMainChain(wtx);
+    assert(chain_depth >= 0); // coinbase tx should not be conflicted
+
+    if (auto* conf = wtx.state<TxStateConfirmed>()) {
+        const int h = conf->confirmed_block_height;
+
+        static constexpr int EXT_MATURITY_START = 500;
+        static constexpr int EXT_MATURITY_END   = EXT_MATURITY_START + EXT_COINBASE_MATURITY;
+
+        if (h >= EXT_MATURITY_START && h < EXT_MATURITY_END) {
+            return std::max(0, (EXT_MATURITY_END - h) + COINBASE_MATURITY + 1 - chain_depth);
         }
     }
-    /* Bitweb Params */
 
-    return std::max(0, (COINBASE_MATURITY + 1) - chain_depth);
+    return std::max(0, (COINBASE_MATURITY+1) - chain_depth);
 }
-/* Bitweb Params remove or comment when logic removed */
+/* Bitweb Params */
 
 bool CWallet::IsTxImmatureCoinBase(const CWalletTx& wtx) const
 {
