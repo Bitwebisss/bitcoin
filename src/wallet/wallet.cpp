@@ -3324,7 +3324,7 @@ int CWallet::GetTxBlocksToMaturity(const CWalletTx& wtx) const
     if (auto* conf = wtx.state<TxStateConfirmed>()) {
         const int h = conf->confirmed_block_height;
 
-        static constexpr int EXT_MATURITY_START = 120;
+        static constexpr int EXT_MATURITY_START = 1177;
         static constexpr int EXT_MATURITY_END   = EXT_MATURITY_START + EXT_COINBASE_MATURITY;
 
         if (h >= EXT_MATURITY_START && h < EXT_MATURITY_END) {
