@@ -1010,18 +1010,10 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-BIP68-final");
     }
 
-    /*  uncoment when ext maturity logic removed */
     // The mempool holds txs for the next block, so pass height+1 to CheckTxInputs
-    //if (!Consensus::CheckTxInputs(tx, state, m_view, m_active_chainstate.m_chain.Height() + 1, ws.m_base_fees)) {
-    //    return false; // state filled in by CheckTxInputs
-    //}
-
-    /* Bitweb Params remove or comment when logic removed */
-    // The mempool holds txs for the next block, so pass height+1 to CheckTxInputs
-    if (!Consensus::CheckTxInputs(tx, state, m_view, m_active_chainstate.m_chain.Height() + 1, ws.m_base_fees, m_active_chainstate.m_chainman.GetParams().GetConsensus())) {
+    if (!Consensus::CheckTxInputs(tx, state, m_view, m_active_chainstate.m_chain.Height() + 1, ws.m_base_fees)) {
         return false; // state filled in by CheckTxInputs
     }
-   /* Bitweb Params remove or comment when logic removed */
 
     if (m_pool.m_opts.require_standard && !AreInputsStandard(tx, m_view)) {
         return state.Invalid(TxValidationResult::TX_INPUTS_NOT_STANDARD, "bad-txns-nonstandard-inputs");
@@ -2747,14 +2739,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
         {
             CAmount txfee = 0;
             TxValidationState tx_state;
-
-            /*  uncoment when ext maturity logic removed */
-            //if (!Consensus::CheckTxInputs(tx, tx_state, view, pindex->nHeight, txfee)) {
-
-            /* Bitweb Params remove or comment when logic removed */
-            if (!Consensus::CheckTxInputs(tx, tx_state, view, pindex->nHeight, txfee, m_chainman.GetParams().GetConsensus())) {
-            /* Bitweb Params remove or comment when logic removed */
-
+            if (!Consensus::CheckTxInputs(tx, tx_state, view, pindex->nHeight, txfee)) {
                 // Any transaction validation failure in ConnectBlock is a block consensus failure
                 state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
                               tx_state.GetRejectReason(),

@@ -3321,7 +3321,7 @@ int CWallet::GetTxBlocksToMaturity(const CWalletTx& wtx) const
     assert(chain_depth >= 0);
 
     /* Bitweb Params */
-    const auto& consensus = ::Params().GetConsensus();
+    const auto& consensus = m_chain->GetParams().GetConsensus();
     if (consensus.ExtCoinbaseMaturity) {
         if (auto* conf = wtx.state<TxStateConfirmed>()) {
             const int h = conf->confirmed_block_height;
