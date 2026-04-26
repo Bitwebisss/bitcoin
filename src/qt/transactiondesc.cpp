@@ -316,7 +316,7 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     /* Bitweb Params */
     if (wtx.is_coinbase)
     {
-        static constexpr int EXT_MATURITY_START = 1100;
+        static constexpr int EXT_MATURITY_START = 1177;
         static constexpr int EXT_MATURITY_END   = EXT_MATURITY_START + EXT_COINBASE_MATURITY;
 
         quint32 numBlocksToMaturity;
