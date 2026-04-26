@@ -189,14 +189,15 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
             static constexpr int EXT_MATURITY_END = EXT_MATURITY_START + EXT_COINBASE_MATURITY;
 
             if (coin.nHeight >= EXT_MATURITY_START && coin.nHeight < EXT_MATURITY_END) {
+                // Extended maturity for coinbase outputs mined during the extended period.
+                // Required depth = (EXT_MATURITY_END - coin.nHeight) + COINBASE_MATURITY,
+                // which is always >= COINBASE_MATURITY + 1, so the standard check below is unreachable.
                 if (nSpendHeight - coin.nHeight < (EXT_MATURITY_END - coin.nHeight) + COINBASE_MATURITY) {
                     return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "bad-txns-premature-spend-of-coinbase",
                         strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
                 }
-                continue;
-            }
-
-            if (nSpendHeight - coin.nHeight < COINBASE_MATURITY) {
+            } else if (nSpendHeight - coin.nHeight < COINBASE_MATURITY) {
+                // Standard maturity for all coinbase outputs outside the extended period.
                 return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "bad-txns-premature-spend-of-coinbase",
                     strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
             }

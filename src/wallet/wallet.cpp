@@ -3328,10 +3328,14 @@ int CWallet::GetTxBlocksToMaturity(const CWalletTx& wtx) const
         static constexpr int EXT_MATURITY_END   = EXT_MATURITY_START + EXT_COINBASE_MATURITY;
 
         if (h >= EXT_MATURITY_START && h < EXT_MATURITY_END) {
+            // Extended maturity period: early return means the standard check below
+            // is unreachable for these coins. +1 matches standard Bitcoin convention
+            // and is consistent with transactiondesc.cpp display.
             return std::max(0, (EXT_MATURITY_END - h) + COINBASE_MATURITY + 1 - chain_depth);
         }
     }
-
+    // Standard maturity for all coinbase outputs outside the extended period,
+    // and as fallback if confirmed state is unavailable.
     return std::max(0, (COINBASE_MATURITY+1) - chain_depth);
 }
 /* Bitweb Params */

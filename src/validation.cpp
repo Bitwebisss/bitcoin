@@ -399,13 +399,13 @@ void Chainstate::MaybeUpdateMempoolForReorg(
                     static constexpr int EXT_MATURITY_END   = EXT_MATURITY_START + EXT_COINBASE_MATURITY;
 
                     if (coin.nHeight >= EXT_MATURITY_START && coin.nHeight < EXT_MATURITY_END) {
+                        // Extended maturity: required depth always >= COINBASE_MATURITY + 1,
+                        // so the standard check in the else branch is unreachable for these coins.
                         if (mempool_spend_height - coin.nHeight < (EXT_MATURITY_END - coin.nHeight) + COINBASE_MATURITY) {
                             return true;
                         }
-                        continue;
-                    }
-
-                    if (mempool_spend_height - coin.nHeight < COINBASE_MATURITY) {
+                    } else if (mempool_spend_height - coin.nHeight < COINBASE_MATURITY) {
+                        // Standard maturity for all coinbase outputs outside the extended period.
                         return true;
                     }
                 }
