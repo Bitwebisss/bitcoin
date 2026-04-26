@@ -101,7 +101,7 @@ class FullBlockTest(BitcoinTestFramework):
         # We set mocktime at start to cover all ~1300 blocks generated in this test.
         # MOCK_OFFSET=2000: all blocks (max nTime ≈ start+1300) satisfy nTime ≤ mocktime+FTL=start+2600.
         FTL = 600
-        MOCK_OFFSET = 11000 # RETURN TO 2000 AFTER REMOVE EXT_COINBASE_MATURITY LOGIC
+        MOCK_OFFSET = 2000
         start_time = int(time.time())
         node.setmocktime(start_time + MOCK_OFFSET)
 
@@ -1300,25 +1300,9 @@ class FullBlockTest(BitcoinTestFramework):
         if self.options.v2transport:
             self.nodes[0].disconnect_p2ps()
             self.helper_peer = self.nodes[0].add_p2p_connection(P2PDataStore(), supports_v2_p2p=False)
-        # Bitweb: premine-range coinbases (h≥500) require depth ≥ EXT_COINBASE_MATURITY+100.
-        # The large-reorg loop spends within-loop coinbases at depth = pre_queue_size + 1.
-        # Add 8000 buffer blocks here so depth = 8100, covering the premine lock period.
-
-        # REMOVE AFTER REMOVE EXT_COINBASE_MATURITY LOGIC
-        EXT_COINBASE_MATURITY_BUFFER = 8000
-        ext_coinbase_maturity_buf_blocks = []
-        for j in range(EXT_COINBASE_MATURITY_BUFFER):
-            ext_coinbase_maturity_buf_blocks.append(self.next_block(f"pmb.{j}"))
-            self.save_spendable_output()
-        self.send_blocks(ext_coinbase_maturity_buf_blocks, True, timeout=2440)
-        # REMOVE AFTER REMOVE EXT_COINBASE_MATURITY LOGIC
-
         self.log.info("Test a re-org of one week's worth of blocks (1088 blocks)")
 
-        # RESTORE AFTER REMOVE EXT_COINBASE_MATURITY LOGIC
-        # self.move_tip(88)
-        # RESTORE AFTER REMOVE EXT_COINBASE_MATURITY LOGIC
-
+        self.move_tip(88)
         LARGE_REORG_SIZE = 1088
         blocks = []
         spend = out[32]
@@ -1339,15 +1323,7 @@ class FullBlockTest(BitcoinTestFramework):
         chain1_tip = i
 
         # now create alt chain of same length
-
-        # REMOVE AFTER REMOVE EXT_COINBASE_MATURITY LOGIC
-        self.move_tip(f"pmb.{EXT_COINBASE_MATURITY_BUFFER - 1}")
-        # REMOVE AFTER REMOVE EXT_COINBASE_MATURITY LOGIC
-
-        # RESTORE AFTER REMOVE EXT_COINBASE_MATURITY LOGIC
-        # self.move_tip(88)
-        # RESTORE AFTER REMOVE EXT_COINBASE_MATURITY LOGIC
-
+        self.move_tip(88)
         blocks2 = []
         for i in range(89, LARGE_REORG_SIZE + 89):
             blocks2.append(self.next_block("alt" + str(i)))
