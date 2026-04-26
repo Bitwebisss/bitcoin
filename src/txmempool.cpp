@@ -9,7 +9,6 @@
 #include <coins.h>
 #include <common/system.h>
 #include <consensus/consensus.h>
-#include <chainparams.h>  // Bitweb Params: remove or comment when logic removed
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <logging.h>
