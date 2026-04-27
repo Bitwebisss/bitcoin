@@ -110,7 +110,7 @@ struct PreSelectInputs {
     // future: this could have external inputs as well.
 };
 
-// Bitweb params uncoment me after EXT_COINBASE_MATURITY removed
+// Bitweb params uncomment me after EXT_COINBASE_MATURITY removed
 //static void WalletCreateTx(benchmark::Bench& bench, const OutputType output_type, bool allow_other_inputs, std::optional<PreSelectInputs> preset_inputs)
 //{
 //    const auto test_setup = MakeNoLogFileContext<const TestingSetup>();
