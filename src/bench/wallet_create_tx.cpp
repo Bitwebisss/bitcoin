@@ -200,9 +200,9 @@ static void WalletCreateTx(benchmark::Bench& bench, const OutputType output_type
         // When EXT logic removed from CheckTxInputs: delete this block, assert below stays.
         static constexpr int EXT_START = 1177;
         static constexpr int EXT_END   = EXT_START + EXT_COINBASE_MATURITY;
-        const int pre_ext  = std::min(std::max(0, (int)chain_size - COINBASE_MATURITY), EXT_START);
+        const int pre_ext  = std::min(std::max(0, (int)chain_size - COINBASE_MATURITY), EXT_START - 1);
         const int ext      = ((int)chain_size >= EXT_END + COINBASE_MATURITY) ? (EXT_END - EXT_START) : 0;
-        const int post_ext = std::max(0, (int)chain_size - COINBASE_MATURITY - EXT_END);
+        const int post_ext = std::max(0, (int)chain_size - COINBASE_MATURITY - EXT_END + 1);
         bal_ok = (bal == 49 * COIN * (pre_ext + ext + post_ext));
     }
     assert(bal_ok);
