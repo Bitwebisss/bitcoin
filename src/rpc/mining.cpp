@@ -89,7 +89,7 @@ static UniValue GetNetworkHashPS(int lookup, int height, const CChain& active_ch
     // If lookup is -1, then use blocks since last difficulty change.
     /* Bitweb Params */
     if (lookup == -1)
-        lookup = Params().GetConsensus().lwmaAveragingWindow; /* 576 Bitweb Params */
+        lookup = Params().GetConsensus().lwmaAveragingWindow;
 
     // If lookup is larger than chain, then set it to chain length.
     if (lookup > pb->nHeight)
