@@ -2898,7 +2898,7 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
             //
             // The correct fix is a sliding window: reset the timeout after each
             // successfully received batch. If a peer stops responding for more
-            // than HEADERS_RESPONSE_TIME (2 min), it gets disconnected. A peer
+            // than HEADERS_RESPONSE_TIME (4 min), it gets disconnected. A peer
             // that keeps sending valid batches will never be disconnected
             // prematurely, regardless of chain length.
             //
