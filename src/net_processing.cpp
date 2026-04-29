@@ -92,7 +92,7 @@ TRACEPOINT_SEMAPHORE(net, misbehaving_connection);
 
 /** Headers download timeout.
  *  Timeout = base + per_header * (expected number of headers) */
-static constexpr auto HEADERS_DOWNLOAD_TIMEOUT_BASE = 20min; /* Bitweb Params */
+static constexpr auto HEADERS_DOWNLOAD_TIMEOUT_BASE = 15min; /* Bitweb Params */
 static constexpr auto HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER = 2ms; /* Bitweb Params */
 /** How long to wait for a peer to respond to a getheaders request */
 static constexpr auto HEADERS_RESPONSE_TIME{4min}; /* Bitweb Params */
