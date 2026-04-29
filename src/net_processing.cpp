@@ -128,9 +128,9 @@ static const unsigned int MAX_GETDATA_SZ = 1000;
 static const int MAX_BLOCKS_IN_TRANSIT_PER_PEER = 16;
 /** Default time during which a peer must stall block download progress before being disconnected.
  * the actual timeout is increased temporarily if peers are disconnected for hitting the timeout */
-static constexpr auto BLOCK_STALLING_TIMEOUT_DEFAULT{8s}; /* Bitweb Params */
+static constexpr auto BLOCK_STALLING_TIMEOUT_DEFAULT{2s};
 /** Maximum timeout for stalling block download. */
-static constexpr auto BLOCK_STALLING_TIMEOUT_MAX{128s}; /* Bitweb Params */
+static constexpr auto BLOCK_STALLING_TIMEOUT_MAX{64s};
 /** Maximum depth of blocks we're willing to serve as compact blocks to peers
  *  when requested. For older blocks, a regular BLOCK response will be sent. */
 static const int MAX_CMPCTBLOCK_DEPTH = 5;
