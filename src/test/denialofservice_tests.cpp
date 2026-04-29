@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     connman.FlushSendBuffer(dummyNode1);
 
     int64_t nStartTime = GetTime();
-    // Wait 43 minutes
+    // Wait 43 minutes (> CHAIN_SYNC_TIMEOUT=40min) Bitweb Params
     SetMockTime(nStartTime+43*60);
     BOOST_CHECK(peerman.SendMessages(&dummyNode1)); // should result in getheaders
     {
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
         const auto& [to_send, _more, _msg_type] = dummyNode1.m_transport->GetBytesToSend(false);
         BOOST_CHECK(!to_send.empty());
     }
-    // Wait 4 more minutes
+    // Wait 5 more minutes (> HEADERS_RESPONSE_TIME=4min from the 43min mark) Bitweb Params
     SetMockTime(nStartTime+48*60);
     BOOST_CHECK(peerman.SendMessages(&dummyNode1)); // should result in disconnect
     BOOST_CHECK(dummyNode1.fDisconnect == true);
