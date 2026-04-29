@@ -93,15 +93,15 @@ TRACEPOINT_SEMAPHORE(net, misbehaving_connection);
 /** Headers download timeout.
  *  Timeout = base + per_header * (expected number of headers) */
 static constexpr auto HEADERS_DOWNLOAD_TIMEOUT_BASE = 15min;
-static constexpr auto HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER = 2ms; /* Bitweb Params */
+static constexpr auto HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER = 1ms; /* Bitweb Params */
 /** How long to wait for a peer to respond to a getheaders request */
-static constexpr auto HEADERS_RESPONSE_TIME{4min}; /* Bitweb Params */
+static constexpr auto HEADERS_RESPONSE_TIME{2min};
 /** Protect at least this many outbound peers from disconnection due to slow/
  * behind headers chain.
  */
 static constexpr int32_t MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT = 4;
 /** Timeout for (unprotected) outbound peers to sync to our chainwork */
-static constexpr auto CHAIN_SYNC_TIMEOUT{40min}; /* Bitweb Params */
+static constexpr auto CHAIN_SYNC_TIMEOUT{20min};
 /** How frequently to check for stale tips */
 static constexpr auto STALE_CHECK_INTERVAL{10min};
 /** How frequently to check for extra outbound peers and disconnect */
@@ -649,7 +649,7 @@ private:
     arith_uint256 GetAntiDoSWorkThreshold();
     /** Deal with state tracking and headers sync for peers that send
      * non-connecting headers (this can happen due to BIP 130 headers
-     * announcements for blocks interacting with the 5m (MAX_FUTURE_BLOCK_TIME) rule). */
+     * announcements for blocks interacting with the 10m (MAX_FUTURE_BLOCK_TIME) rule). */
     void HandleUnconnectingHeaders(CNode& pfrom, Peer& peer, const std::vector<CBlockHeader>& headers) EXCLUSIVE_LOCKS_REQUIRED(g_msgproc_mutex);
     /** Return true if the headers connect to each other, false otherwise */
     bool CheckHeadersAreContinuous(const std::vector<CBlockHeader>& headers) const;
