@@ -571,7 +571,7 @@ static RPCHelpMan getblockhash()
     };
 }
 
-/* Bitweb Params
+/* Bitweb Params */
 static RPCHelpMan getargon2idpowblockhash()
 {
     return RPCHelpMan{"getargon2idpowblockhash",
@@ -580,7 +580,7 @@ static RPCHelpMan getargon2idpowblockhash()
                     {"height", RPCArg::Type::NUM, RPCArg::Optional::NO, "The height index"},
                 },
                 RPCResult{
-                    RPCResult::Type::STR_HEX, "", "The block hash"},
+                    RPCResult::Type::STR_HEX, "", "The argon2id block pow hash"},
                 RPCExamples{
                     HelpExampleCli("getargon2idpowblockhash", "1000")
             + HelpExampleRpc("getargon2idpowblockhash", "1000")
@@ -600,7 +600,7 @@ static RPCHelpMan getargon2idpowblockhash()
 },
     };
 }
-Bitweb Params */
+/* Bitweb Params */
 
 static RPCHelpMan getblockheader()
 {
@@ -3507,7 +3507,7 @@ void RegisterBlockchainRPCCommands(CRPCTable& t)
         {"blockchain", &getblock},
         {"blockchain", &getblockfrompeer},
         {"blockchain", &getblockhash},
-//        {"blockchain", &getargon2idpowblockhash}, /* Bitweb Params */
+        {"blockchain", &getargon2idpowblockhash}, /* Bitweb Params */
         {"blockchain", &getblockheader},
         {"blockchain", &getchaintips},
         {"blockchain", &getdifficulty},

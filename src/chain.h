@@ -42,7 +42,7 @@ static constexpr int64_t TIMESTAMP_WINDOW = 2 * 60 * 60; // 2 hours - original w
  *
  * Ref: https://github.com/bitcoin/bitcoin/pull/1026
  */
-static constexpr int64_t MAX_BLOCK_TIME_GAP = 45 * 60; /* Bitweb Params */
+static constexpr int64_t MAX_BLOCK_TIME_GAP = 90 * 60; /* Bitweb Params */
 
 class CBlockFileInfo
 {
