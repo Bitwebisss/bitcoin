@@ -46,7 +46,7 @@ from test_framework.blocktools import (
 )
 from test_framework.util import assert_equal
 
-CHECKPOINT_HEIGHT = 580
+CHECKPOINT_HEIGHT = 2100
 # ---------------------------------------------------------------------------
 
 
