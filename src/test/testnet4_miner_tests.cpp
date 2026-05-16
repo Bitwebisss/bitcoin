@@ -93,18 +93,18 @@ BOOST_AUTO_TEST_CASE(MiningInterface)
 // at the cost of slightly less stability. This is intentional for a test
 // network where hashrate is unpredictable.
 //
-// Bootstrap threshold L = N+1 = 289  (mainnet: 577)
-//   height <= 289 → return genesis nBits
-//   height   290  → first real LWMA computation
+// Bootstrap threshold L = N+59424 = 59712  (mainnet: 60000)
+//   height <= 59712 → return genesis nBits
+//   height   59713  → first real LWMA computation
 //
 // All expected values verified by Python arith_uint256 simulation that
 // mirrors the exact integer arithmetic in Lwma3CalculateNextWorkRequired.
 //
-//   stable hashrate (height N+2 = 290)    : 0x1f0ffffeU
-//   spacing = 6T (solvetime cap)          : 0x1f0fffffU  (== powLimit)
-//   spacing = T/2 (2x hashrate)           : 0x1f07ffffU
-//   spacing = T/3 (3x hashrate)           : 0x1f055554U
-//   mixed (144 slow 2T + 144 fast T/2)    : 0x1f0e1a9eU
+//   stable hashrate (height N+59425 = 59713) : 0x1f0ffffeU
+//   spacing = 6T (solvetime cap)              : 0x1f0fffffU  (== powLimit)
+//   spacing = T/2 (2x hashrate)               : 0x1f07ffffU
+//   spacing = T/3 (3x hashrate)               : 0x1f055554U
+//   mixed (144 slow 2T + 144 fast T/2)        : 0x1f0e1a9eU
 // ===========================================================================
 
 // ---------------------------------------------------------------------------
@@ -142,10 +142,10 @@ BOOST_AUTO_TEST_CASE(testnet4_lwma3_bootstrap)
     // Verify we are actually testing N=288 and not some other value.
     BOOST_REQUIRE_EQUAL(N, 288);
 
-    const int L = static_cast<int>(N + 1); // 289
+    const int L = static_cast<int>(N + 59424); // 59712
     auto blocks = BuildTestnet4Chain(L + 1, genesisBits, 1775999890, T);
 
-    // Boundary: height L=289 still on bootstrap path.
+    // Boundary: height L=59712 still on bootstrap path.
     BOOST_CHECK_EQUAL(GetNextWorkRequired(&blocks[L], nullptr, consensus), genesisBits);
     // Interior heights also bootstrap.
     BOOST_CHECK_EQUAL(GetNextWorkRequired(&blocks[1],     nullptr, consensus), genesisBits);
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(testnet4_lwma3_stable_hashrate)
     const unsigned int genesisBits = chainParams->GenesisBlock().nBits;
     const arith_uint256 powLimit   = UintToArith256(consensus.powLimit);
 
-    const int lwma_height = static_cast<int>(N + 2); // 290
+    const int lwma_height = static_cast<int>(N + 59425); // 59713
     auto blocks = BuildTestnet4Chain(lwma_height + 1, genesisBits, 1775999890, T);
 
     const unsigned int expected_nbits = 0x1f0ffffeU;
@@ -191,15 +191,15 @@ BOOST_AUTO_TEST_CASE(testnet4_lwma3_no_drift)
     const unsigned int genesisBits = chainParams->GenesisBlock().nBits;
 
     const int EXTRA     = 8;
-    const int chain_len = static_cast<int>(N + 3 + EXTRA); // 299
+    const int chain_len = static_cast<int>(N + 59426 + EXTRA); // 59722
     auto blocks = BuildTestnet4Chain(chain_len, genesisBits, 1775999890, T);
 
-    for (int h = static_cast<int>(N + 3); h < chain_len; h++) {
+    for (int h = static_cast<int>(N + 59426); h < chain_len; h++) {
         blocks[h].nBits = GetNextWorkRequired(&blocks[h - 1], nullptr, consensus);
     }
 
     const unsigned int expected_nbits = 0x1f0ffffeU;
-    for (int h = static_cast<int>(N + 3); h < chain_len; h++) {
+    for (int h = static_cast<int>(N + 59426); h < chain_len; h++) {
         BOOST_CHECK_EQUAL(blocks[h].nBits, expected_nbits);
     }
 }
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(testnet4_lwma3_powlimit_cap)
     const unsigned int genesisBits  = chainParams->GenesisBlock().nBits;
     const unsigned int powLimitBits = UintToArith256(consensus.powLimit).GetCompact();
 
-    const int lwma_height = static_cast<int>(N + 2);
+    const int lwma_height = static_cast<int>(N + 59425);
     auto blocks = BuildTestnet4Chain(lwma_height + 1, genesisBits, 1775999890, 6 * T);
 
     unsigned int result = GetNextWorkRequired(&blocks[lwma_height], nullptr, consensus);
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(testnet4_lwma3_double_hashrate)
     const unsigned int genesisBits = chainParams->GenesisBlock().nBits;
     const arith_uint256 powLimit   = UintToArith256(consensus.powLimit);
 
-    const int lwma_height = static_cast<int>(N + 2);
+    const int lwma_height = static_cast<int>(N + 59425);
     auto blocks = BuildTestnet4Chain(lwma_height + 1, genesisBits, 1775999890, T / 2);
 
     unsigned int result = GetNextWorkRequired(&blocks[lwma_height], nullptr, consensus);
@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(testnet4_lwma3_monotone_difficulty)
     const int64_t N = consensus.lwmaAveragingWindow; // 288
     const int64_t T = consensus.nPowTargetSpacing;   // 300
     const unsigned int genesisBits = chainParams->GenesisBlock().nBits;
-    const int lwma_height = static_cast<int>(N + 2);
+    const int lwma_height = static_cast<int>(N + 59425);
 
     auto blocks_2x = BuildTestnet4Chain(lwma_height + 1, genesisBits, 1775999890, T / 2);
     auto blocks_3x = BuildTestnet4Chain(lwma_height + 1, genesisBits, 1775999890, T / 3);
@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(testnet4_lwma3_mixed_solvetimes_determinism)
     const arith_uint256 powLimit   = UintToArith256(consensus.powLimit);
 
     const int HALF      = static_cast<int>(N / 2); // 144
-    const int chain_len = static_cast<int>(N + 3); // 291
+    const int chain_len = static_cast<int>(N + 59426); // 59714
     std::vector<CBlockIndex> blocks(chain_len);
 
     int64_t ts = 1775999890;
@@ -307,9 +307,9 @@ BOOST_AUTO_TEST_CASE(testnet4_lwma3_mixed_solvetimes_determinism)
         blocks[i].nTime      = static_cast<uint32_t>(ts);
         blocks[i].nChainWork = i ? blocks[i - 1].nChainWork + GetBlockProof(blocks[i - 1])
                                  : arith_uint256(0);
-        if      (i < 3)          ts += T;
-        else if (i < 3 + HALF)   ts += 2 * T;
-        else                     ts += T / 2;
+        if      (i < 59426)             ts += T;
+        else if (i < 59426 + HALF)      ts += 2 * T;
+        else                            ts += T / 2;
     }
 
     const unsigned int expected_nbits = 0x1f0e1a9eU;
