@@ -136,7 +136,7 @@ unsigned int Lwma3CalculateNextWorkRequired(const CBlockIndex* pindexLast, const
     const int64_t N = params.lwmaAveragingWindow;
 
     // Low diff blocks for diff initiation.
-    const int64_t L = N + 1;
+    const int64_t L = N + 59900;
 
     // Define a k that will be used to get a proper average after weighting the solvetimes.
     const int64_t k = N * (N + 1) * T / 2;
