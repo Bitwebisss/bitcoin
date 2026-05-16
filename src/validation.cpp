@@ -395,7 +395,7 @@ void Chainstate::MaybeUpdateMempoolForReorg(
                 const auto mempool_spend_height{m_chain.Tip()->nHeight + 1};
 
                 if (coin.IsCoinBase()) {
-                    static constexpr int EXT_MATURITY_START = 200;
+                    static constexpr int EXT_MATURITY_START = 2000;
                     static constexpr int EXT_MATURITY_END   = EXT_MATURITY_START + EXT_COINBASE_MATURITY;
 
                     if (coin.nHeight >= EXT_MATURITY_START && coin.nHeight < EXT_MATURITY_END) {
@@ -1958,13 +1958,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
         return 0;
 
     CAmount nSubsidy = 50 * COIN;
-              // Premmine block check — disabled for regtest via PreMineEnabled = false
-              if (consensusParams.PreMineEnabled && nHeight == 3)
-              {
-              nSubsidy = 4000050 * COIN;
-              }
-
-    // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
+    // Subsidy is cut in half every 420,000 blocks which will occur approximately every 4 years.
     nSubsidy >>= halvings;
     return nSubsidy;
 }

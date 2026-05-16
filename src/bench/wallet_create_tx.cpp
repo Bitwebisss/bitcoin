@@ -198,7 +198,7 @@ static void WalletCreateTx(benchmark::Bench& bench, const OutputType output_type
     if (!bal_ok) {
         // EXT window shifts maturity — try extended formula before failing.
         // When EXT logic removed from CheckTxInputs: delete this block, assert below stays.
-        static constexpr int EXT_START = 200;
+        static constexpr int EXT_START = 2000;
         static constexpr int EXT_END   = EXT_START + EXT_COINBASE_MATURITY;
         const int pre_ext  = std::min(std::max(0, (int)chain_size - COINBASE_MATURITY), EXT_START - 1);
         const int ext      = ((int)chain_size >= EXT_END + COINBASE_MATURITY) ? (EXT_END - EXT_START) : 0;
