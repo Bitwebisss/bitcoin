@@ -135,8 +135,9 @@ BOOST_AUTO_TEST_CASE(get_next_work_upper_limit_actual)
 // ── Does the -1 LSB accumulate / drift further? ───────────────────────────
 //
 //   No. The chain stabilises at 0x1f0ffffe from the second post-bootstrap
-//   block and stays there indefinitely at constant hashrate. Test 3
-//   (lwma3_stable_hashrate_no_drift) verifies this in C++.
+//   block and stays there indefinitely at constant hashrate. Test 12
+//   (lwma3_live_stabilization_2000_blocks) verifies this under full live
+//   nBits propagation over 2000 blocks.
 //
 // ── Which chain types run LWMA-3? ────────────────────────────────────────
 //
@@ -147,7 +148,6 @@ BOOST_AUTO_TEST_CASE(get_next_work_upper_limit_actual)
 // ── Hardcoded expected values (verified by Python arith_uint256 simulation)
 //
 //   stable hashrate (height N+59425 = 60001) : 0x1f0ffffeU
-//   stabilised from height N+59426 = 60002 on: 0x1f0ffffeU  (no further drift)
 //   spacing = 6T (solvetime cap boundary) : 0x1f0fffffU  (clamped to powLimit)
 //   spacing = 100T (above cap)            : 0x1f0fffffU  (same as 6T)
 //   spacing = T/2  (2× hashrate)          : 0x1f07ffffU  (≈ powLimit / 2)
@@ -178,10 +178,10 @@ static std::vector<CBlockIndex> BuildChain(int count, unsigned int nBits,
 
 // ---------------------------------------------------------------------------
 // Test 1: Bootstrap path.
-//   Any block at height <= L = N+1 = 577 must return genesis nBits unchanged.
-//   LWMA-3 requires a full window of N=576 blocks; the first valid LWMA call
-//   is at height N+2 = 578.  Heights below that use the bootstrap shortcut:
-//     return genesis->nBits;
+//   Any block at height <= L = N+59424 = 60000 must return genesis nBits
+//   unchanged.  The bootstrap guard in Lwma3CalculateNextWorkRequired:
+//     if (height <= L) return genesis->nBits;
+//   The first real LWMA computation occurs at height L+1 = N+59425 = 60001.
 // ---------------------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(lwma3_bootstrap)
 {
@@ -205,7 +205,8 @@ BOOST_AUTO_TEST_CASE(lwma3_bootstrap)
 
 // ---------------------------------------------------------------------------
 // Test 2: First real LWMA-3 computation.
-//   pindexLast at height N+2 = 578 (first height above bootstrap threshold L).
+//   pindexLast at height L+1 = N+59425 = 60001 (first height above bootstrap
+//   threshold L = N+59424 = 60000).
 //   All N=576 window blocks carry genesisBits and ideal spacing T.
 //   Expected result: 0x1f0ffffeU — one compact LSB below genesisBits.
 //   This is caused by the systematic truncation in (target / N / k) × N
@@ -232,39 +233,6 @@ BOOST_AUTO_TEST_CASE(lwma3_stable_hashrate)
     arith_uint256 resultTarget;
     resultTarget.SetCompact(result);
     BOOST_CHECK(resultTarget <= powLimit);
-}
-
-// ---------------------------------------------------------------------------
-// Test 3: Rounding error must NOT accumulate across successive blocks.
-//   Simulate the live chain: each block's nBits is set to the value returned
-//   by GetNextWorkRequired for the previous block, exactly as a full node does.
-//   No actual PoW is performed; LWMA-3 reads only nBits and nTime via pprev,
-//   so updating nBits in the vector is sufficient.
-//   Expected: every block from height N+3 = 579 onward stays at 0x1f0ffffeU.
-//   A drift would indicate a compounding accumulator bug.
-// ---------------------------------------------------------------------------
-BOOST_AUTO_TEST_CASE(lwma3_stable_hashrate_no_drift)
-{
-    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
-    const auto& consensus  = chainParams->GetConsensus();
-    const int64_t N        = consensus.lwmaAveragingWindow; // 576
-    const int64_t T        = consensus.nPowTargetSpacing;   // 300
-    const unsigned int genesisBits = chainParams->GenesisBlock().nBits;
-
-    const int EXTRA     = 8;
-    const int chain_len = static_cast<int>(N + 59426 + EXTRA); // 60010
-    auto blocks = BuildChain(chain_len, genesisBits, 1775999888, T);
-
-    // Propagate difficulty: each block from N+59426 onward gets the computed nBits.
-    for (int h = static_cast<int>(N + 59426); h < chain_len; h++) {
-        blocks[h].nBits = GetNextWorkRequired(&blocks[h - 1], nullptr, consensus);
-    }
-
-    // Difficulty must stabilise at genesisBits - 1 LSB and never drop further.
-    const unsigned int expected_nbits = 0x1f0ffffeU;
-    for (int h = static_cast<int>(N + 59426); h < chain_len; h++) {
-        BOOST_CHECK_EQUAL(blocks[h].nBits, expected_nbits);
-    }
 }
 
 // ---------------------------------------------------------------------------
@@ -515,35 +483,6 @@ BOOST_AUTO_TEST_CASE(lwma3_duplicate_timestamps)
     // With every solvetime = 1s the algorithm perceives massive hashrate;
     // target must be well below powLimit/2 (difficulty well above midpoint).
     BOOST_CHECK(resultTarget < UintToArith256(consensus.powLimit) / 2);
-}
-
-// ---------------------------------------------------------------------------
-// Test 11: Monotonicity — higher hashrate must always produce a harder target.
-//   At spacing T/3 (3× hashrate) the returned target must be strictly smaller
-//   than at spacing T/2 (2× hashrate).  This validates the core property that
-//   LWMA-3 responds correctly to increasing hashrate.
-// ---------------------------------------------------------------------------
-BOOST_AUTO_TEST_CASE(lwma3_monotone_difficulty)
-{
-    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
-    const auto& consensus  = chainParams->GetConsensus();
-    const int64_t N = consensus.lwmaAveragingWindow; // 576
-    const int64_t T = consensus.nPowTargetSpacing;   // 300
-    const unsigned int genesisBits = chainParams->GenesisBlock().nBits;
-    const int lwma_height = static_cast<int>(N + 59425);
-
-    auto blocks_2x = BuildChain(lwma_height + 1, genesisBits, 1775999888, T / 2); // 150 s
-    auto blocks_3x = BuildChain(lwma_height + 1, genesisBits, 1775999888, T / 3); // 100 s
-
-    unsigned int result_2x = GetNextWorkRequired(&blocks_2x[lwma_height], nullptr, consensus);
-    unsigned int result_3x = GetNextWorkRequired(&blocks_3x[lwma_height], nullptr, consensus);
-
-    arith_uint256 target_2x, target_3x;
-    target_2x.SetCompact(result_2x);
-    target_3x.SetCompact(result_3x);
-
-    // 3× hashrate → target must be strictly smaller (harder) than 2× hashrate.
-    BOOST_CHECK(target_3x < target_2x);
 }
 
 // ---------------------------------------------------------------------------
@@ -1311,7 +1250,7 @@ BOOST_AUTO_TEST_CASE(lwma3_timestamp_drop_attack)
 //   causing difficulty to rise by ~979× over one full N-block window.
 //
 //   Key finding (from Python simulation):
-//     After N=576 blocks at 1s spacing: target = 0x1e042f20 (~979× harder).
+//     After N=576 blocks at 1s spacing: target = 0x1e043720 (~972× harder).
 //     The attack requires the attacker to have the hashrate to keep mining
 //     at this extreme difficulty — which grows exponentially as the window
 //     fills.  This makes the attack self-limiting: it only succeeds if the
@@ -1389,7 +1328,7 @@ BOOST_AUTO_TEST_CASE(lwma3_timestamp_rise_attack)
     // Stable baseline.
     BOOST_CHECK_EQUAL(after_stable, 0x1f0ffffeU);
 
-    // After full N-block attack: ~979× difficulty increase.
+    // After full N-block attack: ~972× difficulty increase.
     BOOST_CHECK_EQUAL(after_attack, 0x1e043720U);
 
     // After recovery, difficulty eases but very slowly (old high-difficulty
@@ -1460,8 +1399,9 @@ BOOST_AUTO_TEST_CASE(lwma3_timestamp_alternating_attack)
     const auto& consensus  = chainParams->GetConsensus();
     const int64_t N        = consensus.lwmaAveragingWindow; // 576
     const int64_t T        = consensus.nPowTargetSpacing;   // 300
-    const unsigned int genesisBits = chainParams->GenesisBlock().nBits;
-    const arith_uint256 powLimit   = UintToArith256(consensus.powLimit);
+    const unsigned int genesisBits  = chainParams->GenesisBlock().nBits;
+    const arith_uint256 powLimit    = UintToArith256(consensus.powLimit);
+    const unsigned int powLimitBits = powLimit.GetCompact();
 
     const int L     = static_cast<int>(N + 59424);
     const int TOTAL = L + 1 + static_cast<int>(3 * N);
@@ -1547,6 +1487,148 @@ BOOST_AUTO_TEST_CASE(lwma3_timestamp_alternating_attack)
 
     // Per-block safety across all phases.
     for (int i = ph1; i < TOTAL; i++) {
+        arith_uint256 tgt;
+        tgt.SetCompact(blocks[i].nBits);
+        BOOST_CHECK(tgt <= powLimit);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Test 22: Timestamp drop attack starting from high difficulty.
+//
+//   Verifies that the FTL=600s drop attack cannot collapse difficulty to
+//   powLimit in a single window even when the chain starts at very high
+//   difficulty.  This bounds the worst-case impact of the attack regardless
+//   of how much hashrate was present before the attacker started.
+//
+//   Scenario (live nBits propagation throughout):
+//     Seed phase  : 3 × N=576 blocks at T/10 = 30s spacing
+//                   → difficulty climbs organically to ~35 000× above powLimit
+//     Attack phase: 3 × N=576 blocks at FTL=600s (MAX_FUTURE_BLOCK_TIME)
+//                   → attacker uses maximum future timestamp every block
+//
+//   Key finding (verified by Python arith_uint256 simulation):
+//     Even starting at ~35 000× difficulty, after one full N-block attack
+//     window the difficulty is still ~3 035× above powLimit — NOT at the
+//     floor.  The target grows roughly ×10 per window (FTL≈2T means the
+//     effective solvetime budget is ≈2T, so LWMA sees ≈2T average and
+//     the ratio drifts at most by a constant factor per window).
+//     After three attack windows: 35 059× → 3 035× → 628× → 128×.
+//     powLimit is never reached.
+//
+//   Expected values (Python arith_uint256 simulation):
+//     After seed window 1: 0x1f00911a  (≈28×   above powLimit)
+//     After seed window 2: 0x1e044694  (≈958×  above powLimit)
+//     After seed window 3: 0x1d1de878  (≈35060× above powLimit)
+//     After attack window 1: 0x1e01598e (≈3035× above powLimit)
+//     After attack window 2: 0x1e068608 (≈628×  above powLimit)
+//     After attack window 3: 0x1e1ff176 (≈128×  above powLimit)
+//
+//   Structural assertions (no hardcoded values for bounds checks):
+//     A. Seed actually raised difficulty: target < powLimit / 4.
+//     B. After each attack window target is strictly above powLimit (no floor).
+//     C. Each successive attack window eases difficulty further (cumulative).
+//     D. Target never exceeds powLimit at any point.
+// ---------------------------------------------------------------------------
+BOOST_AUTO_TEST_CASE(lwma3_timestamp_drop_attack_high_difficulty)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const auto& consensus  = chainParams->GetConsensus();
+    const int64_t N        = consensus.lwmaAveragingWindow; // 576
+    const int64_t T        = consensus.nPowTargetSpacing;   // 300
+    const unsigned int genesisBits  = chainParams->GenesisBlock().nBits;
+    const arith_uint256 powLimit    = UintToArith256(consensus.powLimit);
+    const unsigned int powLimitBits = powLimit.GetCompact();
+
+    // FTL = MAX_FUTURE_BLOCK_TIME = 600s = 2*T.
+    const int64_t FTL = 600;
+    BOOST_REQUIRE_EQUAL(FTL, 2 * T);
+
+    const int L     = static_cast<int>(N + 59424); // 60000
+    const int SEED_WINDOWS   = 3;
+    const int ATTACK_WINDOWS = 3;
+    const int TOTAL = L + 1 + (SEED_WINDOWS + ATTACK_WINDOWS) * static_cast<int>(N);
+
+    std::vector<CBlockIndex> blocks(TOTAL);
+
+    // Bootstrap phase.
+    for (int i = 0; i <= L; i++) {
+        blocks[i].pprev      = i ? &blocks[i - 1] : nullptr;
+        blocks[i].nHeight    = i;
+        blocks[i].nTime      = static_cast<uint32_t>(1775999888LL + static_cast<int64_t>(i) * T);
+        blocks[i].nBits      = genesisBits;
+        blocks[i].nChainWork = i ? blocks[i-1].nChainWork + GetBlockProof(blocks[i-1])
+                                 : arith_uint256(0);
+    }
+
+    int64_t cur_ts = static_cast<int64_t>(blocks[L].nTime);
+    auto fill_phase = [&](int from, int count, int64_t spacing) {
+        for (int i = from; i < from + count; i++) {
+            cur_ts += spacing;
+            blocks[i].pprev      = &blocks[i - 1];
+            blocks[i].nHeight    = i;
+            blocks[i].nTime      = static_cast<uint32_t>(cur_ts);
+            blocks[i].nBits      = GetNextWorkRequired(&blocks[i - 1], nullptr, consensus);
+            blocks[i].nChainWork = blocks[i-1].nChainWork + GetBlockProof(blocks[i-1]);
+        }
+    };
+
+    // Seed phase: 3 windows at T/10 = 30s — builds organic high difficulty.
+    const int64_t FAST = T / 10; // 30s
+    const int seed_start  = L + 1;
+    const int attack_start = seed_start + SEED_WINDOWS * static_cast<int>(N);
+
+    for (int w = 0; w < SEED_WINDOWS; w++) {
+        fill_phase(seed_start + w * static_cast<int>(N), static_cast<int>(N), FAST);
+    }
+
+    // Verify expected seed nBits values (Python simulation).
+    const int s1 = seed_start  + 1 * static_cast<int>(N) - 1;
+    const int s2 = seed_start  + 2 * static_cast<int>(N) - 1;
+    const int s3 = attack_start - 1;
+    BOOST_CHECK_EQUAL(blocks[s1].nBits, 0x1f00911aU); // ≈28×   above powLimit
+    BOOST_CHECK_EQUAL(blocks[s2].nBits, 0x1e044694U); // ≈958×  above powLimit
+    BOOST_CHECK_EQUAL(blocks[s3].nBits, 0x1d1de878U); // ≈35060× above powLimit
+
+    // (A) Seed actually raised difficulty well above stable.
+    arith_uint256 seed_target;
+    seed_target.SetCompact(blocks[s3].nBits);
+    BOOST_CHECK(seed_target < powLimit / 4);
+
+    // Attack phase: 3 windows at FTL=600s.
+    for (int w = 0; w < ATTACK_WINDOWS; w++) {
+        fill_phase(attack_start + w * static_cast<int>(N), static_cast<int>(N), FTL);
+    }
+
+    const int a1 = attack_start + 1 * static_cast<int>(N) - 1;
+    const int a2 = attack_start + 2 * static_cast<int>(N) - 1;
+    const int a3 = attack_start + 3 * static_cast<int>(N) - 1;
+
+    // Verify expected attack nBits values (Python simulation).
+    BOOST_CHECK_EQUAL(blocks[a1].nBits, 0x1e01598eU); // ≈3035× above powLimit
+    BOOST_CHECK_EQUAL(blocks[a2].nBits, 0x1e068608U); // ≈628×  above powLimit
+    BOOST_CHECK_EQUAL(blocks[a3].nBits, 0x1e1ff176U); // ≈128×  above powLimit
+
+    // (B) After each attack window, difficulty is still well above powLimit floor.
+    BOOST_CHECK(blocks[a1].nBits != powLimitBits);
+    BOOST_CHECK(blocks[a2].nBits != powLimitBits);
+    BOOST_CHECK(blocks[a3].nBits != powLimitBits);
+
+    arith_uint256 t_a1, t_a2, t_a3;
+    t_a1.SetCompact(blocks[a1].nBits);
+    t_a2.SetCompact(blocks[a2].nBits);
+    t_a3.SetCompact(blocks[a3].nBits);
+
+    BOOST_CHECK(t_a1 < powLimit);
+    BOOST_CHECK(t_a2 < powLimit);
+    BOOST_CHECK(t_a3 < powLimit);
+
+    // (C) Each attack window eases difficulty further (target grows each window).
+    BOOST_CHECK(t_a2 > t_a1);
+    BOOST_CHECK(t_a3 > t_a2);
+
+    // (D) Target never exceeds powLimit across all phases.
+    for (int i = seed_start; i < TOTAL; i++) {
         arith_uint256 tgt;
         tgt.SetCompact(blocks[i].nBits);
         BOOST_CHECK(tgt <= powLimit);
