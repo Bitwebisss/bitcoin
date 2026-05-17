@@ -55,12 +55,12 @@
     </message>
     <message>
         <source>These are your Bitweb addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Тези са вашите Биткойн адреси за изпращане на плащания. Винаги проверявайте количеството и получаващите адреси преди изпращане на монети. </translation>
+        <translation type="unfinished">Тези са вашите Битвеб адреси за изпращане на плащания. Винаги проверявайте количеството и получаващите адреси преди изпращане на монети. </translation>
     </message>
     <message>
         <source>These are your Bitweb addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
-        <translation type="unfinished">Това са вашите биткойн адреси за получаване на плащания. Използвайте бутона „Създаване на нови адреси“ в раздела за получаване, за да създадете нови адреси. Подписването е възможно само с адреси от типа „наследени“.</translation>
+        <translation type="unfinished">Това са вашите битвеб адреси за получаване на плащания. Използвайте бутона „Създаване на нови адреси“ в раздела за получаване, за да създадете нови адреси. Подписването е възможно само с адреси от типа „наследени“.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -188,7 +188,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitwebs from being stolen by malware infecting your computer.</source>
-        <translation type="unfinished">Не забравяйте, че криптирането на вашия портфейл не може напълно да защити вашите биткойни от кражба от зловреден софтуер, заразяващ компютъра ви.</translation>
+        <translation type="unfinished">Не забравяйте, че криптирането на вашия портфейл не може напълно да защити вашите битвеби от кражба от зловреден софтуер, заразяващ компютъра ви.</translation>
     </message>
     <message>
         <source>Wallet to be encrypted</source>
@@ -303,7 +303,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Enter a Bitweb address (e.g. %1)</source>
-        <translation type="unfinished">Въведете Биткойн адрес (например: %1)</translation>
+        <translation type="unfinished">Въведете Битвеб адрес (например: %1)</translation>
     </message>
     <message>
         <source>Inbound</source>
@@ -475,7 +475,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Send coins to a Bitweb address</source>
-        <translation type="unfinished">Изпращане към Биткоин адрес</translation>
+        <translation type="unfinished">Изпращане към Битвеб адрес</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -519,7 +519,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Sign messages with your Bitweb addresses to prove you own them</source>
-        <translation type="unfinished">Пишете съобщения със своя Биткойн адрес за да докажете,че е ваш.</translation>
+        <translation type="unfinished">Пишете съобщения със своя Битвеб адрес за да докажете,че е ваш.</translation>
     </message>
     <message>
         <source>&amp;Verify message…</source>
@@ -527,7 +527,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Bitweb addresses</source>
-        <translation type="unfinished">Потвърждаване на съобщения  за да се знае,че са написани с дадените Биткойн адреси.</translation>
+        <translation type="unfinished">Потвърждаване на съобщения  за да се знае,че са написани с дадените Битвеб адреси.</translation>
     </message>
     <message>
         <source>&amp;Load PSBT from file…</source>
@@ -587,7 +587,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitweb: URIs)</source>
-        <translation type="unfinished">Изискване на плащания(генерира QR кодове и биткойн: URIs)</translation>
+        <translation type="unfinished">Изискване на плащания(генерира QR кодове и битвеб: URIs)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -712,7 +712,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Show the %1 help message to get a list with possible Bitweb command-line options</source>
-        <translation type="unfinished">Покажи %1 помощно съобщение за да получиш лист с възможни Биткойн команди</translation>
+        <translation type="unfinished">Покажи %1 помощно съобщение за да получиш лист с възможни Битвеб команди</translation>
     </message>
     <message>
         <source>&amp;Mask values</source>
@@ -779,7 +779,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <extracomment>A substring of the tooltip.</extracomment>
         <translation type="unfinished">
             <numerusform>%n свързани активно към Bitweb мрежата.</numerusform>
-            <numerusform>%n активно свързани към Биткойн мрежата. </numerusform>
+            <numerusform>%n активно свързани към Битвеб мрежата. </numerusform>
         </translation>
     </message>
     <message>
@@ -1274,7 +1274,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>The entered address "%1" is not a valid Bitweb address.</source>
-        <translation type="unfinished">"%1" не е валиден Биткоин адрес.</translation>
+        <translation type="unfinished">"%1" не е валиден Битвеб адрес.</translation>
     </message>
     <message>
         <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
@@ -1386,7 +1386,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Bitweb</source>
-        <translation type="unfinished">Биткоин</translation>
+        <translation type="unfinished">Битвеб</translation>
     </message>
     <message numerus="yes">
         <source>%n GB of space available</source>
@@ -1431,7 +1431,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>%1 will download and store a copy of the Bitweb block chain.</source>
-        <translation type="unfinished">%1 ще свали и съхрани копие на биткойн блокчейна.</translation>
+        <translation type="unfinished">%1 ще свали и съхрани копие на битвеб блокчейна.</translation>
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
@@ -1458,7 +1458,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Attempting to spend bitwebs that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation type="unfinished">Опитът да се изразходват биткойни, които са засегнати от все още показаните трансакции, няма да бъдат приети от мрежата.</translation>
+        <translation type="unfinished">Опитът да се изразходват битвеби, които са засегнати от все още показаните трансакции, няма да бъдат приети от мрежата.</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -1672,7 +1672,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Connect to the Bitweb network through a SOCKS5 proxy.</source>
-        <translation type="unfinished">Свързване с Биткойн мрежата чрез SOCKS5  прокси.</translation>
+        <translation type="unfinished">Свързване с Битвеб мрежата чрез SOCKS5  прокси.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1804,7 +1804,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitweb network after a connection is established, but this process has not completed yet.</source>
-        <translation type="unfinished">Текущата информация на екрана може да не е актуална. Вашият портфейл ще се синхронизира автоматично с мрежата на Биткоин, щом поне една връзката с нея се установи; този процес все още не е приключил.</translation>
+        <translation type="unfinished">Текущата информация на екрана може да не е актуална. Вашият портфейл ще се синхронизира автоматично с мрежата на Битвеб, щом поне една връзката с нея се установи; този процес все още не е приключил.</translation>
     </message>
     <message>
         <source>Available:</source>
@@ -1902,7 +1902,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Cannot start bitweb: click-to-pay handler</source>
-        <translation type="unfinished">Биткойн не можe да се стартира: click-to-pay handler</translation>
+        <translation type="unfinished">Битвеб не можe да се стартира: click-to-pay handler</translation>
     </message>
     <message>
         <source>URI handling</source>
@@ -2460,7 +2460,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Warning: Invalid Bitweb address</source>
-        <translation type="unfinished">Внимание: Невалиден Биткойн адрес</translation>
+        <translation type="unfinished">Внимание: Невалиден Битвеб адрес</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -2550,7 +2550,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Bitweb address</source>
-        <translation type="unfinished">Проверете съобщение, за да сте сигурни че е подписано с определен Биткоин адрес</translation>
+        <translation type="unfinished">Проверете съобщение, за да сте сигурни че е подписано с определен Битвеб адрес</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>

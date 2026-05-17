@@ -55,7 +55,7 @@
     </message>
     <message>
         <source>These are your Bitweb addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation type="unfinished">Эдгээр Биткойн хаягууд нь илгээх хаягууд. Хүлээн авах хаяг болон тоо хэмжээг илгээхээсээ өмнө сайн нягталж үзэж байна уу</translation>
+        <translation type="unfinished">Эдгээр Битвеб хаягууд нь илгээх хаягууд. Хүлээн авах хаяг болон тоо хэмжээг илгээхээсээ өмнө сайн нягталж үзэж байна уу</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -508,7 +508,7 @@
     <name>Intro</name>
     <message>
         <source>Bitweb</source>
-        <translation type="unfinished">Биткойн</translation>
+        <translation type="unfinished">Битвеб</translation>
     </message>
     <message numerus="yes">
         <source>%n GB of space available</source>
@@ -834,7 +834,7 @@
     </message>
     <message>
         <source>Warning: Invalid Bitweb address</source>
-        <translation type="unfinished">Анхаар:Буруу Биткойны хаяг байна</translation>
+        <translation type="unfinished">Анхаар:Буруу Битвебы хаяг байна</translation>
     </message>
     <message>
         <source>(no label)</source>

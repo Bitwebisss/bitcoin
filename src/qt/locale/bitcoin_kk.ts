@@ -167,7 +167,7 @@
     </message>
     <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitwebs from being stolen by malware infecting your computer.</source>
-        <translation type="unfinished">Шифрлау биткоиніңізді компьютер жұқтырған зиянды БЖ-дан толығымен қорғай алмайтынын есіңізде сақтаңыз.</translation>
+        <translation type="unfinished">Шифрлау битвебіңізді компьютер жұқтырған зиянды БЖ-дан толығымен қорғай алмайтынын есіңізде сақтаңыз.</translation>
     </message>
     <message>
         <source>Wallet to be encrypted</source>
@@ -458,7 +458,7 @@
     </message>
     <message>
         <source>Request payments (generates QR codes and bitweb: URIs)</source>
-        <translation type="unfinished">Төлем талап ету (QR кодтары мен биткоин құрады: URI)</translation>
+        <translation type="unfinished">Төлем талап ету (QR кодтары мен битвеб құрады: URI)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -600,7 +600,7 @@
     </message>
     <message>
         <source>Bitweb</source>
-        <translation type="unfinished">Биткоин</translation>
+        <translation type="unfinished">Битвеб</translation>
     </message>
     <message numerus="yes">
         <source>%n GB of space available</source>

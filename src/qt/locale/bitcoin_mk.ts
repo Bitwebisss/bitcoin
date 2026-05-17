@@ -60,7 +60,7 @@
     <message>
         <source>These are your Bitweb addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
-        <translation type="unfinished">Ова се вашите биткоин-адреси за примање плаќања. Користете го копчето „Создавање нови адреси“ во јазичето за примање за да создадете нови адреси. Потпишувањето е можно само со „наследни“ адреси.</translation>
+        <translation type="unfinished">Ова се вашите битвеб-адреси за примање плаќања. Користете го копчето „Создавање нови адреси“ во јазичето за примање за да создадете нови адреси. Потпишувањето е можно само со „наследни“ адреси.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -152,7 +152,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITWEBS&lt;/b&gt;!</source>
-        <translation type="unfinished">ВНИМАНИЕ: Ако го шифрирате вашиот паричник и ја изгубите лозинката, &lt;b&gt;ЌЕ ГИ ИЗГУБИТЕ СИТЕ БИТКОИНИ&lt;/b&gt;!</translation>
+        <translation type="unfinished">ВНИМАНИЕ: Ако го шифрирате вашиот паричник и ја изгубите лозинката, &lt;b&gt;ЌЕ ГИ ИЗГУБИТЕ СИТЕ БИТВЕБИ&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -172,7 +172,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitwebs from being stolen by malware infecting your computer.</source>
-        <translation type="unfinished">Запомнете дека шифрирањето на вашиот паричник не може целосно да ги заштити вашите биткоини од кражба од злонамерен софтвер, заразувајќи го вашиот сметач.</translation>
+        <translation type="unfinished">Запомнете дека шифрирањето на вашиот паричник не може целосно да ги заштити вашите битвеби од кражба од злонамерен софтвер, заразувајќи го вашиот сметач.</translation>
     </message>
     <message>
         <source>Wallet to be encrypted</source>
@@ -435,7 +435,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Send coins to a Bitweb address</source>
-        <translation type="unfinished">Испрати биткоини на биткоин-адреса</translation>
+        <translation type="unfinished">Испрати битвеби на битвеб-адреса</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -479,7 +479,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Sign messages with your Bitweb addresses to prove you own them</source>
-        <translation type="unfinished">Напишете пораки со вашата биткоин-адреса за да докажете дека е ваша.</translation>
+        <translation type="unfinished">Напишете пораки со вашата битвеб-адреса за да докажете дека е ваша.</translation>
     </message>
     <message>
         <source>&amp;Verify message…</source>
@@ -487,7 +487,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Bitweb addresses</source>
-        <translation type="unfinished">Потврдување на пораките за да се знае дека се напишани со дадените биткоин-адреси.</translation>
+        <translation type="unfinished">Потврдување на пораките за да се знае дека се напишани со дадените битвеб-адреси.</translation>
     </message>
     <message>
         <source>&amp;Load PSBT from file…</source>
@@ -547,7 +547,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitweb: URIs)</source>
-        <translation type="unfinished">Барање за плаќања (создава QR-кодови и биткоин: URI)</translation>
+        <translation type="unfinished">Барање за плаќања (создава QR-кодови и битвеб: URI)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -603,7 +603,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Load Partially Signed Bitweb Transaction</source>
-        <translation type="unfinished">Вчитајте делумно потпишана биткоин-трансакција</translation>
+        <translation type="unfinished">Вчитајте делумно потпишана битвеб-трансакција</translation>
     </message>
     <message>
         <source>Load PSBT from &amp;clipboard…</source>
@@ -611,7 +611,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Load Partially Signed Bitweb Transaction from clipboard</source>
-        <translation type="unfinished">Вчитајте делумно потпишана биткоин-трансакција од клипбордот</translation>
+        <translation type="unfinished">Вчитајте делумно потпишана битвеб-трансакција од клипбордот</translation>
     </message>
     <message>
         <source>Node window</source>
@@ -631,7 +631,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Open a bitweb: URI</source>
-        <translation type="unfinished">Отвори биткоин: URI</translation>
+        <translation type="unfinished">Отвори битвеб: URI</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -661,7 +661,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Show the %1 help message to get a list with possible Bitweb command-line options</source>
-        <translation type="unfinished">Прикажи %1 помошна порака за да добиеш список на можни биткоин-команди.</translation>
+        <translation type="unfinished">Прикажи %1 помошна порака за да добиеш список на можни битвеб-команди.</translation>
     </message>
     <message>
         <source>&amp;Mask values</source>
@@ -958,7 +958,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <name>Intro</name>
     <message>
         <source>Bitweb</source>
-        <translation type="unfinished">Биткоин</translation>
+        <translation type="unfinished">Битвеб</translation>
     </message>
     <message numerus="yes">
         <source>%n GB of space available</source>
