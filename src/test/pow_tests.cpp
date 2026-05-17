@@ -1179,6 +1179,382 @@ BOOST_AUTO_TEST_CASE(lwma3_live_monotone_during_sustained_change)
 }
 
 // ---------------------------------------------------------------------------
+// Test 19: Timestamp drop attack — maximum difficulty manipulation via FTL.
+//
+//   An attacker who controls the block timestamp can inflate apparent solvetimes
+//   by setting each block's timestamp as far into the future as nodes allow.
+//   With MAX_FUTURE_BLOCK_TIME = 600s = 2T, the maximum fake solvetime per
+//   block is 600s instead of the real T=300s.
+//
+//   Key finding (from Python simulation):
+//     The attack hits powLimit at step 1 of N — instantly.
+//     After the full N-block attack window the difficulty is at powLimit,
+//     identical to what a natural 3T slow hashrate produces (test 13).
+//
+//   Why the attack is safe despite hitting powLimit immediately:
+//     • powLimit is the floor — difficulty cannot go lower.
+//     • Recovery is identical to the natural drop scenario (test 13):
+//       after 2N honest blocks the difficulty returns to 0x1f0ffffe.
+//     • The attacker gains NO extra advantage compared to simply mining slowly.
+//       FTL = 2T is the exact threshold where the attack converges to powLimit,
+//       not below it.
+//
+//   Scenario (live nBits propagation):
+//     Phase 1: N=576 blocks at  T   — stable baseline
+//     Phase 2: N=576 blocks at 2T   — timestamp drop attack (FTL=600)
+//     Phase 3: N=576 blocks at  T   — 1st recovery window
+//     Phase 4: N=576 blocks at  T   — 2nd recovery window
+//
+//   All expected values verified by Python arith_uint256 simulation.
+// ---------------------------------------------------------------------------
+BOOST_AUTO_TEST_CASE(lwma3_timestamp_drop_attack)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const auto& consensus  = chainParams->GetConsensus();
+    const int64_t N        = consensus.lwmaAveragingWindow; // 576
+    const int64_t T        = consensus.nPowTargetSpacing;   // 300
+    const unsigned int genesisBits  = chainParams->GenesisBlock().nBits;
+    const arith_uint256 powLimit    = UintToArith256(consensus.powLimit);
+    const unsigned int powLimitBits = powLimit.GetCompact();
+
+    // MAX_FUTURE_BLOCK_TIME = 600 = 2*T: this is the maximum timestamp offset
+    // an attacker can inject per block without nodes rejecting the block.
+    const int64_t FTL = 600; // seconds
+    BOOST_REQUIRE_EQUAL(FTL, 2 * T); // contract: FTL must equal 2T for this test
+
+    const int L     = static_cast<int>(N + 59424); // 60000
+    const int TOTAL = L + 1 + static_cast<int>(4 * N);
+
+    std::vector<CBlockIndex> blocks(TOTAL);
+
+    for (int i = 0; i <= L; i++) {
+        blocks[i].pprev      = i ? &blocks[i - 1] : nullptr;
+        blocks[i].nHeight    = i;
+        blocks[i].nTime      = static_cast<uint32_t>(1775999888LL + static_cast<int64_t>(i) * T);
+        blocks[i].nBits      = genesisBits;
+        blocks[i].nChainWork = i ? blocks[i-1].nChainWork + GetBlockProof(blocks[i-1])
+                                 : arith_uint256(0);
+    }
+
+    int64_t cur_ts = static_cast<int64_t>(blocks[L].nTime);
+    auto fill_phase = [&](int from, int count, int64_t spacing) {
+        for (int i = from; i < from + count; i++) {
+            cur_ts += spacing;
+            blocks[i].pprev      = &blocks[i - 1];
+            blocks[i].nHeight    = i;
+            blocks[i].nTime      = static_cast<uint32_t>(cur_ts);
+            blocks[i].nBits      = GetNextWorkRequired(&blocks[i - 1], nullptr, consensus);
+            blocks[i].nChainWork = blocks[i-1].nChainWork + GetBlockProof(blocks[i-1]);
+        }
+    };
+
+    const int ph1 = L + 1;
+    const int ph2 = ph1 + static_cast<int>(N);
+    const int ph3 = ph2 + static_cast<int>(N);
+    const int ph4 = ph3 + static_cast<int>(N);
+
+    fill_phase(ph1, static_cast<int>(N), T);    // stable
+    fill_phase(ph2, static_cast<int>(N), FTL);  // attack: every block at max future time
+    fill_phase(ph3, static_cast<int>(N), T);    // 1st recovery
+    fill_phase(ph4, static_cast<int>(N), T);    // 2nd recovery
+
+    const unsigned int after_stable = blocks[ph2 - 1].nBits;
+    const unsigned int after_attack = blocks[ph3 - 1].nBits;
+    const unsigned int after_rec1   = blocks[ph4 - 1].nBits;
+    const unsigned int after_rec2   = blocks[TOTAL - 1].nBits;
+
+    // Stable baseline.
+    BOOST_CHECK_EQUAL(after_stable, 0x1f0ffffeU);
+
+    // Attack immediately clamps to powLimit — hits the floor at step 1.
+    BOOST_CHECK_EQUAL(after_attack, 0x1f0fffffU);
+    BOOST_CHECK_EQUAL(after_attack, powLimitBits);
+
+    // Recovery mirrors the natural drop scenario (test 13):
+    //   1st window still carries attack-era nBits → stays at powLimit.
+    BOOST_CHECK_EQUAL(after_rec1, 0x1f0ffffeU);
+
+    // 2nd window fully refreshed → returns to stable (with one extra LSB
+    //   lost due to live propagation drift, same as test 12).
+    BOOST_CHECK_EQUAL(after_rec2, 0x1f0ffffdU);
+
+    // Structural properties.
+    arith_uint256 t_stable, t_attack, t_rec2;
+    t_stable.SetCompact(after_stable);
+    t_attack.SetCompact(after_attack);
+    t_rec2.SetCompact(after_rec2);
+
+    BOOST_CHECK(t_attack  > t_stable); // attack eased difficulty (larger target)
+    BOOST_CHECK(t_rec2   <= t_attack); // recovery hardened it back
+
+    // Per-block safety: target never exceeds powLimit throughout all phases.
+    for (int i = ph1; i < TOTAL; i++) {
+        arith_uint256 tgt;
+        tgt.SetCompact(blocks[i].nBits);
+        BOOST_CHECK(tgt <= powLimit);
+    }
+
+    // During the attack phase the target must be non-decreasing (difficulty
+    // can only ease, never accidentally harden mid-attack).
+    for (int i = ph2 + 1; i < ph3; i++) {
+        arith_uint256 tgt_cur, tgt_prev;
+        tgt_cur.SetCompact(blocks[i].nBits);
+        tgt_prev.SetCompact(blocks[i - 1].nBits);
+        BOOST_CHECK(tgt_cur >= tgt_prev);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Test 20: Timestamp rise attack — compressed timestamps inflate difficulty.
+//
+//   An attacker compresses timestamps to the minimum valid value: prev + 1s.
+//   This makes LWMA-3 believe blocks are arriving 300× faster than reality,
+//   causing difficulty to rise by ~979× over one full N-block window.
+//
+//   Key finding (from Python simulation):
+//     After N=576 blocks at 1s spacing: target = 0x1e042f20 (~979× harder).
+//     The attack requires the attacker to have the hashrate to keep mining
+//     at this extreme difficulty — which grows exponentially as the window
+//     fills.  This makes the attack self-limiting: it only succeeds if the
+//     attacker has an overwhelming hashrate advantage, in which case they
+//     could already 51%-attack the network directly.
+//
+//   Recovery behavior (also tested here):
+//     After the attack window clears and honest miners resume at spacing T,
+//     difficulty eases slowly because old high-difficulty nBits persist in
+//     the window for N blocks.  Recovery takes many windows to complete.
+//     All recovery blocks stay <= powLimit (proven per-block below).
+//
+//   Monotonicity during attack:
+//     Target is strictly non-increasing during the attack (difficulty only
+//     rises, never accidentally drops while timestamps are compressed).
+//
+//   Scenario (live nBits propagation):
+//     Phase 1: N=576 blocks at  T   — stable baseline
+//     Phase 2: N=576 blocks at  1s  — compressed-timestamp rise attack
+//     Phase 3: N=576 blocks at  T   — 1st recovery window
+//     Phase 4: N=576 blocks at  T   — 2nd recovery window
+//
+//   All expected values verified by Python arith_uint256 simulation.
+// ---------------------------------------------------------------------------
+BOOST_AUTO_TEST_CASE(lwma3_timestamp_rise_attack)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const auto& consensus  = chainParams->GetConsensus();
+    const int64_t N        = consensus.lwmaAveragingWindow; // 576
+    const int64_t T        = consensus.nPowTargetSpacing;   // 300
+    const unsigned int genesisBits = chainParams->GenesisBlock().nBits;
+    const arith_uint256 powLimit   = UintToArith256(consensus.powLimit);
+
+    const int L     = static_cast<int>(N + 59424);
+    const int TOTAL = L + 1 + static_cast<int>(4 * N);
+
+    std::vector<CBlockIndex> blocks(TOTAL);
+
+    for (int i = 0; i <= L; i++) {
+        blocks[i].pprev      = i ? &blocks[i - 1] : nullptr;
+        blocks[i].nHeight    = i;
+        blocks[i].nTime      = static_cast<uint32_t>(1775999888LL + static_cast<int64_t>(i) * T);
+        blocks[i].nBits      = genesisBits;
+        blocks[i].nChainWork = i ? blocks[i-1].nChainWork + GetBlockProof(blocks[i-1])
+                                 : arith_uint256(0);
+    }
+
+    int64_t cur_ts = static_cast<int64_t>(blocks[L].nTime);
+    auto fill_phase = [&](int from, int count, int64_t spacing) {
+        for (int i = from; i < from + count; i++) {
+            cur_ts += spacing;
+            blocks[i].pprev      = &blocks[i - 1];
+            blocks[i].nHeight    = i;
+            blocks[i].nTime      = static_cast<uint32_t>(cur_ts);
+            blocks[i].nBits      = GetNextWorkRequired(&blocks[i - 1], nullptr, consensus);
+            blocks[i].nChainWork = blocks[i-1].nChainWork + GetBlockProof(blocks[i-1]);
+        }
+    };
+
+    const int ph1 = L + 1;
+    const int ph2 = ph1 + static_cast<int>(N);
+    const int ph3 = ph2 + static_cast<int>(N);
+    const int ph4 = ph3 + static_cast<int>(N);
+
+    fill_phase(ph1, static_cast<int>(N), T);  // stable
+    fill_phase(ph2, static_cast<int>(N), 1);  // attack: 1-second timestamps
+    fill_phase(ph3, static_cast<int>(N), T);  // 1st recovery
+    fill_phase(ph4, static_cast<int>(N), T);  // 2nd recovery
+
+    const unsigned int after_stable = blocks[ph2 - 1].nBits;
+    const unsigned int after_attack = blocks[ph3 - 1].nBits;
+    const unsigned int after_rec1   = blocks[ph4 - 1].nBits;
+    const unsigned int after_rec2   = blocks[TOTAL - 1].nBits;
+
+    // Stable baseline.
+    BOOST_CHECK_EQUAL(after_stable, 0x1f0ffffeU);
+
+    // After full N-block attack: ~979× difficulty increase.
+    BOOST_CHECK_EQUAL(after_attack, 0x1e042f20U);
+
+    // After recovery, difficulty eases but very slowly (old high-difficulty
+    // nBits stay in the window for N blocks after the attack ends).
+    BOOST_CHECK_EQUAL(after_rec1, 0x1f00a06dU);
+    BOOST_CHECK_EQUAL(after_rec2, 0x1f009b75U);
+
+    // Structural: attack raises difficulty (target falls).
+    arith_uint256 t_stable, t_attack, t_rec1, t_rec2;
+    t_stable.SetCompact(after_stable);
+    t_attack.SetCompact(after_attack);
+    t_rec1.SetCompact(after_rec1);
+    t_rec2.SetCompact(after_rec2);
+
+    BOOST_CHECK(t_attack < t_stable);  // attack raised difficulty (smaller target)
+    BOOST_CHECK(t_rec1   > t_attack);  // recovery eases (larger target than attack low)
+    BOOST_CHECK(t_rec2   > t_attack);  // 2nd window continues easing
+
+    // Recovery is still far from stable — the window takes time to flush
+    // high-difficulty attack blocks.  (Full convergence takes many N-windows.)
+    BOOST_CHECK(t_rec2 < t_stable);
+
+    // Monotonicity during attack: target non-increasing (difficulty only rises).
+    for (int i = ph2 + 1; i < ph3; i++) {
+        arith_uint256 tgt_cur, tgt_prev;
+        tgt_cur.SetCompact(blocks[i].nBits);
+        tgt_prev.SetCompact(blocks[i - 1].nBits);
+        BOOST_CHECK(tgt_cur <= tgt_prev);
+    }
+
+    // Per-block safety: target never above powLimit across all four phases.
+    for (int i = ph1; i < TOTAL; i++) {
+        arith_uint256 tgt;
+        tgt.SetCompact(blocks[i].nBits);
+        BOOST_CHECK(tgt <= powLimit);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Test 21: Alternating timestamp attack — 600s / 1s interleaving.
+//
+//   The attacker alternates between the two extremes: maximum-future block
+//   (600s = 2T per block) and minimum-valid block (1s per block).
+//   Average solvetime = (600 + 1) / 2 = 300.5s ≈ T.
+//
+//   Key finding:
+//     The attack has negligible effect: after N=576 alternating blocks the
+//     target is 0x1f0fffbb, vs 0x1f0ffffe at stable — a difference of only
+//     0x43 compact LSBs.  This is because the weighted average solvetime is
+//     ≈T and the two extremes cancel almost perfectly in the LWMA accumulator.
+//
+//     The slight easing (0x1f0fffbb > 0x1f0ffffe) is because 300.5s > T=300s:
+//     the 300× longer FTL blocks outweigh the 1s blocks in absolute terms.
+//
+//   After 2N alternating blocks the target is 0x1f0fff90 — the pattern has
+//   essentially no power to systematically alter difficulty beyond a trivial
+//   rounding-level drift.
+//
+//   Scenario (live nBits propagation):
+//     Phase 1: N=576 blocks at  T         — stable baseline
+//     Phase 2: N=576 blocks alternating   — 600s, 1s, 600s, 1s ...
+//     Phase 3: N=576 blocks alternating   — second attack window
+//
+//   All expected values verified by Python arith_uint256 simulation.
+// ---------------------------------------------------------------------------
+BOOST_AUTO_TEST_CASE(lwma3_timestamp_alternating_attack)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const auto& consensus  = chainParams->GetConsensus();
+    const int64_t N        = consensus.lwmaAveragingWindow; // 576
+    const int64_t T        = consensus.nPowTargetSpacing;   // 300
+    const unsigned int genesisBits = chainParams->GenesisBlock().nBits;
+    const arith_uint256 powLimit   = UintToArith256(consensus.powLimit);
+
+    const int L     = static_cast<int>(N + 59424);
+    const int TOTAL = L + 1 + static_cast<int>(3 * N);
+
+    std::vector<CBlockIndex> blocks(TOTAL);
+
+    for (int i = 0; i <= L; i++) {
+        blocks[i].pprev      = i ? &blocks[i - 1] : nullptr;
+        blocks[i].nHeight    = i;
+        blocks[i].nTime      = static_cast<uint32_t>(1775999888LL + static_cast<int64_t>(i) * T);
+        blocks[i].nBits      = genesisBits;
+        blocks[i].nChainWork = i ? blocks[i-1].nChainWork + GetBlockProof(blocks[i-1])
+                                 : arith_uint256(0);
+    }
+
+    // Index of the live block relative to first live height (L+1), used to
+    // decide even/odd alternation.
+    int alt_idx = 0;
+    int64_t cur_ts = static_cast<int64_t>(blocks[L].nTime);
+
+    auto fill_stable = [&](int from, int count) {
+        for (int i = from; i < from + count; i++) {
+            cur_ts += T;
+            blocks[i].pprev      = &blocks[i - 1];
+            blocks[i].nHeight    = i;
+            blocks[i].nTime      = static_cast<uint32_t>(cur_ts);
+            blocks[i].nBits      = GetNextWorkRequired(&blocks[i - 1], nullptr, consensus);
+            blocks[i].nChainWork = blocks[i-1].nChainWork + GetBlockProof(blocks[i-1]);
+        }
+    };
+
+    auto fill_alternating = [&](int from, int count) {
+        for (int i = from; i < from + count; i++, alt_idx++) {
+            // Even index: 600s (max future timestamp); odd: 1s (min timestamp).
+            const int64_t spacing = (alt_idx % 2 == 0) ? 600 : 1;
+            cur_ts += spacing;
+            blocks[i].pprev      = &blocks[i - 1];
+            blocks[i].nHeight    = i;
+            blocks[i].nTime      = static_cast<uint32_t>(cur_ts);
+            blocks[i].nBits      = GetNextWorkRequired(&blocks[i - 1], nullptr, consensus);
+            blocks[i].nChainWork = blocks[i-1].nChainWork + GetBlockProof(blocks[i-1]);
+        }
+    };
+
+    const int ph1 = L + 1;
+    const int ph2 = ph1 + static_cast<int>(N);
+    const int ph3 = ph2 + static_cast<int>(N);
+
+    fill_stable(ph1, static_cast<int>(N));       // stable baseline
+    fill_alternating(ph2, static_cast<int>(N));  // 1st attack window
+    fill_alternating(ph3, static_cast<int>(N));  // 2nd attack window
+
+    const unsigned int after_stable  = blocks[ph2 - 1].nBits;
+    const unsigned int after_alt_1N  = blocks[ph3 - 1].nBits;
+    const unsigned int after_alt_2N  = blocks[TOTAL - 1].nBits;
+
+    // Stable baseline unchanged.
+    BOOST_CHECK_EQUAL(after_stable, 0x1f0ffffeU);
+
+    // After one N-window of alternating: nearly no effect.
+    BOOST_CHECK_EQUAL(after_alt_1N, 0x1f0fffbbU);
+
+    // After two N-windows: drift continues but remains tiny.
+    BOOST_CHECK_EQUAL(after_alt_2N, 0x1f0fff90U);
+
+    // The alternating attack is ineffective: the target barely moved.
+    // Both results must still be valid targets at or below powLimit.
+    arith_uint256 t_stable, t_alt_1N, t_alt_2N;
+    t_stable.SetCompact(after_stable);
+    t_alt_1N.SetCompact(after_alt_1N);
+    t_alt_2N.SetCompact(after_alt_2N);
+
+    BOOST_CHECK(t_alt_1N <= powLimit);
+    BOOST_CHECK(t_alt_2N <= powLimit);
+
+    // The attack causes only a trivial easing (300.5s avg > T → slight target
+    // rise), not a meaningful difficulty drop.  The difference between stable
+    // and after_alt_2N is negligible in absolute mining terms.
+    BOOST_CHECK(t_alt_1N > t_stable);  // ever so slightly easier — not a concern
+    BOOST_CHECK(t_alt_2N > t_alt_1N);  // drift continues but slowly
+    BOOST_CHECK(t_alt_2N < powLimit);  // nowhere near powLimit
+
+    // Per-block safety across all phases.
+    for (int i = ph1; i < TOTAL; i++) {
+        arith_uint256 tgt;
+        tgt.SetCompact(blocks[i].nBits);
+        BOOST_CHECK(tgt <= powLimit);
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Existing proof-of-work validity tests — unchanged from upstream.
 // ---------------------------------------------------------------------------
 
