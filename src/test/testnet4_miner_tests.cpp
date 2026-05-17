@@ -322,4 +322,159 @@ BOOST_AUTO_TEST_CASE(testnet4_lwma3_mixed_solvetimes_determinism)
     BOOST_CHECK(resultTarget > arith_uint256(0));
 }
 
+// ---------------------------------------------------------------------------
+// Test T4-8: Live-propagation stabilization — 2000 blocks after bootstrap.
+//
+//   Testnet4 uses N=288, so the compact-LSB drift occurs every 288 blocks
+//   (roughly twice as often as on mainnet).  The test covers 6+ full window
+//   rollovers (2000 / 288 ≈ 6.9) and verifies:
+//     (a) Exact compact values at window-boundary checkpoints (N, 2N, 3N).
+//     (b) Exact final value at step 2000.
+//     (c) The algorithm stays bounded throughout — never above powLimit,
+//         never below powLimit/2.
+//
+//   All expected values verified by Python arith_uint256 simulation.
+// ---------------------------------------------------------------------------
+BOOST_AUTO_TEST_CASE(testnet4_lwma3_live_stabilization_2000_blocks)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::TESTNET4);
+    const auto& consensus  = chainParams->GetConsensus();
+    const int64_t N        = consensus.lwmaAveragingWindow; // 288
+    const int64_t T        = consensus.nPowTargetSpacing;   // 300
+    const unsigned int genesisBits = chainParams->GenesisBlock().nBits;
+    const arith_uint256 powLimit   = UintToArith256(consensus.powLimit);
+
+    BOOST_REQUIRE_EQUAL(N, 288);
+
+    const int L     = static_cast<int>(N + 59424); // 59712
+    const int LIVE  = 2000;
+    const int TOTAL = L + 1 + LIVE;               // 61713
+
+    std::vector<CBlockIndex> blocks(TOTAL);
+
+    for (int i = 0; i <= L; i++) {
+        blocks[i].pprev      = i ? &blocks[i - 1] : nullptr;
+        blocks[i].nHeight    = i;
+        blocks[i].nTime      = static_cast<uint32_t>(1775999890LL + static_cast<int64_t>(i) * T);
+        blocks[i].nBits      = genesisBits;
+        blocks[i].nChainWork = i ? blocks[i-1].nChainWork + GetBlockProof(blocks[i-1])
+                                 : arith_uint256(0);
+    }
+
+    int64_t cur_ts = static_cast<int64_t>(blocks[L].nTime) + T;
+    for (int i = L + 1; i < TOTAL; i++) {
+        blocks[i].pprev      = &blocks[i - 1];
+        blocks[i].nHeight    = i;
+        blocks[i].nTime      = static_cast<uint32_t>(cur_ts);
+        blocks[i].nBits      = GetNextWorkRequired(&blocks[i - 1], nullptr, consensus);
+        blocks[i].nChainWork = blocks[i-1].nChainWork + GetBlockProof(blocks[i-1]);
+        cur_ts += T;
+    }
+
+    // (a) Window-boundary checkpoints.
+    //   step N  = 288 : 0x1f0ffffe
+    //   step 2N = 576 : 0x1f0ffffd
+    //   step 3N = 864 : 0x1f0ffffc
+    BOOST_CHECK_EQUAL(blocks[L + static_cast<int>(N)].nBits,     0x1f0ffffeU);
+    BOOST_CHECK_EQUAL(blocks[L + static_cast<int>(2 * N)].nBits, 0x1f0ffffdU);
+    BOOST_CHECK_EQUAL(blocks[L + static_cast<int>(3 * N)].nBits, 0x1f0ffffcU);
+
+    // (b) Final value after 2000 steps (falls in [6N+1, 7N) → 0x1f0ffff8).
+    BOOST_CHECK_EQUAL(blocks[L + LIVE].nBits, 0x1f0ffff8U);
+
+    // (c) Bounds check.
+    for (int i = L + 1; i <= L + LIVE; i++) {
+        arith_uint256 tgt;
+        tgt.SetCompact(blocks[i].nBits);
+        BOOST_CHECK(tgt <= powLimit);
+        BOOST_CHECK(tgt >= powLimit / 2);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Test T4-9: Live hashrate spike (T/3) followed by full recovery (2N blocks).
+//
+//   Scenario (live nBits propagation, N=288):
+//     Phase 1: N=288 blocks at  T   — stable baseline
+//     Phase 2: N=288 blocks at T/3  — hashrate triples
+//     Phase 3: N=288 blocks at  T   — 1st recovery window
+//     Phase 4: N=288 blocks at  T   — 2nd recovery window
+//
+//   All expected values verified by Python arith_uint256 simulation.
+// ---------------------------------------------------------------------------
+BOOST_AUTO_TEST_CASE(testnet4_lwma3_live_spike_and_recovery)
+{
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::TESTNET4);
+    const auto& consensus  = chainParams->GetConsensus();
+    const int64_t N        = consensus.lwmaAveragingWindow; // 288
+    const int64_t T        = consensus.nPowTargetSpacing;   // 300
+    const unsigned int genesisBits = chainParams->GenesisBlock().nBits;
+    const arith_uint256 powLimit   = UintToArith256(consensus.powLimit);
+
+    const int L     = static_cast<int>(N + 59424);
+    const int TOTAL = L + 1 + static_cast<int>(4 * N);
+
+    std::vector<CBlockIndex> blocks(TOTAL);
+
+    for (int i = 0; i <= L; i++) {
+        blocks[i].pprev      = i ? &blocks[i - 1] : nullptr;
+        blocks[i].nHeight    = i;
+        blocks[i].nTime      = static_cast<uint32_t>(1775999890LL + static_cast<int64_t>(i) * T);
+        blocks[i].nBits      = genesisBits;
+        blocks[i].nChainWork = i ? blocks[i-1].nChainWork + GetBlockProof(blocks[i-1])
+                                 : arith_uint256(0);
+    }
+
+    int64_t cur_ts = static_cast<int64_t>(blocks[L].nTime);
+    auto fill_phase = [&](int from, int count, int64_t spacing) {
+        for (int i = from; i < from + count; i++) {
+            cur_ts += spacing;
+            blocks[i].pprev      = &blocks[i - 1];
+            blocks[i].nHeight    = i;
+            blocks[i].nTime      = static_cast<uint32_t>(cur_ts);
+            blocks[i].nBits      = GetNextWorkRequired(&blocks[i - 1], nullptr, consensus);
+            blocks[i].nChainWork = blocks[i-1].nChainWork + GetBlockProof(blocks[i-1]);
+        }
+    };
+
+    const int ph1 = L + 1;
+    const int ph2 = ph1 + static_cast<int>(N);
+    const int ph3 = ph2 + static_cast<int>(N);
+    const int ph4 = ph3 + static_cast<int>(N);
+
+    fill_phase(ph1, static_cast<int>(N), T);       // stable
+    fill_phase(ph2, static_cast<int>(N), T / 3);   // spike
+    fill_phase(ph3, static_cast<int>(N), T);        // 1st recovery window
+    fill_phase(ph4, static_cast<int>(N), T);        // 2nd recovery window
+
+    const unsigned int after_stable = blocks[ph2 - 1].nBits;
+    const unsigned int after_spike  = blocks[ph3 - 1].nBits;
+    const unsigned int after_rec1   = blocks[ph4 - 1].nBits;
+    const unsigned int after_rec2   = blocks[ph4 + static_cast<int>(N) - 1].nBits;
+
+    // Stable baseline.
+    BOOST_CHECK_EQUAL(after_stable, 0x1f0ffffeU);
+
+    // After spike: target lower (difficulty ~3× higher).
+    // Python simulation: 0x1f029479
+    BOOST_CHECK_EQUAL(after_spike, 0x1f029479U);
+
+    // Recovery easing — two windows.
+    // Python simulation: 0x1f0305af, then 0x1f03068e
+    BOOST_CHECK_EQUAL(after_rec1, 0x1f0305afU);
+    BOOST_CHECK_EQUAL(after_rec2, 0x1f03068eU);
+
+    // Structural invariants.
+    arith_uint256 t_stable, t_spike, t_rec1, t_rec2;
+    t_stable.SetCompact(after_stable);
+    t_spike.SetCompact(after_spike);
+    t_rec1.SetCompact(after_rec1);
+    t_rec2.SetCompact(after_rec2);
+
+    BOOST_CHECK(t_spike < t_stable); // spike raised difficulty
+    BOOST_CHECK(t_rec1  > t_spike);  // 1st window: easing begins
+    BOOST_CHECK(t_rec2  > t_rec1);   // 2nd window: easing continues
+    BOOST_CHECK(t_rec2 <= powLimit); // always sane
+}
+
 BOOST_AUTO_TEST_SUITE_END()

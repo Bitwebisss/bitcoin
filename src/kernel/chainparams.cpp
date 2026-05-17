@@ -265,7 +265,7 @@ public:
         // Checkpoints restored
         checkpointData = {
             {
-                {0, uint256{"d57b558193dd042caa90f3b3b06626cecd47fd0d09ecb7e355ae21f8f64b47b1"}},
+                {2100, uint256{"6c783046dabd145f1e955d29fefe08e19a1d9df0c9a4e24cf3e7b54a421c2607"}},
             }
         };
         // Checkpoints restored
