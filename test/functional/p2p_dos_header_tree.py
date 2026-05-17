@@ -46,7 +46,7 @@ from test_framework.blocktools import (
 )
 from test_framework.util import assert_equal
 
-CHECKPOINT_HEIGHT = 2100
+CHECKPOINT_HEIGHT = 1000
 # ---------------------------------------------------------------------------
 
 
@@ -301,7 +301,10 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
 
         self.log.info("Feed all non-fork headers, including and up to the first checkpoint")
         peer_checkpoint = self.nodes[0].add_p2p_connection(P2PInterface())
-        peer_checkpoint.send_and_ping(msg_headers(headers))
+        chunk_size = 2000
+        for i in range(0, len(headers), chunk_size):
+            chunk = headers[i:i+chunk_size]
+            peer_checkpoint.send_and_ping(msg_headers(chunk))
         assert {
             'height':    CHECKPOINT_HEIGHT,
             'hash':      checkpoint_hash,
