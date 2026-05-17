@@ -1479,8 +1479,12 @@ BOOST_AUTO_TEST_CASE(lwma3_timestamp_alternating_attack)
     t_alt_2N.SetCompact(after_alt_2N);
 
     // Both attack windows hit the powLimit floor.
-    BOOST_CHECK(t_alt_1N == powLimit);
-    BOOST_CHECK(t_alt_2N == powLimit);
+    // Note: compare against compact-roundtripped powLimit because SetCompact()
+    // truncates precision — t_alt_xN can never equal the raw arith_uint256 powLimit.
+    arith_uint256 powLimitCompact;
+    powLimitCompact.SetCompact(powLimitBits);
+    BOOST_CHECK(t_alt_1N == powLimitCompact);
+    BOOST_CHECK(t_alt_2N == powLimitCompact);
 
     // The attack eases difficulty (larger target than stable).
     BOOST_CHECK(t_alt_1N > t_stable);
