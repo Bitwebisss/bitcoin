@@ -144,12 +144,10 @@ unsigned int Lwma3CalculateNextWorkRequired(const CBlockIndex* pindexLast, const
     const int64_t height = pindexLast->nHeight;
     const arith_uint256 powLimit = UintToArith256(params.powLimit);
 
-   // New coins just "give away" first N blocks. It's better to guess
-   // this value instead of using powLimit, but err on high side to not get stuck.
-    if (height <= L) {
-        const CBlockIndex* genesis = pindexLast->GetAncestor(0);
-        assert(genesis != nullptr);
-        return genesis->nBits;
+    // Bootstrap: give away first L=60000 blocks at minimum difficulty (powLimit).
+    // Extended from original LWMA-1 (height < N) to cover airdrop period.
+    if (height <= (EnableFuzzDeterminism() ? N + 1 : L)) {
+        return powLimit.GetCompact();
     }
 
     assert(height - N >= 0);
@@ -195,9 +193,9 @@ unsigned int Lwma3CalculateNextWorkRequired(const CBlockIndex* pindexLast, const
 
 // Check that on difficulty adjustments, the new difficulty does not increase
 // or decrease beyond the permitted limits.
+/*
 bool PermittedDifficultyTransition(const Consensus::Params& params, int64_t height, uint32_t old_nbits, uint32_t new_nbits)
 {
-    /*
     if (params.fPowAllowMinDifficultyBlocks) return true;
 
     if (height % params.DifficultyAdjustmentInterval() == 0) {
@@ -242,7 +240,20 @@ bool PermittedDifficultyTransition(const Consensus::Params& params, int64_t heig
     } else if (old_nbits != new_nbits) {
         return false;
     }
-    */
+    return true;
+}
+*/
+
+bool PermittedDifficultyTransition(const Consensus::Params& params,
+                                   int64_t height,
+                                   uint32_t old_nbits,
+                                   uint32_t new_nbits)
+{
+    const int64_t N = params.lwmaAveragingWindow;
+    const int64_t L = N + 59424;
+    if (height <= (EnableFuzzDeterminism() ? N + 1 : L)) {
+        return new_nbits == UintToArith256(params.powLimit).GetCompact();
+    }
     return true;
 }
 

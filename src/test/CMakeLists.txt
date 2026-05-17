@@ -76,7 +76,8 @@ add_executable(test_bitweb
   policyestimator_tests.cpp
   pool_tests.cpp
   pow_tests.cpp
-  pow_argon2id_tests.cpp
+  pow_argon2id_tests.cpp # Bitweb Params
+  permitted_difficulty_tests.cpp # Bitweb Params
   prevector_tests.cpp
   raii_event_tests.cpp
   random_tests.cpp
