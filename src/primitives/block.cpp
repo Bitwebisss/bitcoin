@@ -39,38 +39,43 @@ uint256 CBlockHeader::GetHash() const
  */
 uint256 CBlockHeader::GetArgon2idPoWHash() const
 {
-    static constexpr uint32_t ARGON2ID_TIME_COST   = 3;
-    static constexpr uint32_t ARGON2ID_MEM_COST_KB = 1024;
-    static constexpr uint32_t ARGON2ID_PARALLELISM = 1;
-    static constexpr size_t   ARGON2ID_HASH_LEN    = 32;
-
     // Serialize the block header (80 bytes: version, hashPrevBlock,
     // hashMerkleRoot, nTime, nBits, nNonce).
     DataStream ss{};
     ss << *this;
     assert(ss.size() == 80);
 
+
     // Compute Argon2id hash. The serialized header serves as both the
     // password and the salt. argon2id_hash_raw requires salt >= 8 bytes;
     // the 80-byte header satisfies this with ample margin.
     uint256 hash;
-    const int rc = argon2id_hash_raw(
-        ARGON2ID_TIME_COST,
-        ARGON2ID_MEM_COST_KB,
-        ARGON2ID_PARALLELISM,
-        ss.data(), ss.size(),  /* password */
-        ss.data(), ss.size(),  /* salt     */
-        hash.begin(), ARGON2ID_HASH_LEN
-    );
+    argon2_context context;
+    context.out    = hash.begin();
+    context.outlen = 32;
+    context.pwd    = const_cast<uint8_t*>((const uint8_t*)ss.data());
+    context.pwdlen = 80;
+    context.salt   = const_cast<uint8_t*>((const uint8_t*)ss.data());
+    context.saltlen = 80;
+    context.secret = nullptr; context.secretlen = 0;
+    context.ad     = nullptr; context.adlen     = 0;
+    context.allocate_cbk = nullptr;
+    context.free_cbk     = nullptr;
+    context.flags   = ARGON2_DEFAULT_FLAGS;
+    context.t_cost  = 3;
+    context.m_cost  = 1024;
+    context.lanes   = 1;
+    context.threads = 1;
+    context.version = ARGON2_VERSION_NUMBER; // = 0x13, как в argon2_hash внутри
 
     // argon2id_hash_raw must not fail for well-formed parameters.
     // Any failure here indicates a programming error or memory exhaustion
     // and is treated as a fatal condition.
-    assert(rc == ARGON2_OK);
 
+    const int rc = argon2_ctx(&context, Argon2_id);
+    assert(rc == ARGON2_OK);
     return hash;
 }
-/* Bitweb Params */
 
 std::string CBlock::ToString() const
 {
