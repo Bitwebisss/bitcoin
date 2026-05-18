@@ -130,26 +130,26 @@
     do {                                                                       \
         __m256i _t1 = _mm256_blend_epi32(B0, B1, 0xCC);                        \
         __m256i _t2 = _mm256_blend_epi32(B0, B1, 0x33);                        \
-        B1 = _mm256_shuffle_epi32(_t1, 0x4e);                                  \
-        B0 = _mm256_shuffle_epi32(_t2, 0x4e);           \
+        B1 = _mm256_permute4x64_epi64(_t1, _MM_SHUFFLE(2, 3, 0, 1));           \
+        B0 = _mm256_permute4x64_epi64(_t2, _MM_SHUFFLE(2, 3, 0, 1));           \
         _t1 = C0;  C0 = C1;  C1 = _t1;                                        \
         _t1 = _mm256_blend_epi32(D0, D1, 0xCC);                                \
         _t2 = _mm256_blend_epi32(D0, D1, 0x33);                                \
-        D0 = _mm256_shuffle_epi32(_t1, 0x4e);                                  \
-        D1 = _mm256_shuffle_epi32(_t2, 0x4e);           \
+        D0 = _mm256_permute4x64_epi64(_t1, _MM_SHUFFLE(2, 3, 0, 1));           \
+        D1 = _mm256_permute4x64_epi64(_t2, _MM_SHUFFLE(2, 3, 0, 1));           \
     } while ((void)0, 0)
 
 #define UNDIAGONALIZE_2_AVX2(A0, A1, B0, B1, C0, C1, D0, D1)                  \
     do {                                                                       \
         __m256i _t1 = _mm256_blend_epi32(B0, B1, 0xCC);                        \
         __m256i _t2 = _mm256_blend_epi32(B0, B1, 0x33);                        \
-        B0 = _mm256_shuffle_epi32(_t1, 0x4e);                                  \
-        B1 = _mm256_shuffle_epi32(_t2, 0x4e);           \
+        B0 = _mm256_permute4x64_epi64(_t1, _MM_SHUFFLE(2, 3, 0, 1));           \
+        B1 = _mm256_permute4x64_epi64(_t2, _MM_SHUFFLE(2, 3, 0, 1));           \
         _t1 = C0;  C0 = C1;  C1 = _t1;                                        \
         _t1 = _mm256_blend_epi32(D0, D1, 0x33);                                \
         _t2 = _mm256_blend_epi32(D0, D1, 0xCC);                                \
-        D0 = _mm256_shuffle_epi32(_t1, 0x4e);                                  \
-        D1 = _mm256_shuffle_epi32(_t2, 0x4e);           \
+        D0 = _mm256_permute4x64_epi64(_t1, _MM_SHUFFLE(2, 3, 0, 1));           \
+        D1 = _mm256_permute4x64_epi64(_t2, _MM_SHUFFLE(2, 3, 0, 1));           \
     } while ((void)0, 0)
 
 /* -------------------------------------------------------------------------
