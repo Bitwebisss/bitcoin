@@ -26,16 +26,28 @@ static constexpr size_t   HEADER_LEN       = 80;
 static void RunArgon2idHash(benchmark::Bench& bench)
 {
     std::array<uint8_t, HEADER_LEN> hdr{};
-    hdr[0] = 0x04; /* non-zero version field */
+    hdr[0] = 0x04;
 
     bench.unit("hash").batch(1).run([&] {
         uint256 out;
-        const int rc = argon2id_hash_raw(
-            ARGON2ID_T, ARGON2ID_M, ARGON2ID_P,
-            hdr.data(), hdr.size(),
-            hdr.data(), hdr.size(),
-            out.begin(), ARGON2ID_HASHLEN
-        );
+        argon2_context context;
+        context.out    = out.begin();
+        context.outlen = 32;
+        context.pwd    = hdr.data();
+        context.pwdlen = HEADER_LEN;
+        context.salt   = hdr.data();
+        context.saltlen = HEADER_LEN;
+        context.secret = nullptr; context.secretlen = 0;
+        context.ad     = nullptr; context.adlen     = 0;
+        context.allocate_cbk = nullptr;
+        context.free_cbk     = nullptr;
+        context.flags   = ARGON2_DEFAULT_FLAGS;
+        context.t_cost  = ARGON2ID_T;
+        context.m_cost  = ARGON2ID_M;
+        context.lanes   = ARGON2ID_P;
+        context.threads = ARGON2ID_P;
+        context.version = ARGON2_VERSION_NUMBER;
+        const int rc = argon2_ctx(&context, Argon2_id);
         assert(rc == ARGON2_OK);
     });
 }
