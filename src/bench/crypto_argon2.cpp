@@ -32,7 +32,7 @@ static void RunArgon2idHash(benchmark::Bench& bench)
         uint256 out;
         argon2_context context;
         context.out    = out.begin();
-        context.outlen = 32;
+        context.outlen = ARGON2ID_HASHLEN;
         context.pwd    = hdr.data();
         context.pwdlen = HEADER_LEN;
         context.salt   = hdr.data();
