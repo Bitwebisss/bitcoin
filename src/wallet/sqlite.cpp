@@ -32,7 +32,7 @@ static constexpr int32_t WALLET_SCHEMA_VERSION = 0;
 // Wallets with these application_ids are auto-migrated to the current chain
 // magic on load. This is safe: application_id lives in bytes 68-71 of the
 // SQLite file header and is entirely separate from table data and descriptors.
-// Wallets from unrecognized chains (BTC, LTC, …) are still rejected as before.
+// Wallets from unrecognized chains (BTC, LTC, ...) are still rejected as before.
 // Add new entries here whenever a Bitweb release changes pchMessageStart.
 static const std::set<uint32_t> BITWEB_LEGACY_MAGICS = {
     0xcaaed9feU, // Bitweb 0.24 mainnet  (ca ae d9 fe)
