@@ -27,7 +27,7 @@
 namespace wallet {
 static constexpr int32_t WALLET_SCHEMA_VERSION = 0;
 
-// Bitweb Params speacial migration code from old chain.
+// Bitweb Params spacial migration code from old chain.
 // Known legacy Bitweb network magic values (ReadBE32(pchMessageStart)).
 // Wallets with these application_ids are auto-migrated to the current chain
 // magic on load. This is safe: application_id lives in bytes 68-71 of the
