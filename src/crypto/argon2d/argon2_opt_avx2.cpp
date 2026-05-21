@@ -16,7 +16,7 @@
  */
 
 /*
- * AVX2 fill_segment — compiled separately with ${ARGON2_AVX2_CXXFLAGS} (-mavx2).
+ * AVX2 fill_segment - compiled separately with ${ARGON2_AVX2_CXXFLAGS} (-mavx2).
  *
  * Self-contained: all Blake2b round primitives come from blamka-round-avx2.h,
  * which contains only __m256i code with no #if __AVX512F__ dispatch.
@@ -38,7 +38,7 @@
 #include <crypto/argon2d/blake2/blamka-round-avx2.h>   /* __m256i, BLAKE2_ROUND_1/2_AVX2 */
 
 /* -------------------------------------------------------------------------
- * fill_block — AVX2 / __m256i version.
+ * fill_block - AVX2 / __m256i version.
  *
  * state[] holds ARGON2_HWORDS_IN_BLOCK (32) __m256i elements, covering the
  * full 1024-byte Argon2 block (each __m256i = 4 × 64-bit words).
@@ -63,14 +63,14 @@ static void fill_block(__m256i *state, const block *ref_block,
         }
     }
 
-    /* Column pass — 4 iterations */
+    /* Column pass - 4 iterations */
     for (i = 0; i < 4; ++i) {
         BLAKE2_ROUND_1_AVX2(
             state[8 * i + 0], state[8 * i + 4], state[8 * i + 1], state[8 * i + 5],
             state[8 * i + 2], state[8 * i + 6], state[8 * i + 3], state[8 * i + 7]);
     }
 
-    /* Row pass — 4 iterations */
+    /* Row pass - 4 iterations */
     for (i = 0; i < 4; ++i) {
         BLAKE2_ROUND_2_AVX2(
             state[ 0 + i], state[ 4 + i], state[ 8 + i], state[12 + i],
@@ -95,7 +95,7 @@ static void next_addresses(block *address_block, block *input_block)
 }
 
 /* -------------------------------------------------------------------------
- * fill_segment_avx2 — exported; registered by Argon2AutoDetectImpl (opt.cpp).
+ * fill_segment_avx2 - exported; registered by Argon2AutoDetectImpl (opt.cpp).
  * ------------------------------------------------------------------------- */
 void fill_segment_avx2(const argon2_instance_t *instance,
                        argon2_position_t position)

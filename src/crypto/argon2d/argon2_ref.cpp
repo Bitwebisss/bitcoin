@@ -18,7 +18,7 @@
 /*
  * Pure-C reference implementation.
  *
- * fill_segment_ref() is always compiled and always exported — it serves as the
+ * fill_segment_ref() is always compiled and always exported - it serves as the
  * safe fallback that opt.cpp (x86 dispatcher) defaults to before CPUID
  * detection upgrades to SSE2 / SSSE3 / AVX2 / AVX-512.
  *
@@ -46,7 +46,7 @@
 #include <crypto/argon2d/blake2/blake2.h>
 
 /* -------------------------------------------------------------------------
- * Internal helpers — same as upstream reference implementation.
+ * Internal helpers - same as upstream reference implementation.
  * ------------------------------------------------------------------------- */
 
 static void fill_block(const block *prev_block, const block *ref_block,
@@ -98,7 +98,7 @@ static void next_addresses(block *address_block, block *input_block,
 }
 
 /* -------------------------------------------------------------------------
- * fill_segment_ref — always exported; used as fallback by the x86 dispatcher.
+ * fill_segment_ref - always exported; used as fallback by the x86 dispatcher.
  * ------------------------------------------------------------------------- */
 void fill_segment_ref(const argon2_instance_t *instance,
                       argon2_position_t position)
@@ -205,7 +205,7 @@ void fill_segment_ref(const argon2_instance_t *instance,
  * ------------------------------------------------------------------------- */
 #if !defined(HAVE_GETCPUID)
 
-/* Forward declaration — defined in argon2_opt_neon.cpp when compiled. */
+/* Forward declaration - defined in argon2_opt_neon.cpp when compiled. */
 #if defined(ENABLE_ARGON2_NEON)
 void fill_segment_neon(const argon2_instance_t *instance,
                        argon2_position_t position);

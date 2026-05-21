@@ -16,7 +16,7 @@
  */
 
 /*
- * SSE2 fill_segment — compiled separately with ${ARGON2_SSE2_CXXFLAGS} (-msse2).
+ * SSE2 fill_segment - compiled separately with ${ARGON2_SSE2_CXXFLAGS} (-msse2).
  *
  * Self-contained: all Blake2b round primitives come from blamka-round-sse2.h,
  * which contains only __m128i code with no #if __AVX2__ / #if __AVX512F__
@@ -44,7 +44,7 @@
 #include <crypto/argon2d/blake2/blamka-round-sse2.h>   /* __m128i, BLAKE2_ROUND_SSE2 */
 
 /* -------------------------------------------------------------------------
- * fill_block — SSE2 / __m128i version.
+ * fill_block - SSE2 / __m128i version.
  *
  * state[] holds ARGON2_OWORDS_IN_BLOCK (64) __m128i elements, covering the
  * full 1024-byte Argon2 block (each __m128i = 2 × 64-bit words).
@@ -70,14 +70,14 @@ static void fill_block(__m128i *state, const block *ref_block,
         }
     }
 
-    /* Column pass — 8 iterations × 8 elements */
+    /* Column pass - 8 iterations × 8 elements */
     for (i = 0; i < 8; ++i) {
         BLAKE2_ROUND_SSE2(
             state[8 * i + 0], state[8 * i + 1], state[8 * i + 2], state[8 * i + 3],
             state[8 * i + 4], state[8 * i + 5], state[8 * i + 6], state[8 * i + 7]);
     }
 
-    /* Row pass — 8 iterations × 8 elements (strided) */
+    /* Row pass - 8 iterations × 8 elements (strided) */
     for (i = 0; i < 8; ++i) {
         BLAKE2_ROUND_SSE2(
             state[8 * 0 + i], state[8 * 1 + i], state[8 * 2 + i], state[8 * 3 + i],
@@ -102,7 +102,7 @@ static void next_addresses(block *address_block, block *input_block)
 }
 
 /* -------------------------------------------------------------------------
- * fill_segment_sse2 — exported; registered by Argon2AutoDetectImpl (opt.cpp).
+ * fill_segment_sse2 - exported; registered by Argon2AutoDetectImpl (opt.cpp).
  * ------------------------------------------------------------------------- */
 void fill_segment_sse2(const argon2_instance_t *instance,
                        argon2_position_t position)

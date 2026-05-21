@@ -2,7 +2,7 @@
 """
 Regenerates all test data files (.hex and .json) for the bitweb-tx utility tests.
 
-Run from contrib/testgen/ — no manual copying required:
+Run from contrib/testgen/ - no manual copying required:
 
     cd contrib/testgen
     python3 regenerate_test_data.py
@@ -25,7 +25,7 @@ import subprocess
 import sys
 
 # ---------------------------------------------------------------------------
-# Path resolution — everything is derived from this script's location.
+# Path resolution - everything is derived from this script's location.
 # Layout assumption:
 #   <repo>/contrib/testgen/regenerate_test_data.py   <- this file
 #   <repo>/build/bin/bitweb-tx                       <- binary

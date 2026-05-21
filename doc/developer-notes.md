@@ -1182,7 +1182,7 @@ example, instead of a blanket `git ls-files src | xargs sed -i s/apple/orange/`,
 `git grep -l apple src | xargs sed -i s/apple/orange/`.
 
 Also, it is good to keep the selection of files as specific as possible — for example, replace only in directories where
-you expect replacements — because it reduces the risk that a rebase of your commit by re-running the script will
+you expect replacements - because it reduces the risk that a rebase of your commit by re-running the script will
 introduce accidental changes.
 
 Some good examples of scripted-diff:

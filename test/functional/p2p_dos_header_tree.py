@@ -23,7 +23,7 @@ After mining:
 
 # ---------------------------------------------------------------------------
 # Only this constant needs updating if you want more/fewer blocks.
-# Hashes are read directly from the JSON — no manual copying needed.
+# Hashes are read directly from the JSON - no manual copying needed.
 # ---------------------------------------------------------------------------
 import json
 import os
@@ -101,7 +101,7 @@ def _run_generator(node, log, datafile_path):
 
     _progress("")
     _progress("=" * 64)
-    _progress(f"  GENERATOR MODE — mining {CHECKPOINT_HEIGHT} testnet3 blocks")
+    _progress(f"  GENERATOR MODE - mining {CHECKPOINT_HEIGHT} testnet3 blocks")
     _progress(f"  genesis = {genesis_hash}")
     _progress("=" * 64)
 
@@ -290,7 +290,7 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
         headers      = [_header_from_record(r) for r in data['main']]
         headers_fork = [_header_from_record(r) for r in data['fork']]
 
-        # Hashes come from the JSON — no hardcoded constants to keep in sync
+        # Hashes come from the JSON - no hardcoded constants to keep in sync
         checkpoint_hash = data['main'][-1]['hash']
         fork_tip_hash   = data['fork'][-1]['hash']
 
@@ -328,7 +328,7 @@ class RejectLowDifficultyHeadersTest(BitcoinTestFramework):
             'status':    'headers-only',
         } in self.nodes[0].getchaintips()
 
-        self.log.info("Feed fork headers to node[1] (no checkpoint reached yet — should accept)")
+        self.log.info("Feed fork headers to node[1] (no checkpoint reached yet - should accept)")
         peer_before_checkpoint = self.nodes[1].add_p2p_connection(P2PInterface())
         peer_before_checkpoint.send_and_ping(msg_headers(headers_fork))
         assert {

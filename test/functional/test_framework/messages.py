@@ -774,7 +774,7 @@ class CBlockHeader:
     @property
     def argon2id(self):
         """Argon2id PoW hash computed on-the-fly from the serialized 80-byte header.
-        Header bytes serve as BOTH password AND salt — mirrors GetArgon2idPoWHash() in block.cpp.
+        Header bytes serve as BOTH password AND salt - mirrors GetArgon2idPoWHash() in block.cpp.
         Parameters are consensus-critical (must not be changed):
           t (time_cost)   = 3
           m (memory_cost) = 1024 KiB  (ARGON2ID_MEM_COST_KB)

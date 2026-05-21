@@ -15,7 +15,7 @@
  * software. If not, they may be obtained at the above URLs.
  */
 /*
- * SSSE3 fill_segment — compiled separately with ${ARGON2_SSSE3_CXXFLAGS}
+ * SSSE3 fill_segment - compiled separately with ${ARGON2_SSSE3_CXXFLAGS}
  * (-mssse3).
  *
  * Structurally identical to argon2_opt_sse2.cpp; the speedup comes from
@@ -55,7 +55,7 @@
 #include <crypto/argon2d/blake2/blamka-round-ssse3.h>  /* self-contained SSSE3 */
 
 /* -------------------------------------------------------------------------
- * fill_block — SSSE3 / __m128i version.
+ * fill_block - SSSE3 / __m128i version.
  *
  * state[] holds ARGON2_OWORDS_IN_BLOCK (64) __m128i elements covering the
  * full 1024-byte block (each __m128i = 2 × 64-bit words).
@@ -81,14 +81,14 @@ static void fill_block(__m128i *state, const block *ref_block,
         }
     }
 
-    /* Column pass — 8 iterations × 8 elements */
+    /* Column pass - 8 iterations × 8 elements */
     for (i = 0; i < 8; ++i) {
         BLAKE2_ROUND_SSSE3(
             state[8 * i + 0], state[8 * i + 1], state[8 * i + 2], state[8 * i + 3],
             state[8 * i + 4], state[8 * i + 5], state[8 * i + 6], state[8 * i + 7]);
     }
 
-    /* Row pass — 8 iterations × 8 elements (strided) */
+    /* Row pass - 8 iterations × 8 elements (strided) */
     for (i = 0; i < 8; ++i) {
         BLAKE2_ROUND_SSSE3(
             state[8 * 0 + i], state[8 * 1 + i], state[8 * 2 + i], state[8 * 3 + i],
@@ -113,7 +113,7 @@ static void next_addresses(block *address_block, block *input_block)
 }
 
 /* -------------------------------------------------------------------------
- * fill_segment_ssse3 — exported; registered by Argon2AutoDetectImpl (opt.cpp).
+ * fill_segment_ssse3 - exported; registered by Argon2AutoDetectImpl (opt.cpp).
  * Slot: preferred over SSE2, superseded by AVX2 when available.
  * ------------------------------------------------------------------------- */
 void fill_segment_ssse3(const argon2_instance_t *instance,

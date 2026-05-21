@@ -213,14 +213,14 @@ if(NOT MSVC)
 
   # Bitweb Params
   # --------------------------------------------------------------------------
-  # Check for ARM NEON intrinsics — portable subset (AArch64 + ARMv7+NEON).
+  # Check for ARM NEON intrinsics - portable subset (AArch64 + ARMv7+NEON).
   #
   # Probes only intrinsics available on both 64-bit and 32-bit ARM NEON:
-  #   vmovn_u64, vmull_u32, vaddq_u64, veorq_u64 — widening-multiply G step.
+  #   vmovn_u64, vmull_u32, vaddq_u64, veorq_u64 - widening-multiply G step.
   # vqtbl1q_u8 is intentionally NOT probed here (AArch64-only).
   #
   # Step 1: compile without extra flags.
-  #   On AArch64, NEON is mandatory — arm_neon.h just works.
+  #   On AArch64, NEON is mandatory - arm_neon.h just works.
   #   On any other baseline-NEON target this also catches it.
   # Step 2: if step 1 fails, try -mfpu=neon (ARMv7 where NEON is optional).
   # --------------------------------------------------------------------------
@@ -292,8 +292,8 @@ if(NOT MSVC)
   # fastest available tier. On Haswell+ it is superseded by AVX2.
   #
   # Key SSSE3 instructions used:
-  #   _mm_shuffle_epi8  — faster rotr24 and rotr16 vs. shift+or (SSE2)
-  #   _mm_alignr_epi8   — faster diagonalize vs. unpack pair (SSE2)
+  #   _mm_shuffle_epi8  - faster rotr24 and rotr16 vs. shift+or (SSE2)
+  #   _mm_alignr_epi8   - faster diagonalize vs. unpack pair (SSE2)
   set(ARGON2_SSSE3_CXXFLAGS -mssse3)
   check_cxx_source_compiles_with_flags("
     #include <tmmintrin.h>

@@ -215,11 +215,11 @@ ARGON2_PUBLIC size_t argon2_encodedlen(uint32_t t_cost, uint32_t m_cost,
 namespace argon2_implementation {
 enum UseImplementation : uint8_t {
     STANDARD   = 0,
-    USE_SSE2   = 1 << 0, /* 0x01 — x86: SSE2 baseline                 */
-    USE_SSSE3  = 1 << 1, /* 0x02 — x86: SSSE3 (Sandy/Ivy Bridge)      */
-    USE_AVX2   = 1 << 2, /* 0x04 — x86: AVX2 (Haswell+)               */
-    USE_AVX512 = 1 << 3, /* 0x08 — x86: AVX-512F (Skylake-X+)         */
-    USE_NEON   = 1 << 4, /* 0x10 — ARM: NEON (AArch64 / ARMv7+NEON)   */
+    USE_SSE2   = 1 << 0, /* 0x01 - x86: SSE2 baseline                 */
+    USE_SSSE3  = 1 << 1, /* 0x02 - x86: SSSE3 (Sandy/Ivy Bridge)      */
+    USE_AVX2   = 1 << 2, /* 0x04 - x86: AVX2 (Haswell+)               */
+    USE_AVX512 = 1 << 3, /* 0x08 - x86: AVX-512F (Skylake-X+)         */
+    USE_NEON   = 1 << 4, /* 0x10 - ARM: NEON (AArch64 / ARMv7+NEON)   */
     /* Bits 0x01–0x08 are only tested on x86 (opt.cpp / HAVE_GETCPUID).
      * Bit 0x10 is only tested on non-x86 (ref.cpp / !HAVE_GETCPUID).
      * Passing USE_ALL on any architecture is therefore always safe. */

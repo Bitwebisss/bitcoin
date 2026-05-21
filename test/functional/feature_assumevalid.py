@@ -161,7 +161,7 @@ class AssumeValidTest(BitcoinTestFramework):
         assert len(self.blocks) == TOTAL_BLOCKS
 
         # Start node1 and node2 with assumevalid so they accept a block with a bad signature.
-        # hash_hex is SHA256d (GetHash()) — the block index key in the C++ node.
+        # hash_hex is SHA256d (GetHash()) - the block index key in the C++ node.
         self.start_node(1, extra_args=["-assumevalid=" + block102.hash_hex])
         self.start_node(2, extra_args=["-assumevalid=" + block102.hash_hex])
 

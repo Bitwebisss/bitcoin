@@ -11,7 +11,7 @@
 #include <cassert>
 #include <cstdint>
 
-/* Consensus-critical parameters — must match block.cpp exactly */
+/* Consensus-critical parameters - must match block.cpp exactly */
 static constexpr uint32_t ARGON2ID_T       = 3;
 static constexpr uint32_t ARGON2ID_M       = 1024;
 static constexpr uint32_t ARGON2ID_P       = 1;
@@ -20,7 +20,7 @@ static constexpr size_t   HEADER_LEN       = 80;
 
 /*
  * Run one Argon2id PoW hash of a synthetic 80-byte block header.
- * Unit is "hash" — unlike SHA256, Argon2 is memory-hard so
+ * Unit is "hash" - unlike SHA256, Argon2 is memory-hard so
  * throughput in bytes/s is not a meaningful metric.
  */
 static void RunArgon2idHash(benchmark::Bench& bench)
@@ -56,7 +56,7 @@ static void RunArgon2idHash(benchmark::Bench& bench)
  * One benchmark variant per available ISA, mirroring SHA256_STANDARD /
  * SHA256_SSE4 / SHA256_AVX2 in crypto_hash.cpp.
  * Argon2AutoDetect(impl) selects the implementation exactly as
- * SHA256AutoDetect(impl) does — no #ifdef needed in the bench body.
+ * SHA256AutoDetect(impl) does - no #ifdef needed in the bench body.
  * If the requested ISA is unavailable, Argon2AutoDetect silently
  * falls back (to reference on non-x86).
  *
@@ -120,7 +120,7 @@ static void Argon2id_AVX512(benchmark::Bench& bench)
 BENCHMARK(Argon2id_AVX512, benchmark::PriorityLevel::HIGH);
 #endif
 
-/* NEON: AArch64 / ARMv7+NEON — compiled in only on non-x86 builds where
+/* NEON: AArch64 / ARMv7+NEON - compiled in only on non-x86 builds where
  * introspection.cmake sets HAVE_ARGON2_NEON.  Mutually exclusive with the
  * x86 ISA variants above because HAVE_GETCPUID (cpuid.h) is absent on ARM,
  * so the SSE2/AVX paths are never compiled there anyway. */

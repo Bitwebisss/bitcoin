@@ -351,7 +351,7 @@ class PruneTest(BitcoinTestFramework):
         assert_equal(node.getblockcount(), 995)
         assert_raises_rpc_error(-1, "Cannot prune blocks because node is not in prune mode", node.pruneblockchain, 500)
 
-        # now re-start in manual pruning mode — same mocktime protection needed
+        # now re-start in manual pruning mode - same mocktime protection needed
         self.restart_node_mocktime(node_number, extra_args=["-prune=1"])
         node = self.nodes[node_number]
         assert_equal(node.getblockcount(), 995)

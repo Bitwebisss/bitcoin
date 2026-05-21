@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(MiningInterface)
     should_be_nullptr = block_template->waitNext(wait_options);
     BOOST_REQUIRE(should_be_nullptr == nullptr);
 
-    // fPowAllowMinDifficultyBlocks is disabled on all chains — the 20-minute
+    // fPowAllowMinDifficultyBlocks is disabled on all chains - the 20-minute
     // min-difficulty timer in WaitAndCreateNewBlock is dead code and never
     // triggers a new template. The block below is preserved for history.
     /*
@@ -126,7 +126,7 @@ static std::vector<CBlockIndex> BuildTestnet4Chain(int count, unsigned int nBits
 }
 
 // ---------------------------------------------------------------------------
-// Test T4-1: Bootstrap boundary — N=288 means L=289, not 577.
+// Test T4-1: Bootstrap boundary - N=288 means L=289, not 577.
 //   Any height <= 289 must return genesis nBits unchanged.
 //   Height 290 is the first real LWMA computation.
 //   This catches accidental changes to lwmaAveragingWindow in chainparams.
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(testnet4_lwma3_no_drift)
 }
 
 // ---------------------------------------------------------------------------
-// Test T4-4: powLimit cap — spacing >= 6T must clamp to powLimit.
+// Test T4-4: powLimit cap - spacing >= 6T must clamp to powLimit.
 //   Expected: 0x1f0fffffU.
 // ---------------------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(testnet4_lwma3_powlimit_cap)
@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(testnet4_lwma3_powlimit_cap)
 }
 
 // ---------------------------------------------------------------------------
-// Test T4-5: Doubled hashrate — spacing T/2 must raise difficulty.
+// Test T4-5: Doubled hashrate - spacing T/2 must raise difficulty.
 //   Expected: 0x1f07ffffU.
 // ---------------------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(testnet4_lwma3_double_hashrate)
@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE(testnet4_lwma3_double_hashrate)
 }
 
 // ---------------------------------------------------------------------------
-// Test T4-6: Monotonicity — 3x hashrate must produce harder target than 2x.
+// Test T4-6: Monotonicity - 3x hashrate must produce harder target than 2x.
 //   spacing T/2 → 0x1f07ffffU
 //   spacing T/3 → 0x1f055554U
 // ---------------------------------------------------------------------------
@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE(testnet4_lwma3_monotone_difficulty)
 }
 
 // ---------------------------------------------------------------------------
-// Test T4-7: Mixed-spacing determinism — regression guard for N=288.
+// Test T4-7: Mixed-spacing determinism - regression guard for N=288.
 //   Window split: first HALF=144 blocks at 2T, last HALF=144 at T/2.
 //   Expected: 0x1f0e1a9eU (verified by Python arith_uint256 simulation).
 //
@@ -323,14 +323,14 @@ BOOST_AUTO_TEST_CASE(testnet4_lwma3_mixed_solvetimes_determinism)
 }
 
 // ---------------------------------------------------------------------------
-// Test T4-8: Live-propagation stabilization — 2000 blocks after bootstrap.
+// Test T4-8: Live-propagation stabilization - 2000 blocks after bootstrap.
 //
 //   Testnet4 uses N=288, so the compact-LSB drift occurs every 288 blocks
 //   (roughly twice as often as on mainnet).  The test covers 6+ full window
 //   rollovers (2000 / 288 ≈ 6.9) and verifies:
 //     (a) Exact compact values at window-boundary checkpoints (N, 2N, 3N).
 //     (b) Exact final value at step 2000.
-//     (c) The algorithm stays bounded throughout — never above powLimit,
+//     (c) The algorithm stays bounded throughout - never above powLimit,
 //         never below powLimit/2.
 //
 //   All expected values verified by Python arith_uint256 simulation.
@@ -395,10 +395,10 @@ BOOST_AUTO_TEST_CASE(testnet4_lwma3_live_stabilization_2000_blocks)
 // Test T4-9: Live hashrate spike (T/3) followed by full recovery (2N blocks).
 //
 //   Scenario (live nBits propagation, N=288):
-//     Phase 1: N=288 blocks at  T   — stable baseline
-//     Phase 2: N=288 blocks at T/3  — hashrate triples
-//     Phase 3: N=288 blocks at  T   — 1st recovery window
-//     Phase 4: N=288 blocks at  T   — 2nd recovery window
+//     Phase 1: N=288 blocks at  T   - stable baseline
+//     Phase 2: N=288 blocks at T/3  - hashrate triples
+//     Phase 3: N=288 blocks at  T   - 1st recovery window
+//     Phase 4: N=288 blocks at  T   - 2nd recovery window
 //
 //   All expected values verified by Python arith_uint256 simulation.
 // ---------------------------------------------------------------------------
@@ -459,7 +459,7 @@ BOOST_AUTO_TEST_CASE(testnet4_lwma3_live_spike_and_recovery)
     // Python simulation: 0x1f029479
     BOOST_CHECK_EQUAL(after_spike, 0x1f029479U);
 
-    // Recovery easing — two windows.
+    // Recovery easing - two windows.
     // Python simulation: 0x1f0305af, then 0x1f03068e
     BOOST_CHECK_EQUAL(after_rec1, 0x1f0305afU);
     BOOST_CHECK_EQUAL(after_rec2, 0x1f03068eU);

@@ -16,7 +16,7 @@
  */
 
 /*
- * AVX-512F fill_segment — compiled separately with ${ARGON2_AVX512F_CXXFLAGS}
+ * AVX-512F fill_segment - compiled separately with ${ARGON2_AVX512F_CXXFLAGS}
  * (-mavx512f).
  *
  * Self-contained: all Blake2b round primitives come from blamka-round-avx512.h,
@@ -39,7 +39,7 @@
 #include <crypto/argon2d/blake2/blamka-round-avx512.h>  /* __m512i, BLAKE2_ROUND_1/2_AVX512 */
 
 /* -------------------------------------------------------------------------
- * fill_block — AVX-512F / __m512i version.
+ * fill_block - AVX-512F / __m512i version.
  *
  * state[] holds ARGON2_512BIT_WORDS_IN_BLOCK (16) __m512i elements, covering
  * the full 1024-byte Argon2 block (each __m512i = 8 × 64-bit words).
@@ -64,14 +64,14 @@ static void fill_block(__m512i *state, const block *ref_block,
         }
     }
 
-    /* Column pass — 2 iterations */
+    /* Column pass - 2 iterations */
     for (i = 0; i < 2; ++i) {
         BLAKE2_ROUND_1_AVX512(
             state[8 * i + 0], state[8 * i + 1], state[8 * i + 2], state[8 * i + 3],
             state[8 * i + 4], state[8 * i + 5], state[8 * i + 6], state[8 * i + 7]);
     }
 
-    /* Row pass — 2 iterations */
+    /* Row pass - 2 iterations */
     for (i = 0; i < 2; ++i) {
         BLAKE2_ROUND_2_AVX512(
             state[2 * 0 + i], state[2 * 1 + i], state[2 * 2 + i], state[2 * 3 + i],
@@ -96,7 +96,7 @@ static void next_addresses(block *address_block, block *input_block)
 }
 
 /* -------------------------------------------------------------------------
- * fill_segment_avx512 — exported; registered by Argon2AutoDetectImpl (opt.cpp).
+ * fill_segment_avx512 - exported; registered by Argon2AutoDetectImpl (opt.cpp).
  * ------------------------------------------------------------------------- */
 void fill_segment_avx512(const argon2_instance_t *instance,
                          argon2_position_t position)

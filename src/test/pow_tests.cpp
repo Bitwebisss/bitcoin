@@ -16,7 +16,7 @@ BOOST_FIXTURE_TEST_SUITE(pow_tests, BasicTestingSetup)
 // ---------------------------------------------------------------------------
 // Original Bitcoin Core difficulty-adjustment tests (kept for history).
 //
-// These tested CalculateNextWorkRequired() — the 2016-block retargeting rule
+// These tested CalculateNextWorkRequired() - the 2016-block retargeting rule
 // that is NOT used in this coin (replaced by LWMA-3).
 //
 // BTC's retarget formula:
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(get_next_work_upper_limit_actual)
 // Helper: build a linear chain of `count` blocks (indices 0..count-1).
 // All blocks carry the same nBits, spaced `spacing` seconds apart from t0.
 // The vector is pre-allocated so pprev pointers remain valid after the loop.
-// LWMA-3 reads only nBits and nTime — nChainWork is not used by the algorithm
+// LWMA-3 reads only nBits and nTime - nChainWork is not used by the algorithm
 // but is populated so other tests that inspect it remain consistent.
 // ---------------------------------------------------------------------------
 static std::vector<CBlockIndex> BuildChain(int count, unsigned int nBits,
@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(lwma3_bootstrap)
 //   pindexLast at height L+1 = N+59425 = 60001 (first height above bootstrap
 //   threshold L = N+59424 = 60000).
 //   All N=576 window blocks carry genesisBits and ideal spacing T.
-//   Expected result: 0x1f0ffffeU — one compact LSB below genesisBits.
+//   Expected result: 0x1f0ffffeU - one compact LSB below genesisBits.
 //   This is caused by the systematic truncation in (target / N / k) × N
 //   iterations; the absolute error is ~10^10, negligible for mining.
 // ---------------------------------------------------------------------------
@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_CASE(lwma3_stable_hashrate)
 }
 
 // ---------------------------------------------------------------------------
-// Test 4: powLimit cap — very slow blocks must not produce a target above
+// Test 4: powLimit cap - very slow blocks must not produce a target above
 //   powLimit.
 //   spacing = 6T → every solvetime hits the internal 6T cap → uncapped result
 //   would be ~6× powLimit → clamped to exactly powLimit.
@@ -267,7 +267,7 @@ BOOST_AUTO_TEST_CASE(lwma3_powlimit_cap)
 }
 
 // ---------------------------------------------------------------------------
-// Test 5: The 6T solvetime cap is symmetric — any spacing >= 6T yields the
+// Test 5: The 6T solvetime cap is symmetric - any spacing >= 6T yields the
 //   same result as exactly 6T, because every solvetime is clamped to
 //   min(6T, actual) before being used.
 //   Expected for both 6T and 100T: 0x1f0fffffU.
@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(lwma3_6T_solvetime_cap)
 }
 
 // ---------------------------------------------------------------------------
-// Test 6: Doubled hashrate — difficulty must rise, target must fall.
+// Test 6: Doubled hashrate - difficulty must rise, target must fall.
 //   spacing = T/2 → blocks arrive twice as fast → algorithm halves the target.
 //   Expected: 0x1f07ffffU  (≈ powLimit / 2).
 // ---------------------------------------------------------------------------
@@ -314,14 +314,14 @@ BOOST_AUTO_TEST_CASE(lwma3_double_hashrate)
     unsigned int result = GetNextWorkRequired(&blocks[lwma_height], nullptr, consensus);
     BOOST_CHECK_EQUAL(result, expected_nbits);
 
-    // Target must be strictly below powLimit — difficulty increased.
+    // Target must be strictly below powLimit - difficulty increased.
     arith_uint256 resultTarget;
     resultTarget.SetCompact(result);
     BOOST_CHECK(resultTarget < powLimit);
 }
 
 // ---------------------------------------------------------------------------
-// Test 7: Mixed-spacing determinism — pure regression guard.
+// Test 7: Mixed-spacing determinism - pure regression guard.
 //   The LWMA window [3..578] (N=576 blocks, all carrying genesisBits) is split
 //   into two halves by timestamp only:
 //     blocks [3 .. 3+N/2-1]  : spacing 2T  (288 slow blocks)
@@ -344,8 +344,8 @@ BOOST_AUTO_TEST_CASE(lwma3_mixed_solvetimes_determinism)
 
     // Build chain length N+59426 = 60002 (pindexLast = blocks[60001]).
     // Blocks 0..59425: spacing T  (anchor; blocks[59425].nTime is prevTs).
-    // Blocks 59426..59426+HALF-1 (first HALF=288): spacing 2T  — slow miners.
-    // Blocks 59426+HALF..60001  (second HALF=288): spacing T/2 — fast miners.
+    // Blocks 59426..59426+HALF-1 (first HALF=288): spacing 2T  - slow miners.
+    // Blocks 59426+HALF..60001  (second HALF=288): spacing T/2 - fast miners.
     const int HALF      = static_cast<int>(N / 2); // 288
     const int chain_len = static_cast<int>(N + 59426); // 60002
     std::vector<CBlockIndex> blocks(chain_len);
@@ -376,7 +376,7 @@ BOOST_AUTO_TEST_CASE(lwma3_mixed_solvetimes_determinism)
 }
 
 // ---------------------------------------------------------------------------
-// Test 8: fPowNoRetargeting — regtest shortcut.
+// Test 8: fPowNoRetargeting - regtest shortcut.
 //   When fPowNoRetargeting is true (REGTEST), GetNextWorkRequired must return
 //   pindexLast->nBits unchanged regardless of chain length or timestamps.
 //   This is the first branch in GetNextWorkRequired and completely bypasses
@@ -452,7 +452,7 @@ BOOST_AUTO_TEST_CASE(lwma3_testnet_runs_lwma)
 }
 
 // ---------------------------------------------------------------------------
-// Test 10: Duplicate timestamps — protection against negative or zero solvetimes.
+// Test 10: Duplicate timestamps - protection against negative or zero solvetimes.
 //   When a block's timestamp is <= the running previousTimestamp, LWMA-3
 //   forces it forward by 1 second:
 //     thisTimestamp = (block->GetBlockTime() > previousTimestamp)
@@ -486,7 +486,7 @@ BOOST_AUTO_TEST_CASE(lwma3_duplicate_timestamps)
 }
 
 // ---------------------------------------------------------------------------
-// Test 12: Live-propagation stabilization — 2000 blocks after bootstrap.
+// Test 12: Live-propagation stabilization - 2000 blocks after bootstrap.
 //
 //   Existing tests (2–3) freeze all nBits at genesisBits and only vary
 //   timestamps. This test simulates the real chain: each block's nBits is
@@ -497,7 +497,7 @@ BOOST_AUTO_TEST_CASE(lwma3_duplicate_timestamps)
 //   propagation: every full N-block window the mantissa loses one LSB due
 //   to accumulated truncation in (target / N / k) × N iterations.
 //   One compact LSB at exponent 0x1f equals 2^224, which is ~9.5×10^-5%
-//   of powLimit — 57 orders of magnitude below any meaningful difficulty
+//   of powLimit - 57 orders of magnitude below any meaningful difficulty
 //   difference.  The drift pattern is exactly periodic: one LSB lost per
 //   N blocks.
 //
@@ -505,7 +505,7 @@ BOOST_AUTO_TEST_CASE(lwma3_duplicate_timestamps)
 //     (a) Exact compact values at window-boundary checkpoints (N, 2N, 3N).
 //     (b) Exact final value at step 2000.
 //     (c) The algorithm stays bounded in [0x1f0ffffbU, 0x1f0fffffU]
-//         throughout — it never explodes, never collapses.
+//         throughout - it never explodes, never collapses.
 //
 //   All expected values produced by Python arith_uint256 simulation that
 //   mirrors the exact integer arithmetic in Lwma3CalculateNextWorkRequired.
@@ -549,7 +549,7 @@ BOOST_AUTO_TEST_CASE(lwma3_live_stabilization_2000_blocks)
         cur_ts += T;
     }
 
-    // (a) Window-boundary checkpoints — one compact LSB lost per N blocks.
+    // (a) Window-boundary checkpoints - one compact LSB lost per N blocks.
     //   step N  = 576 : first full live window        → 0x1f0ffffe
     //   step 2N = 1152: second window rollover        → 0x1f0ffffd
     //   step 3N = 1728: third  window rollover        → 0x1f0ffffc
@@ -574,10 +574,10 @@ BOOST_AUTO_TEST_CASE(lwma3_live_stabilization_2000_blocks)
 // Test 13: Live hashrate drop (3T) followed by full recovery (2N blocks at T).
 //
 //   Scenario (all phases use live nBits propagation):
-//     Phase 1: N=576 blocks at  T   — establish stable baseline
-//     Phase 2: N=576 blocks at 3T   — hashrate falls to 1/3
-//     Phase 3: N=576 blocks at  T   — 1st recovery window
-//     Phase 4: N=576 blocks at  T   — 2nd recovery window
+//     Phase 1: N=576 blocks at  T   - establish stable baseline
+//     Phase 2: N=576 blocks at 3T   - hashrate falls to 1/3
+//     Phase 3: N=576 blocks at  T   - 1st recovery window
+//     Phase 4: N=576 blocks at  T   - 2nd recovery window
 //
 //   Expected behaviour:
 //     • After phase 2 the target reaches powLimit (difficulty at minimum).
@@ -645,7 +645,7 @@ BOOST_AUTO_TEST_CASE(lwma3_live_hashrate_drop_and_recovery)
     // Stable baseline (identical to test 2/3).
     BOOST_CHECK_EQUAL(after_stable, 0x1f0ffffeU);
 
-    // Drop clamps to powLimit — difficulty at minimum.
+    // Drop clamps to powLimit - difficulty at minimum.
     BOOST_CHECK_EQUAL(after_drop, 0x1f0fffffU);
     BOOST_CHECK_EQUAL(after_drop, powLimitBits);
 
@@ -671,10 +671,10 @@ BOOST_AUTO_TEST_CASE(lwma3_live_hashrate_drop_and_recovery)
 // Test 14: Live hashrate spike (T/3) followed by full recovery (2N blocks at T).
 //
 //   Scenario (live nBits propagation):
-//     Phase 1: N=576 blocks at  T   — stable baseline
-//     Phase 2: N=576 blocks at T/3  — hashrate triples
-//     Phase 3: N=576 blocks at  T   — 1st recovery window
-//     Phase 4: N=576 blocks at  T   — 2nd recovery window
+//     Phase 1: N=576 blocks at  T   - stable baseline
+//     Phase 2: N=576 blocks at T/3  - hashrate triples
+//     Phase 3: N=576 blocks at  T   - 1st recovery window
+//     Phase 4: N=576 blocks at  T   - 2nd recovery window
 //
 //   Expected behaviour:
 //     • Phase 2 drives the target sharply down (difficulty climbs ~3×).
@@ -771,11 +771,11 @@ BOOST_AUTO_TEST_CASE(lwma3_live_hashrate_spike_and_recovery)
 //   Tests 4 and 5 verify the 6T cap and powLimit ceiling with all window
 //   blocks carrying a fixed genesis nBits.  This test repeats the same
 //   scenario with live nBits propagation so each block's nBits is the actual
-//   LWMA output — exactly as a real full node behaves.
+//   LWMA output - exactly as a real full node behaves.
 //
 //   Scenario:
-//     Phase 1 : N=576 blocks at   T  — stable baseline (live propagation)
-//     Phase 2 : N=576 blocks at 100T — extreme hashrate drop (live propagation)
+//     Phase 1 : N=576 blocks at   T  - stable baseline (live propagation)
+//     Phase 2 : N=576 blocks at 100T - extreme hashrate drop (live propagation)
 //
 //   100T >> 6T, so every solvetime in phase 2 is clamped to 6T internally.
 //   Once the window is completely filled with 6T-capped solvetimes the
@@ -785,7 +785,7 @@ BOOST_AUTO_TEST_CASE(lwma3_live_hashrate_spike_and_recovery)
 //   Expected:
 //     • Final nBits after full phase 2  == powLimitBits (0x1f0fffffU).
 //     • All nBits in both phases produce a target <= powLimit (drift-safe).
-//     • During the extreme drop phase the target is non-decreasing —
+//     • During the extreme drop phase the target is non-decreasing -
 //       difficulty can only ease, never spike upward during a sustained drop.
 // ---------------------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(lwma3_live_powlimit_cap_propagation)
@@ -864,7 +864,7 @@ BOOST_AUTO_TEST_CASE(lwma3_live_powlimit_cap_propagation)
 //
 //   Expected:
 //     • result_6T   == powLimitBits  (cap fully saturated).
-//     • result_100T == powLimitBits  (same — clamped to 6T internally).
+//     • result_100T == powLimitBits  (same - clamped to 6T internally).
 //     • result_6T   == result_100T   (cap symmetry preserved with live nBits).
 // ---------------------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(lwma3_live_6T_cap_symmetry_propagation)
@@ -916,20 +916,20 @@ BOOST_AUTO_TEST_CASE(lwma3_live_6T_cap_symmetry_propagation)
 }
 
 // ---------------------------------------------------------------------------
-// Test 17: Consecutive hashrate events — spike immediately followed by drop.
+// Test 17: Consecutive hashrate events - spike immediately followed by drop.
 //
 //   Scenario (live nBits propagation throughout):
-//     Phase 1: N=576 blocks at  T   — stable baseline
-//     Phase 2: N=576 blocks at T/3  — hashrate triples (spike)
-//     Phase 3: N=576 blocks at 3T   — hashrate collapses to 1/3 (drop)
-//     Phase 4: N=576 blocks at  T   — recovery
+//     Phase 1: N=576 blocks at  T   - stable baseline
+//     Phase 2: N=576 blocks at T/3  - hashrate triples (spike)
+//     Phase 3: N=576 blocks at 3T   - hashrate collapses to 1/3 (drop)
+//     Phase 4: N=576 blocks at  T   - recovery
 //
 //   Key structural properties:
-//     • after_spike  < after_stable — spike raises difficulty (target falls).
-//     • after_drop   > after_spike  — drop eases difficulty (target rises).
+//     • after_spike  < after_stable - spike raises difficulty (target falls).
+//     • after_drop   > after_spike  - drop eases difficulty (target rises).
 //       The window still carries spike-era high-difficulty nBits, so the
 //       rise is slower than after a drop starting from stable difficulty.
-//     • after_rec   >= after_drop   — recovery continues upward.
+//     • after_rec   >= after_drop   - recovery continues upward.
 //     • Every nBits throughout produces a target <= powLimit.
 //
 //   after_spike must equal Test 14's value (same prefix scenario).
@@ -1032,9 +1032,9 @@ BOOST_AUTO_TEST_CASE(lwma3_live_consecutive_spike_then_drop)
 //       it cannot collapse while miners are faster than average.
 //
 //   Scenario (live nBits propagation):
-//     Phase 1: N=576 blocks at  T   — stable baseline
-//     Phase 2: N=576 blocks at 3T   — sustained hashrate drop
-//     Phase 3: N=576 blocks at T/3  — sustained hashrate spike
+//     Phase 1: N=576 blocks at  T   - stable baseline
+//     Phase 2: N=576 blocks at 3T   - sustained hashrate drop
+//     Phase 3: N=576 blocks at T/3  - sustained hashrate spike
 //
 //   Also asserts that target never exceeds powLimit across all three phases.
 // ---------------------------------------------------------------------------
@@ -1082,7 +1082,7 @@ BOOST_AUTO_TEST_CASE(lwma3_live_monotone_during_sustained_change)
     fill_phase(ph3, static_cast<int>(N), T / 3);   // sustained spike
 
     // Property A: during sustained drop target is non-decreasing.
-    // (skip the very first block of each phase — it is a transition step
+    // (skip the very first block of each phase - it is a transition step
     //  where the previous-block's T-spaced solvetime is still in the window)
     for (int i = ph2 + 1; i < ph3; i++) {
         arith_uint256 tgt_cur, tgt_prev;
@@ -1118,7 +1118,7 @@ BOOST_AUTO_TEST_CASE(lwma3_live_monotone_during_sustained_change)
 }
 
 // ---------------------------------------------------------------------------
-// Test 19: Timestamp drop attack — maximum difficulty manipulation via FTL.
+// Test 19: Timestamp drop attack - maximum difficulty manipulation via FTL.
 //
 //   An attacker who controls the block timestamp can inflate apparent solvetimes
 //   by setting each block's timestamp as far into the future as nodes allow.
@@ -1126,12 +1126,12 @@ BOOST_AUTO_TEST_CASE(lwma3_live_monotone_during_sustained_change)
 //   block is 600s instead of the real T=300s.
 //
 //   Key finding (from Python simulation):
-//     The attack hits powLimit at step 1 of N — instantly.
+//     The attack hits powLimit at step 1 of N - instantly.
 //     After the full N-block attack window the difficulty is at powLimit,
 //     identical to what a natural 3T slow hashrate produces (test 13).
 //
 //   Why the attack is safe despite hitting powLimit immediately:
-//     • powLimit is the floor — difficulty cannot go lower.
+//     • powLimit is the floor - difficulty cannot go lower.
 //     • Recovery is identical to the natural drop scenario (test 13):
 //       after 2N honest blocks the difficulty returns to 0x1f0ffffe.
 //     • The attacker gains NO extra advantage compared to simply mining slowly.
@@ -1139,10 +1139,10 @@ BOOST_AUTO_TEST_CASE(lwma3_live_monotone_during_sustained_change)
 //       not below it.
 //
 //   Scenario (live nBits propagation):
-//     Phase 1: N=576 blocks at  T   — stable baseline
-//     Phase 2: N=576 blocks at 2T   — timestamp drop attack (FTL=600)
-//     Phase 3: N=576 blocks at  T   — 1st recovery window
-//     Phase 4: N=576 blocks at  T   — 2nd recovery window
+//     Phase 1: N=576 blocks at  T   - stable baseline
+//     Phase 2: N=576 blocks at 2T   - timestamp drop attack (FTL=600)
+//     Phase 3: N=576 blocks at  T   - 1st recovery window
+//     Phase 4: N=576 blocks at  T   - 2nd recovery window
 //
 //   All expected values verified by Python arith_uint256 simulation.
 // ---------------------------------------------------------------------------
@@ -1205,7 +1205,7 @@ BOOST_AUTO_TEST_CASE(lwma3_timestamp_drop_attack)
     // Stable baseline.
     BOOST_CHECK_EQUAL(after_stable, 0x1f0ffffeU);
 
-    // Attack immediately clamps to powLimit — hits the floor at step 1.
+    // Attack immediately clamps to powLimit - hits the floor at step 1.
     BOOST_CHECK_EQUAL(after_attack, 0x1f0fffffU);
     BOOST_CHECK_EQUAL(after_attack, powLimitBits);
 
@@ -1243,7 +1243,7 @@ BOOST_AUTO_TEST_CASE(lwma3_timestamp_drop_attack)
 }
 
 // ---------------------------------------------------------------------------
-// Test 20: Timestamp rise attack — compressed timestamps inflate difficulty.
+// Test 20: Timestamp rise attack - compressed timestamps inflate difficulty.
 //
 //   An attacker compresses timestamps to the minimum valid value: prev + 1s.
 //   This makes LWMA-3 believe blocks are arriving 300× faster than reality,
@@ -1252,7 +1252,7 @@ BOOST_AUTO_TEST_CASE(lwma3_timestamp_drop_attack)
 //   Key finding (from Python simulation):
 //     After N=576 blocks at 1s spacing: target = 0x1e043720 (~972× harder).
 //     The attack requires the attacker to have the hashrate to keep mining
-//     at this extreme difficulty — which grows exponentially as the window
+//     at this extreme difficulty - which grows exponentially as the window
 //     fills.  This makes the attack self-limiting: it only succeeds if the
 //     attacker has an overwhelming hashrate advantage, in which case they
 //     could already 51%-attack the network directly.
@@ -1268,10 +1268,10 @@ BOOST_AUTO_TEST_CASE(lwma3_timestamp_drop_attack)
 //     rises, never accidentally drops while timestamps are compressed).
 //
 //   Scenario (live nBits propagation):
-//     Phase 1: N=576 blocks at  T   — stable baseline
-//     Phase 2: N=576 blocks at  1s  — compressed-timestamp rise attack
-//     Phase 3: N=576 blocks at  T   — 1st recovery window
-//     Phase 4: N=576 blocks at  T   — 2nd recovery window
+//     Phase 1: N=576 blocks at  T   - stable baseline
+//     Phase 2: N=576 blocks at  1s  - compressed-timestamp rise attack
+//     Phase 3: N=576 blocks at  T   - 1st recovery window
+//     Phase 4: N=576 blocks at  T   - 2nd recovery window
 //
 //   All expected values verified by Python arith_uint256 simulation.
 // ---------------------------------------------------------------------------
@@ -1347,7 +1347,7 @@ BOOST_AUTO_TEST_CASE(lwma3_timestamp_rise_attack)
     BOOST_CHECK(t_rec1   > t_attack);  // recovery eases (larger target than attack low)
     BOOST_CHECK(t_rec2   > t_attack);  // 2nd window continues easing
 
-    // Recovery is still far from stable — the window takes time to flush
+    // Recovery is still far from stable - the window takes time to flush
     // high-difficulty attack blocks.  (Full convergence takes many N-windows.)
     BOOST_CHECK(t_rec2 < t_stable);
 
@@ -1368,7 +1368,7 @@ BOOST_AUTO_TEST_CASE(lwma3_timestamp_rise_attack)
 }
 
 // ---------------------------------------------------------------------------
-// Test 21: Alternating timestamp attack — 600s / 1s interleaving.
+// Test 21: Alternating timestamp attack - 600s / 1s interleaving.
 //
 //   The attacker alternates between the two extremes: maximum-future block
 //   (600s = 2T per block) and minimum-valid block (1s per block).
@@ -1380,16 +1380,16 @@ BOOST_AUTO_TEST_CASE(lwma3_timestamp_rise_attack)
 //     This is because every 600s block (2T) alone is sufficient to push
 //     the target toward the floor (as proven in test 19), and the
 //     interleaved 1s blocks cannot fully counteract this easing pressure.
-//     The powLimit floor is the hard boundary — behaviour is identical to
+//     The powLimit floor is the hard boundary - behaviour is identical to
 //     a pure drop attack once the floor is reached.
 //
 //     Conclusion: alternating FTL/min-timestamp provides no extra benefit
 //     over a pure drop attack.  Both hit the same powLimit floor.
 //
 //   Scenario (live nBits propagation):
-//     Phase 1: N=576 blocks at  T         — stable baseline
-//     Phase 2: N=576 blocks alternating   — 600s, 1s, 600s, 1s ...
-//     Phase 3: N=576 blocks alternating   — second attack window
+//     Phase 1: N=576 blocks at  T         - stable baseline
+//     Phase 2: N=576 blocks alternating   - 600s, 1s, 600s, 1s ...
+//     Phase 3: N=576 blocks alternating   - second attack window
 //
 //   All expected values verified by Python arith_uint256 simulation.
 // ---------------------------------------------------------------------------
@@ -1469,7 +1469,7 @@ BOOST_AUTO_TEST_CASE(lwma3_timestamp_alternating_attack)
     BOOST_CHECK_EQUAL(after_alt_1N, 0x1f0fffffU);
     BOOST_CHECK_EQUAL(after_alt_1N, powLimitBits);
 
-    // After two N-windows: still at powLimit — floor is stable.
+    // After two N-windows: still at powLimit - floor is stable.
     BOOST_CHECK_EQUAL(after_alt_2N, 0x1f0fffffU);
     BOOST_CHECK_EQUAL(after_alt_2N, powLimitBits);
 
@@ -1480,7 +1480,7 @@ BOOST_AUTO_TEST_CASE(lwma3_timestamp_alternating_attack)
 
     // Both attack windows hit the powLimit floor.
     // Note: compare against compact-roundtripped powLimit because SetCompact()
-    // truncates precision — t_alt_xN can never equal the raw arith_uint256 powLimit.
+    // truncates precision - t_alt_xN can never equal the raw arith_uint256 powLimit.
     arith_uint256 powLimitCompact;
     powLimitCompact.SetCompact(powLimitBits);
     BOOST_CHECK(t_alt_1N == powLimitCompact);
@@ -1513,7 +1513,7 @@ BOOST_AUTO_TEST_CASE(lwma3_timestamp_alternating_attack)
 //
 //   Key finding (verified by Python arith_uint256 simulation):
 //     Even starting at ~35 000× difficulty, after one full N-block attack
-//     window the difficulty is still ~3 035× above powLimit — NOT at the
+//     window the difficulty is still ~3 035× above powLimit - NOT at the
 //     floor.  The target grows roughly ×10 per window (FTL≈2T means the
 //     effective solvetime budget is ≈2T, so LWMA sees ≈2T average and
 //     the ratio drifts at most by a constant factor per window).
@@ -1577,7 +1577,7 @@ BOOST_AUTO_TEST_CASE(lwma3_timestamp_drop_attack_high_difficulty)
         }
     };
 
-    // Seed phase: 3 windows at T/10 = 30s — builds organic high difficulty.
+    // Seed phase: 3 windows at T/10 = 30s - builds organic high difficulty.
     const int64_t FAST = T / 10; // 30s
     const int seed_start  = L + 1;
     const int attack_start = seed_start + SEED_WINDOWS * static_cast<int>(N);
@@ -1640,7 +1640,7 @@ BOOST_AUTO_TEST_CASE(lwma3_timestamp_drop_attack_high_difficulty)
 }
 
 // ---------------------------------------------------------------------------
-// Existing proof-of-work validity tests — unchanged from upstream.
+// Existing proof-of-work validity tests - unchanged from upstream.
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_negative_target)
@@ -1720,7 +1720,7 @@ BOOST_AUTO_TEST_CASE(GetBlockProofEquivalentTime_test)
 }
 
 // ---------------------------------------------------------------------------
-// Chain-parameter sanity checks — run for every network type.
+// Chain-parameter sanity checks - run for every network type.
 //
 // In addition to the upstream checks (genesis hash, nBits validity), we verify
 // the PoW routing mode for each chain so that any accidental change to
@@ -1765,7 +1765,7 @@ void sanity_check_chainparams(const ArgsManager& args, ChainType chain_type)
     */
 
     // lwmaAveragingWindow must always be a positive value even if LWMA does
-    // not run on this chain — prevents division-by-zero should routing change.
+    // not run on this chain - prevents division-by-zero should routing change.
     BOOST_CHECK(consensus.lwmaAveragingWindow > 0);
 
     // Verify the expected PoW routing mode per chain type.

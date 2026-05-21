@@ -110,64 +110,6 @@ struct PreSelectInputs {
     // future: this could have external inputs as well.
 };
 
-// Bitweb params uncomment me after EXT_COINBASE_MATURITY removed
-//static void WalletCreateTx(benchmark::Bench& bench, const OutputType output_type, bool allow_other_inputs, std::optional<PreSelectInputs> preset_inputs)
-//{
-//    const auto test_setup = MakeNoLogFileContext<const TestingSetup>();
-//
-//    // Set clock to genesis block, so the descriptors/keys creation time don't interfere with the blocks scanning process.
-//    SetMockTime(test_setup->m_node.chainman->GetParams().GenesisBlock().nTime);
-//    CWallet wallet{test_setup->m_node.chain.get(), "", CreateMockableWalletDatabase()};
-//    {
-//        LOCK(wallet.cs_wallet);
-//        wallet.SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
-//        wallet.SetupDescriptorScriptPubKeyMans();
-//    }
-//
-//    // Generate destinations
-//    const auto dest{getNewDestination(wallet, output_type)};
-//
-//    // Generate chain; each coinbase will have two outputs to fill-up the wallet
-//    const auto& params = Params();
-//    const CScript coinbase_out{GetScriptForDestination(dest)};
-//    unsigned int chain_size = 5000; // 5k blocks means 10k UTXO for the wallet (minus 200 due COINBASE_MATURITY)
-//    for (unsigned int i = 0; i < chain_size; ++i) {
-//        generateFakeBlock(params, test_setup->m_node, wallet, coinbase_out);
-//    }
-//
-//    // Check available balance
-//    auto bal = WITH_LOCK(wallet.cs_wallet, return wallet::AvailableCoins(wallet).GetTotalAmount()); // Cache
-//    assert(bal == 49 * COIN * (chain_size - COINBASE_MATURITY));
-//
-//    wallet::CCoinControl coin_control;
-//    coin_control.m_allow_other_inputs = allow_other_inputs;
-//
-//    CAmount target = 0;
-//    if (preset_inputs) {
-//        // Select inputs, each has 48 BTC
-//        wallet::CoinFilterParams filter_coins;
-//        filter_coins.max_count = preset_inputs->num_of_internal_inputs;
-//        const auto& res = WITH_LOCK(wallet.cs_wallet,
-//                                    return wallet::AvailableCoins(wallet, /*coinControl=*/nullptr, /*feerate=*/std::nullopt, filter_coins));
-//        for (int i=0; i < preset_inputs->num_of_internal_inputs; i++) {
-//            const auto& coin{res.coins.at(output_type)[i]};
-//            target += coin.txout.nValue;
-//            coin_control.Select(coin.outpoint);
-//        }
-//    }
-//
-//    // If automatic coin selection is enabled, add the value of another UTXO to the target
-//    if (coin_control.m_allow_other_inputs) target += 50 * COIN;
-//    std::vector<wallet::CRecipient> recipients = {{dest, target, true}};
-//
-//    bench.run([&] {
-//        LOCK(wallet.cs_wallet);
-//        const auto& tx_res = CreateTransaction(wallet, recipients, /*change_pos=*/std::nullopt, coin_control);
-//        assert(tx_res);
-//    });
-//}
-
-// Bitweb params remove me after EXT_COINBASE_MATURITY removed
 static void WalletCreateTx(benchmark::Bench& bench, const OutputType output_type, bool allow_other_inputs, std::optional<PreSelectInputs> preset_inputs)
 {
     const auto test_setup = MakeNoLogFileContext<const TestingSetup>();
@@ -194,18 +136,7 @@ static void WalletCreateTx(benchmark::Bench& bench, const OutputType output_type
 
     // Check available balance
     auto bal = WITH_LOCK(wallet.cs_wallet, return wallet::AvailableCoins(wallet).GetTotalAmount()); // Cache
-    bool bal_ok = (bal == 49 * COIN * (chain_size - COINBASE_MATURITY));
-    if (!bal_ok) {
-        // EXT window shifts maturity — try extended formula before failing.
-        // When EXT logic removed from CheckTxInputs: delete this block, assert below stays.
-        static constexpr int EXT_START = 2000;
-        static constexpr int EXT_END   = EXT_START + EXT_COINBASE_MATURITY;
-        const int pre_ext  = std::min(std::max(0, (int)chain_size - COINBASE_MATURITY), EXT_START - 1);
-        const int ext      = ((int)chain_size >= EXT_END + COINBASE_MATURITY) ? (EXT_END - EXT_START) : 0;
-        const int post_ext = std::max(0, (int)chain_size - COINBASE_MATURITY - EXT_END + 1);
-        bal_ok = (bal == 49 * COIN * (pre_ext + ext + post_ext));
-    }
-    assert(bal_ok);
+    assert(bal == 49 * COIN * (chain_size - COINBASE_MATURITY));
 
     wallet::CCoinControl coin_control;
     coin_control.m_allow_other_inputs = allow_other_inputs;
@@ -234,7 +165,6 @@ static void WalletCreateTx(benchmark::Bench& bench, const OutputType output_type
         assert(tx_res);
     });
 }
-// Bitweb params remove me after EXT_COINBASE_MATURITY removed
 
 static void AvailableCoins(benchmark::Bench& bench, const std::vector<OutputType>& output_type)
 {

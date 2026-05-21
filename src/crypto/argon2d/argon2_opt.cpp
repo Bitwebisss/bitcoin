@@ -19,13 +19,13 @@
  * x86 runtime ISA selector for Argon2 fill_segment.
  *
  * This file contains ONLY the function-pointer dispatcher and CPUID detection.
- * No SIMD code lives here — each ISA variant is its own translation unit:
+ * No SIMD code lives here - each ISA variant is its own translation unit:
  *
- *   argon2_opt_sse2.cpp   — SSE2 baseline  (compiled with -msse2)
- *   argon2_opt_ssse3.cpp  — SSSE3          (compiled with -mssse3)
- *   argon2_opt_avx2.cpp   — AVX2           (compiled with -mavx2)
- *   argon2_opt_avx512.cpp — AVX-512F       (compiled with -mavx512f)
- *   argon2_ref.cpp        — pure-C reference, always compiled, always exported as
+ *   argon2_opt_sse2.cpp   - SSE2 baseline  (compiled with -msse2)
+ *   argon2_opt_ssse3.cpp  - SSSE3          (compiled with -mssse3)
+ *   argon2_opt_avx2.cpp   - AVX2           (compiled with -mavx2)
+ *   argon2_opt_avx512.cpp - AVX-512F       (compiled with -mavx512f)
+ *   argon2_ref.cpp        - pure-C reference, always compiled, always exported as
  *                    fill_segment_ref(); used as the safe default before CPUID
  *                    detection runs, and on i686 without SSE2.
  *
@@ -49,7 +49,7 @@
  * Each symbol is defined in its own translation unit.
  * ------------------------------------------------------------------------- */
 
-/* Always available — pure-C reference (ref.cpp) */
+/* Always available - pure-C reference (ref.cpp) */
 void fill_segment_ref(const argon2_instance_t *instance,
                       argon2_position_t position);
 
@@ -74,7 +74,7 @@ void fill_segment_avx512(const argon2_instance_t *instance,
 #endif
 
 /* -------------------------------------------------------------------------
- * AVX OS-enable checks — same helpers as sha256.cpp.
+ * AVX OS-enable checks - same helpers as sha256.cpp.
  * ------------------------------------------------------------------------- */
  #if defined(ENABLE_ARGON2_AVX2) || defined(ENABLE_ARGON2_AVX512)
 static int AVXEnabled(void)
@@ -95,7 +95,7 @@ static int AVX512Enabled(void)
 #endif
 
 /* -------------------------------------------------------------------------
- * argon2_fill_segment — global function pointer.
+ * argon2_fill_segment - global function pointer.
  *
  * Default: fill_segment_ref (pure-C, always safe).
  * Argon2AutoDetectImpl() upgrades this to SSE2, AVX2, or AVX-512 when
@@ -104,7 +104,7 @@ static int AVX512Enabled(void)
 void (*argon2_fill_segment)(const argon2_instance_t *instance,
                             argon2_position_t position) = fill_segment_ref;
 
-/* Public entry point called by argon2_core.c — routes through the function pointer. */
+/* Public entry point called by argon2_core.c - routes through the function pointer. */
 void fill_segment(const argon2_instance_t *instance,
                   argon2_position_t position)
 {
@@ -112,7 +112,7 @@ void fill_segment(const argon2_instance_t *instance,
 }
 
 /* -------------------------------------------------------------------------
- * Argon2AutoDetectImpl — x86 implementation.
+ * Argon2AutoDetectImpl - x86 implementation.
  * Called once at startup (kernel/context.cpp) via Argon2AutoDetect().
  * ------------------------------------------------------------------------- */
 const char *Argon2AutoDetectImpl(uint8_t use_implementation)
@@ -169,7 +169,7 @@ const char *Argon2AutoDetectImpl(uint8_t use_implementation)
         } else
 #endif
         {
-            /* STANDARD=0 or no matching tier compiled — stay on reference */
+            /* STANDARD=0 or no matching tier compiled - stay on reference */
             (void)have_xsave;
             (void)have_avx; (void)have_avx2; (void)have_avx512f;
             (void)have_ssse3; (void)have_sse2; (void)enabled_avx;

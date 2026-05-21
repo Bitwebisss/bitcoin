@@ -13,7 +13,7 @@ Usage:
     python3 gen_validateaddress_vectors.py --apply
     python3 gen_validateaddress_vectors.py --hrp xbt --apply
 
-    The script can also be run from test/functional/ — it locates
+    The script can also be run from test/functional/ - it locates
     test_framework and rpc_validateaddress.py automatically in both cases.
 
 ────────────────────────────────────────────────────────────────────────────────
@@ -30,7 +30,7 @@ The data+checksum section encodes:
 When the HRP changes, only the checksum changes. The witness version and program
 stay identical. So conversion is simply: decode(src_hrp) -> encode(dst_hrp).
 
-Addresses with a "wrong" HRP (tc1...) test rejection due to HRP mismatch —
+Addresses with a "wrong" HRP (tc1...) test rejection due to HRP mismatch -
 they do not need conversion and are kept as-is.
 
 error_locations are character positions in the address string that the node
@@ -38,9 +38,9 @@ considers erroneous. They are determined by the node, not by us. For addresses
 that carry error_locations we therefore construct the address such that the bad
 character lands at exactly the required position:
 
-    [41] — bad checksum: take a valid dst_hrp p2wpkh address, corrupt char at 41
-    [40] — mixed case:   take an UPPERCASE dst_hrp p2wpkh address, lowercase char 40
-    [59] — invalid char: take a valid dst_hrp p2tr address, inject 'b' at position 59
+    [41] - bad checksum: take a valid dst_hrp p2wpkh address, corrupt char at 41
+    [40] - mixed case:   take an UPPERCASE dst_hrp p2wpkh address, lowercase char 40
+    [59] - invalid char: take a valid dst_hrp p2tr address, inject 'b' at position 59
            ('b' is absent from the bech32 charset, so the node will report that position)
 ────────────────────────────────────────────────────────────────────────────────
 """
@@ -148,7 +148,7 @@ def generate_blocks(hrp: str) -> str:
 
     # [59] "Invalid Base 32 character"
     # Valid p2tr address for dst_hrp, 63 characters long.
-    # Inject 'b' at position 59 — a character outside the bech32 alphabet.
+    # Inject 'b' at position 59 - a character outside the bech32 alphabet.
     valid_p2tr = reencode("bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqzk5jj0", hrp)
     bad_char_59 = inject_invalid_char_at(valid_p2tr, 59)
 
@@ -189,7 +189,7 @@ def generate_blocks(hrp: str) -> str:
     row(reencode("BC1QR508D6QEJXTDG4Y5R3ZARVARYV98GJ9P", hrp, force_upper=True),
         "Invalid Bech32 v0 address program size (16 bytes), per BIP141", "[]")
 
-    # tc1 — wrong HRP + mixed case; leave unchanged.
+    # tc1 - wrong HRP + mixed case; leave unchanged.
     row("tc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sL5k7",
         "Invalid or unsupported Segwit (Bech32) or Base58 encoding.",
         "[]", "# tb1, Mixed case")
@@ -201,7 +201,7 @@ def generate_blocks(hrp: str) -> str:
         "Version 1+ witness address must use Bech32m checksum",
         "[]", "# Wrong padding")
 
-    # tc1 — wrong HRP; leave unchanged.
+    # tc1 - wrong HRP; leave unchanged.
     row("tc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3pjxtptv",
         "Invalid or unsupported Segwit (Bech32) or Base58 encoding.",
         "[]", "# tb1, Non-zero padding in 8-to-5 conversion")
@@ -210,7 +210,7 @@ def generate_blocks(hrp: str) -> str:
 
     w("    # BIP 350")
 
-    # tc1 — wrong HRP; leave unchanged.
+    # tc1 - wrong HRP; leave unchanged.
     row("tc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vq5zuyut",
         "Invalid or unsupported Segwit (Bech32) or Base58 encoding.",
         "[]", "# Invalid human-readable part")
@@ -219,7 +219,7 @@ def generate_blocks(hrp: str) -> str:
         "Version 1+ witness address must use Bech32m checksum",
         "[]", "# Invalid checksum (Bech32 instead of Bech32m)")
 
-    # tc1 — wrong HRP; leave unchanged.
+    # tc1 - wrong HRP; leave unchanged.
     row("tc1z0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqglt7rf",
         "Invalid or unsupported Segwit (Bech32) or Base58 encoding.",
         "[]", "# tb1, Invalid checksum (Bech32 instead of Bech32m)")
@@ -232,7 +232,7 @@ def generate_blocks(hrp: str) -> str:
         "Version 0 witness address must use Bech32 checksum",
         "[]", "# Invalid checksum (Bech32m instead of Bech32)")
 
-    # tc1 — wrong HRP; leave unchanged.
+    # tc1 - wrong HRP; leave unchanged.
     row("tc1q0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vq24jc47",
         "Invalid or unsupported Segwit (Bech32) or Base58 encoding.",
         "[]", "# tb1, Invalid checksum (Bech32m instead of Bech32)")
@@ -252,7 +252,7 @@ def generate_blocks(hrp: str) -> str:
     row(reencode("BC1QR508D6QEJXTDG4Y5R3ZARVARYV98GJ9P", hrp, force_upper=True),
         "Invalid Bech32 v0 address program size (16 bytes), per BIP141", "[]")
 
-    # tc1 — wrong HRP + mixed case; leave unchanged.
+    # tc1 - wrong HRP + mixed case; leave unchanged.
     row("tc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vq47Zagq",
         "Invalid or unsupported Segwit (Bech32) or Base58 encoding.",
         "[]", "# tb1, Mixed case")
@@ -261,7 +261,7 @@ def generate_blocks(hrp: str) -> str:
         "Invalid padding in Bech32 data section",
         "[]", "# zero padding of more than 4 bits")
 
-    # tc1 — wrong HRP; leave unchanged.
+    # tc1 - wrong HRP; leave unchanged.
     row("tc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vpggkg4j",
         "Invalid or unsupported Segwit (Bech32) or Base58 encoding.",
         "[]", "# tb1, Non-zero padding in 8-to-5 conversion")
@@ -288,7 +288,7 @@ def generate_blocks(hrp: str) -> str:
                 "0014751e76e8199196d454941c45d1b3a323f1433bd6",
                 force_upper=True)
 
-    # The tb1 variant is commented out in the original — preserve that block.
+    # The tb1 variant is commented out in the original - preserve that block.
     valid_entry("bc1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qccfmv3",
                 "00201863143c14c5166804bd19203356da136c985678cd4d27a1b8c6329604903262",
                 pre_comment=(

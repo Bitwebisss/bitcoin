@@ -83,7 +83,7 @@ if(ENABLE_WALLET)
   target_link_libraries(bench_bitweb bitcoin_wallet)
 endif()
 
-# Argon2id ISA availability — forward the same HAVE_ARGON2_* cache variables
+# Argon2id ISA availability - forward the same HAVE_ARGON2_* cache variables
 # that introspection.cmake sets to ENABLE_ARGON2_* compile definitions on
 # bench_bitweb, mirroring what test_bitweb does.  This ensures that
 # crypto_argon2.cpp only registers benchmark variants that were actually

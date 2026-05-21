@@ -16,7 +16,7 @@
  */
 
 /*
- * NEON fill_segment — compiled separately with ${ARGON2_NEON_CXXFLAGS}.
+ * NEON fill_segment - compiled separately with ${ARGON2_NEON_CXXFLAGS}.
  *
  * No flags on AArch64 (NEON is the mandatory baseline).
  * -mfpu=neon on ARMv7 targets.
@@ -27,7 +27,7 @@
  *
  * Key differences from the libsodium-derived argon2-fill-block-neon.c:
  *
- *   1. Uses instance->memory (not instance->region->memory) — matches
+ *   1. Uses instance->memory (not instance->region->memory) - matches
  *      the Bitweb argon2_instance_t layout used by all other ISA variants.
  *
  *   2. Uses const block * / block * API (same as argon2_ref.cpp and
@@ -36,7 +36,7 @@
  *   3. Single fill_block() with int with_xor flag, following AVX2 pattern.
  *
  *   4. vqtbl1q_u8 (AArch64-only) replaced by portable shift+OR in
- *      blamka-round-neon.h — file now compiles on ARMv7+NEON as well.
+ *      blamka-round-neon.h - file now compiles on ARMv7+NEON as well.
  *
  * Structure mirrors argon2_opt_avx2.cpp:
  *   - ARGON2_OWORDS_IN_BLOCK (64) uint64x2_t elements = 1024-byte block.
@@ -56,7 +56,7 @@
 #include <crypto/argon2d/blake2/blamka-round-neon.h>
 
 /* -------------------------------------------------------------------------
- * fill_block — NEON version.
+ * fill_block - NEON version.
  *
  * state[ARGON2_OWORDS_IN_BLOCK] carries the accumulated NEON state across
  * calls within a segment; it is initialised once from prev_block before
@@ -97,7 +97,7 @@ fill_block(uint64x2_t *state, const block *ref_block, block *next_block,
         }
     }
 
-    /* Column pass — 8 iterations, each covering 8 uint64x2_t = 16 words */
+    /* Column pass - 8 iterations, each covering 8 uint64x2_t = 16 words */
     for (i = 0; i < 8; ++i) {
         BLAKE2_ROUND_NEON(
             state[8 * i + 0], state[8 * i + 1],
@@ -106,7 +106,7 @@ fill_block(uint64x2_t *state, const block *ref_block, block *next_block,
             state[8 * i + 6], state[8 * i + 7]);
     }
 
-    /* Row pass — 8 iterations, stride 8 */
+    /* Row pass - 8 iterations, stride 8 */
     for (i = 0; i < 8; ++i) {
         BLAKE2_ROUND_NEON(
             state[8 * 0 + i], state[8 * 1 + i],
@@ -122,7 +122,7 @@ fill_block(uint64x2_t *state, const block *ref_block, block *next_block,
 }
 
 /* -------------------------------------------------------------------------
- * next_addresses — generate ARGON2_ADDRESSES_IN_BLOCK pseudo-random
+ * next_addresses - generate ARGON2_ADDRESSES_IN_BLOCK pseudo-random
  * addresses for data-independent addressing (Argon2i / Argon2id pass 0).
  *
  * Mirrors AVX2 next_addresses exactly:
@@ -141,7 +141,7 @@ next_addresses(block *address_block, block *input_block)
 }
 
 /* -------------------------------------------------------------------------
- * fill_segment_neon — exported symbol; registered as the active
+ * fill_segment_neon - exported symbol; registered as the active
  * fill_segment implementation by Argon2AutoDetectImpl (argon2_ref.cpp
  * non-x86 path) when ENABLE_ARGON2_NEON is defined.
  *

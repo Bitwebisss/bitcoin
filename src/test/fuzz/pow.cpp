@@ -146,9 +146,9 @@ FUZZ_TARGET(pow_transition, .init = initialize_pow)
     // N = 576 (lwmaAveragingWindow). Chain length range: 1 .. N*3 = 1728.
     //
     // This covers all three branches of the algorithm:
-    //   height in [1,   N+1] — "new coin" branch, returns genesis bits
-    //   height in [N+2, N*2] — LWMA warming up, unstable phase
-    //   height in [N*2, N*3] — LWMA fully stabilized
+    //   height in [1,   N+1] - "new coin" branch, returns genesis bits
+    //   height in [N+2, N*2] - LWMA warming up, unstable phase
+    //   height in [N*2, N*3] - LWMA fully stabilized
     const int64_t N = consensus_params.lwmaAveragingWindow;
     const int num_blocks = fuzzed_data_provider.ConsumeIntegralInRange<int>(1, static_cast<int>(N * 3));
 

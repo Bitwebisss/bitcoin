@@ -28,10 +28,10 @@
 #ifndef BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAMKA_ROUND_AVX2_H
 #define BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAMKA_ROUND_AVX2_H
 
-#include <immintrin.h>          /* AVX2 — compiler defines __AVX2__ via -mavx2 */
+#include <immintrin.h>          /* AVX2 - compiler defines __AVX2__ via -mavx2 */
 
 /* -------------------------------------------------------------------------
- * Rotation helpers — all expressed with AVX2 shuffle/permute intrinsics.
+ * Rotation helpers - all expressed with AVX2 shuffle/permute intrinsics.
  * ------------------------------------------------------------------------- */
 #define BLAMKA_AVX2_rotr32(x)                                                  \
     _mm256_shuffle_epi32((x), _MM_SHUFFLE(2, 3, 0, 1))
@@ -47,7 +47,7 @@
     _mm256_xor_si256(_mm256_srli_epi64((x), 63), _mm256_add_epi64((x), (x)))
 
 /* -------------------------------------------------------------------------
- * G1_AVX2 / G2_AVX2 — first and second half of one Blake2b G application,
+ * G1_AVX2 / G2_AVX2 - first and second half of one Blake2b G application,
  * each operating on two parallel __m256i columns at once.
  * ------------------------------------------------------------------------- */
 #define G1_AVX2(A0, A1, B0, B1, C0, C1, D0, D1)                               \
@@ -103,8 +103,8 @@
     } while ((void)0, 0)
 
 /* -------------------------------------------------------------------------
- * DIAGONALIZE_1 / UNDIAGONALIZE_1 — column-pass permutation (__m256i pair).
- * DIAGONALIZE_2 / UNDIAGONALIZE_2 — row-pass permutation (__m256i pair).
+ * DIAGONALIZE_1 / UNDIAGONALIZE_1 - column-pass permutation (__m256i pair).
+ * DIAGONALIZE_2 / UNDIAGONALIZE_2 - row-pass permutation (__m256i pair).
  * ------------------------------------------------------------------------- */
 #define DIAGONALIZE_1_AVX2(A0, B0, C0, D0, A1, B1, C1, D1)                    \
     do {                                                                       \
@@ -153,8 +153,8 @@
     } while ((void)0, 0)
 
 /* -------------------------------------------------------------------------
- * BLAKE2_ROUND_1_AVX2 — column pass (8 __m256i state elements, row-major).
- * BLAKE2_ROUND_2_AVX2 — row    pass (8 __m256i state elements, column-major).
+ * BLAKE2_ROUND_1_AVX2 - column pass (8 __m256i state elements, row-major).
+ * BLAKE2_ROUND_2_AVX2 - row    pass (8 __m256i state elements, column-major).
  *
  * Each macro expands to a full Blake2b round (two G + diagonalize halves).
  * opt_avx2.cpp calls ROUND_1 for the 4 column iterations and ROUND_2 for

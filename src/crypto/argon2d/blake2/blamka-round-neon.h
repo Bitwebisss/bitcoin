@@ -19,14 +19,14 @@
  * Portable ARM NEON Blake2b round primitives for Argon2.
  *
  * Targets the common NEON subset available on BOTH:
- *   - AArch64 (ARMv8-A 64-bit) — NEON is mandatory baseline.
- *   - ARMv7 with NEON          — compiled with -mfpu=neon.
+ *   - AArch64 (ARMv8-A 64-bit) - NEON is mandatory baseline.
+ *   - ARMv7 with NEON          - compiled with -mfpu=neon.
  *
  * rotr24 / rotr16:
  *   On AArch64 and Apple Silicon (__aarch64__ / __arm64__):
- *     vqtbl1q_u8 — single-register 128-bit table lookup, one instruction.
+ *     vqtbl1q_u8 - single-register 128-bit table lookup, one instruction.
  *   On ARMv7+NEON:
- *     portable shift+OR — vqtbl1q_u8 is AArch64-only and would SIGILL on ARMv7.
+ *     portable shift+OR - vqtbl1q_u8 is AArch64-only and would SIGILL on ARMv7.
  *
  * All other primitives (vmovn_u64, vmull_u32, vaddq_u64, veorq_u64,
  * vreinterpretq_u64_u32, vrev64q_u32, vshrq_n_u64, vshlq_n_u64, vorrq_u64,
@@ -42,7 +42,7 @@
 #include <arm_neon.h>
 
 /* -------------------------------------------------------------------------
- * fBlaMka_neon — modified G mixing function used by Argon2.
+ * fBlaMka_neon - modified G mixing function used by Argon2.
  *
  * Computes: x + y + 2*(lo32(x) * lo32(y))
  * ------------------------------------------------------------------------- */
@@ -58,13 +58,13 @@ fBlaMka_neon(uint64x2_t x, uint64x2_t y)
 /* -------------------------------------------------------------------------
  * Rotation helpers.
  *
- * rotr32: vrev64q_u32 — portable, available on ARMv7 NEON and AArch64.
+ * rotr32: vrev64q_u32 - portable, available on ARMv7 NEON and AArch64.
  *
  * rotr24 / rotr16:
  *   AArch64 / Apple Silicon: vqtbl1q_u8 (one instruction).
  *   ARMv7+NEON:              shift+OR   (vqtbl1q_u8 is AArch64-only).
  *
- * rotr63: shift+XOR — portable on both targets.
+ * rotr63: shift+XOR - portable on both targets.
  * ------------------------------------------------------------------------- */
 static inline uint64x2_t
 rotr64_32_neon(uint64x2_t x)
@@ -109,7 +109,7 @@ rotr64_63_neon(uint64x2_t x)
 }
 
 /* -------------------------------------------------------------------------
- * G1_NEON / G2_NEON — first and second half of a Blake2b G step.
+ * G1_NEON / G2_NEON - first and second half of a Blake2b G step.
  *
  * Each macro operates on two parallel uint64x2_t columns simultaneously
  * (A0/A1, B0/B1, C0/C1, D0/D1), covering 16 consecutive uint64 words.
@@ -194,7 +194,7 @@ rotr64_63_neon(uint64x2_t x)
             vextq_u8(vreinterpretq_u8_u64(B1),                    \
                      vreinterpretq_u8_u64(B0), 8));               \
         B0 = _t0;  B1 = _t1;                                      \
-        /* C: rotate by +2 — swap the two registers entirely. */  \
+        /* C: rotate by +2 - swap the two registers entirely. */  \
         _t0 = C0;  C0 = C1;  C1 = _t0;                           \
         /* D: rotate by +3 (= rotate back by 1)               */  \
         _t0 = vreinterpretq_u64_u8(                               \
@@ -217,7 +217,7 @@ rotr64_63_neon(uint64x2_t x)
             vextq_u8(vreinterpretq_u8_u64(B0),                    \
                      vreinterpretq_u8_u64(B1), 8));               \
         B0 = _t0;  B1 = _t1;                                      \
-        /* C: undo +2 — swap again. */                            \
+        /* C: undo +2 - swap again. */                            \
         _t0 = C0;  C0 = C1;  C1 = _t0;                           \
         /* D: undo +3 (= rotate by +1)                         */ \
         /* NOTE: vextq argument order is D0,D1 here (opposite  */ \
@@ -232,7 +232,7 @@ rotr64_63_neon(uint64x2_t x)
     } while ((void)0, 0)
 
 /* -------------------------------------------------------------------------
- * BLAKE2_ROUND_NEON — full Blake2b round (G1 + G2 + diagonalize).
+ * BLAKE2_ROUND_NEON - full Blake2b round (G1 + G2 + diagonalize).
  *
  * Arguments: A0,A1,B0,B1,C0,C1,D0,D1  (8 uint64x2_t registers = 16 words)
  * ------------------------------------------------------------------------- */

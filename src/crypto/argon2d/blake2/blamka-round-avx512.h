@@ -79,7 +79,7 @@ static inline __m512i muladd_avx512(__m512i x, __m512i y)
         UNDIAGONALIZE_AVX512(A0, B0, C0, D0, A1, B1, C1, D1);                  \
     } while ((void)0, 0)
 
-/* _mm512_setr_epi64 args are compile-time constants — compiler folds to immediate load */
+/* _mm512_setr_epi64 args are compile-time constants - compiler folds to immediate load */
 #define SWAP_HALVES_AVX512(A0, A1)                                             \
     do {                                                                       \
         __m512i _t0 = _mm512_shuffle_i64x2((A0), (A1), _MM_SHUFFLE(1, 0, 1, 0)); \

@@ -54,8 +54,8 @@
 #ifndef BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAMKA_ROUND_SSSE3_H
 #define BITCOIN_CRYPTO_ARGON2D_BLAKE2_BLAMKA_ROUND_SSSE3_H
 
-#include <emmintrin.h>   /* SSE2 baseline — _mm_xor_si128, _mm_add_epi64, etc. */
-#include <tmmintrin.h>   /* SSSE3 — _mm_shuffle_epi8, _mm_alignr_epi8         */
+#include <emmintrin.h>   /* SSE2 baseline - _mm_xor_si128, _mm_add_epi64, etc. */
+#include <tmmintrin.h>   /* SSSE3 - _mm_shuffle_epi8, _mm_alignr_epi8         */
 
 #include <crypto/argon2d/blake2/blake2-impl.h>   /* BLAKE2_INLINE */
 
@@ -70,7 +70,7 @@
     (_mm_setr_epi8(3, 4, 5, 6, 7, 0, 1, 2, 11, 12, 13, 14, 15, 8, 9, 10))
 
 /* -------------------------------------------------------------------------
- * Rotation helpers — all SSSE3-native.
+ * Rotation helpers - all SSSE3-native.
  *
  * rotr32: _mm_shuffle_epi32  (same as SSE2, already optimal)
  * rotr24: _mm_shuffle_epi8 with BLAMKA_SSSE3_r24
@@ -88,7 +88,7 @@
                                     _mm_add_epi64((x), (x))))))
 
 /* -------------------------------------------------------------------------
- * fBlaMka — Argon2 multiply-add mixing function (SSSE3 version).
+ * fBlaMka - Argon2 multiply-add mixing function (SSSE3 version).
  * _mm_mul_epu32 is SSE2; no SSSE3-specific instruction available here.
  * ------------------------------------------------------------------------- */
 static BLAKE2_INLINE __m128i fBlaMka_ssse3(__m128i x, __m128i y)
@@ -98,7 +98,7 @@ static BLAKE2_INLINE __m128i fBlaMka_ssse3(__m128i x, __m128i y)
 }
 
 /* -------------------------------------------------------------------------
- * G1_SSSE3 / G2_SSSE3 — first and second half of one Blake2b G application,
+ * G1_SSSE3 / G2_SSSE3 - first and second half of one Blake2b G application,
  * operating on two parallel __m128i columns at once.
  * rotr24 and rotr16 use _mm_shuffle_epi8 (SSSE3) instead of shift+or (SSE2).
  * ------------------------------------------------------------------------- */
@@ -145,7 +145,7 @@ static BLAKE2_INLINE __m128i fBlaMka_ssse3(__m128i x, __m128i y)
     } while ((void)0, 0)
 
 /* -------------------------------------------------------------------------
- * DIAGONALIZE_SSSE3 / UNDIAGONALIZE_SSSE3 — permute 8 __m128i values.
+ * DIAGONALIZE_SSSE3 / UNDIAGONALIZE_SSSE3 - permute 8 __m128i values.
  *
  * Uses _mm_alignr_epi8 (SSSE3) which is faster than the SSE2 unpack
  * sequence. This is the other key benefit of SSSE3 beyond the rotations.
@@ -173,7 +173,7 @@ static BLAKE2_INLINE __m128i fBlaMka_ssse3(__m128i x, __m128i y)
     } while ((void)0, 0)
 
 /* -------------------------------------------------------------------------
- * BLAKE2_ROUND_SSSE3 — full Blake2b round on 8 __m128i registers.
+ * BLAKE2_ROUND_SSSE3 - full Blake2b round on 8 __m128i registers.
  *
  * Uses SSSE3 shuffle for all four rotations and _mm_alignr_epi8 for
  * diagonalize. On Sandy Bridge / Ivy Bridge (no AVX2) this is the fastest

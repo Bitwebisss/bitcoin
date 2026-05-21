@@ -753,7 +753,7 @@ class FullBlockTest(BitcoinTestFramework):
         b48p = self.next_block("48p")
         self.send_blocks([b48, b48p], success=True)  # Reorg to the longer chain
         node.invalidateblock(b48p.hash_hex)  # mark b48p as invalid
-        # Restore mocktime to MOCK_OFFSET (NOT 0 — FTL=600s means we can't use real time
+        # Restore mocktime to MOCK_OFFSET (NOT 0 - FTL=600s means we can't use real time
         # once blocks are >600 blocks deep, i.e. nTime > real_now + 600)
         node.setmocktime(start_time + MOCK_OFFSET)
 
