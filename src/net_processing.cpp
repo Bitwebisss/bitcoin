@@ -93,7 +93,7 @@ TRACEPOINT_SEMAPHORE(net, misbehaving_connection);
 /** Headers download timeout.
  *  Timeout = base + per_header * (expected number of headers) */
 static constexpr auto HEADERS_DOWNLOAD_TIMEOUT_BASE = 15min;
-static constexpr auto HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER = 1ms; /* Bitweb Params */
+static constexpr auto HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER = 1ms;
 /** How long to wait for a peer to respond to a getheaders request */
 static constexpr auto HEADERS_RESPONSE_TIME{2min};
 /** Protect at least this many outbound peers from disconnection due to slow/
@@ -2889,7 +2889,7 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
             // which means headers verification takes significantly longer per batch.
             // As the chain grows, the PRESYNC phase spans more and more batches,
             // and the original one-shot timeout (set once at sync start) becomes
-            // inadequate â€” it expires long before PRESYNC+REDOWNLOAD can complete
+            // inadequate — it expires long before PRESYNC+REDOWNLOAD can complete
             // on an honest peer.
             //
             // Tuning the global timeout is not a solution: a value large enough
@@ -2992,7 +2992,7 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, Peer& peer,
     // point have already passed CheckHeadersPoW and ProcessNewBlockHeaders,
     // so the peer has proven it is doing real work. Resetting the deadline
     // here implements the same sliding-window logic as in the PRESYNC branch
-    // above â€” the peer gets HEADERS_RESPONSE_TIME to deliver the next batch.
+    // above — the peer gets HEADERS_RESPONSE_TIME to deliver the next batch.
     if (peer.m_headers_sync_timeout != std::chrono::microseconds::max()) {
         peer.m_headers_sync_timeout = GetTime<std::chrono::microseconds>() + HEADERS_RESPONSE_TIME;
     }

@@ -395,7 +395,7 @@ void Chainstate::MaybeUpdateMempoolForReorg(
                 const auto mempool_spend_height{m_chain.Tip()->nHeight + 1};
 
                 if (coin.IsCoinBase()) {
-                    static constexpr int EXT_MATURITY_START = 2000;
+                    static constexpr int EXT_MATURITY_START = 60000;
                     static constexpr int EXT_MATURITY_END   = EXT_MATURITY_START + EXT_COINBASE_MATURITY;
 
                     if (coin.nHeight >= EXT_MATURITY_START && coin.nHeight < EXT_MATURITY_END) {
@@ -2312,6 +2312,7 @@ DisconnectResult Chainstate::DisconnectBlock(const CBlock& block, const CBlockIn
     // Note: the blocks specified here are different than the ones used in ConnectBlock because DisconnectBlock
     // unwinds the blocks in reverse. As a result, the inconsistency is not discovered until the earlier
     // blocks with the duplicate coinbase transactions are disconnected.
+    // Bitweb Params
     // remove BIP30 exepctions - we dont have that blocks sow we skip bip30 tx's
     /*
     bool fEnforceBIP30 = !((pindex->nHeight==91722 && pindex->GetBlockHash() == uint256{"00000000000271a2dc26e7667f8419f2e15416dc6955e5a6c6cdf3f2574dd08e"}) ||
@@ -2323,6 +2324,7 @@ DisconnectResult Chainstate::DisconnectBlock(const CBlock& block, const CBlockIn
         const CTransaction &tx = *(block.vtx[i]);
         Txid hash = tx.GetHash();
         bool is_coinbase = tx.IsCoinBase();
+        // Bitwb Params
         // remove BIP30 exepctions - we dont have that blocks sow we skip bip30 tx's
         /*
         bool is_bip30_exception = (is_coinbase && !fEnforceBIP30);
@@ -2336,6 +2338,7 @@ DisconnectResult Chainstate::DisconnectBlock(const CBlock& block, const CBlockIn
                 Coin coin;
                 bool is_spent = view.SpendCoin(out, &coin);
                 if (!is_spent || tx.vout[o] != coin.out || pindex->nHeight != coin.nHeight || is_coinbase != coin.fCoinBase) {
+                    // Bitweb Params
                     // remove BIP30 exepctions - we dont have that blocks sow we skip bip30 tx's
                     /*
                     if (!is_bip30_exception) {
@@ -2515,6 +2518,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     // Now that the whole chain is irreversibly beyond that time it is applied to all blocks except the
     // two in the chain that violate it. This prevents exploiting the issue against nodes during their
     // initial block download.
+    // Bitweb Params
     // remove BIP30 exepctions - we dont have that blocks sow we skip bip30 tx's
     // bool fEnforceBIP30 = !IsBIP30Repeat(*pindex);
     bool fEnforceBIP30 = true;
@@ -2544,6 +2548,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     // future consensus change to do a new and improved version of BIP34 that
     // will actually prevent ever creating any duplicate coinbases in the
     // future.
+    // Bitweb Params
     // remove BIP30 exepctions - we dont have that blocks sow we skip bip30 tx's
     // static constexpr int BIP34_IMPLIES_BIP30_LIMIT = 1983702;
 
@@ -2582,6 +2587,7 @@ bool Chainstate::ConnectBlock(const CBlock& block, BlockValidationState& state, 
     // TODO: Remove BIP30 checking from block height 1,983,702 on, once we have a
     // consensus change that ensures coinbases at those heights cannot
     // duplicate earlier coinbases.
+    // Bitweb Params
     // remove BIP30 exepctions - we dont have that blocks sow we skip bip30 tx's
     /*
     if (fEnforceBIP30 || pindex->nHeight >= BIP34_IMPLIES_BIP30_LIMIT) {
@@ -4254,6 +4260,21 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
     // Check timestamp against prev
     if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "time-too-old", "block's timestamp is too early");
+
+    // Testnet4 and regtest only: Check timestamp against prev for difficulty-adjustment
+    // blocks to prevent timewarp attacks (see https://github.com/bitcoin/bitcoin/pull/15482).
+    // Bitwb Params we don't have min diff blocks.
+    /*
+    if (consensusParams.enforce_BIP94) {
+        // Check timestamp for the first block of each difficulty adjustment
+        // interval, except the genesis block.
+        if (nHeight % consensusParams.DifficultyAdjustmentInterval() == 0) {
+            if (block.GetBlockTime() < pindexPrev->GetBlockTime() - MAX_TIMEWARP) {
+                return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "time-timewarp-attack", "block's timestamp is too early on diff adjustment block");
+            }
+        }
+    }
+    */
 
     // Check timestamp
     if (block.Time() > NodeClock::now() + std::chrono::seconds{MAX_FUTURE_BLOCK_TIME}) {
@@ -6367,6 +6388,7 @@ Chainstate& ChainstateManager::ActivateExistingSnapshot(uint256 base_blockhash)
     return *m_snapshot_chainstate;
 }
 
+// Bitweb Params
 // remove BIP30 exepctions - we dont have that blocks sow we skip bip30 tx's
 /*
 bool IsBIP30Repeat(const CBlockIndex& block_index)

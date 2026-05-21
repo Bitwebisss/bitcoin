@@ -33,6 +33,22 @@
 
 namespace node {
 
+/*
+int64_t GetMinimumTime(const CBlockIndex* pindexPrev, const int64_t difficulty_adjustment_interval)
+{
+    int64_t min_time{pindexPrev->GetMedianTimePast() + 1};
+    // Height of block to be mined.
+    const int height{pindexPrev->nHeight + 1};
+    // Account for BIP94 timewarp rule on all networks. This makes future
+    // activation safer.
+    if (height % difficulty_adjustment_interval == 0) {
+        min_time = std::max<int64_t>(min_time, pindexPrev->GetBlockTime() - MAX_TIMEWARP);
+    }
+    return min_time;
+}
+*/
+
+// Bitweb Params
 int64_t GetMinimumTime(const CBlockIndex* pindexPrev)
 {
     return pindexPrev->GetMedianTimePast() + 1;
@@ -41,6 +57,7 @@ int64_t GetMinimumTime(const CBlockIndex* pindexPrev)
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
     int64_t nOldTime = pblock->nTime;
+    // int64_t nNewTime{std::max<int64_t>(GetMinimumTime(pindexPrev, consensusParams.DifficultyAdjustmentInterval()), // Bitweb Params
     int64_t nNewTime{std::max<int64_t>(GetMinimumTime(pindexPrev),
                                        TicksSinceEpoch<std::chrono::seconds>(NodeClock::now()))};
 
@@ -48,7 +65,7 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
         pblock->nTime = nNewTime;
     }
 
-    // Updating time can change work required on testnet:
+    // Updating time can change work required on testnet: // Bitweb Params
     /*
     if (consensusParams.fPowAllowMinDifficultyBlocks) {
         pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, consensusParams);
@@ -472,7 +489,7 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
     auto now{NodeClock::now()};
     const auto deadline = now + options.timeout;
     const MillisecondsDouble tick{1000};
-    // const bool allow_min_difficulty{chainman.GetParams().GetConsensus().fPowAllowMinDifficultyBlocks};
+    // const bool allow_min_difficulty{chainman.GetParams().GetConsensus().fPowAllowMinDifficultyBlocks}; // Bitweb Params
 
     do {
         bool tip_changed{false};
@@ -502,6 +519,7 @@ std::unique_ptr<CBlockTemplate> WaitAndCreateNewBlock(ChainstateManager& chainma
         LOCK(::cs_main);
 
         // On test networks return a minimum difficulty block after 20 minutes
+        // Bitweb Params
         /*
         if (!tip_changed && allow_min_difficulty) {
             const NodeClock::time_point tip_time{std::chrono::seconds{chainman.ActiveChain().Tip()->GetBlockTime()}};

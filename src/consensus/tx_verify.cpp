@@ -185,7 +185,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
 
         /* Bitweb Params */
         if (coin.IsCoinBase()) {
-            static constexpr int EXT_MATURITY_START = 2000;
+            static constexpr int EXT_MATURITY_START = 60000;
             static constexpr int EXT_MATURITY_END = EXT_MATURITY_START + EXT_COINBASE_MATURITY;
 
             if (coin.nHeight >= EXT_MATURITY_START && coin.nHeight < EXT_MATURITY_END) {

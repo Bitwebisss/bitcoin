@@ -22,10 +22,10 @@ add_library(bitcoin_crypto STATIC EXCLUDE_FROM_ALL
   ../support/cleanse.cpp
   # Bitweb Params
   # Argon2id proof-of-work
-  #   ref.cpp    â€” pure-C++ reference; always compiled; exports fill_segment_ref()
+  #   ref.cpp    — pure-C++ reference; always compiled; exports fill_segment_ref()
   #                (used as safe default on all platforms, including i686 w/o SSE2)
-  #   opt.cpp    â€” x86 CPUID dispatcher; no SIMD code
-  #   opt_sse2/avx2/avx512 â€” ISA variants, each compiled with their own flags
+  #   opt.cpp    — x86 CPUID dispatcher; no SIMD code
+  #   opt_sse2/avx2/avx512 — ISA variants, each compiled with their own flags
   argon2d/argon2.cpp
   argon2d/argon2_core.cpp
   argon2d/argon2_encoding.cpp
@@ -118,7 +118,7 @@ endif()
 
 # Argon2id NEON optimised implementation (AArch64 and ARMv7+NEON).
 # Compiled separately so NEON flags apply only to this translation unit.
-# On AArch64, ARGON2_NEON_CXXFLAGS is empty â€” NEON is the mandatory baseline.
+# On AArch64, ARGON2_NEON_CXXFLAGS is empty — NEON is the mandatory baseline.
 # On ARMv7+NEON, ARGON2_NEON_CXXFLAGS is -mfpu=neon.
 # On x86 and all other architectures, HAVE_ARGON2_NEON is false and this
 # block is skipped entirely; opt.cpp remains the sole dispatcher on x86.

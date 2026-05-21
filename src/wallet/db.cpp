@@ -20,9 +20,11 @@ namespace wallet {
 bool operator<(BytePrefix a, std::span<const std::byte> b) { return std::ranges::lexicographical_compare(a.prefix, b.subspan(0, std::min(a.prefix.size(), b.size()))); }
 bool operator<(std::span<const std::byte> a, BytePrefix b) { return std::ranges::lexicographical_compare(a.subspan(0, std::min(a.size(), b.prefix.size())), b.prefix); }
 
+// Bitweb Params special migration code from old chain.
 static const std::set<uint32_t> BITWEB_SQLITE_MAGICS = {
     0xcaaed9feU, // Bitweb 0.24 mainnet (ca ae d9 fe)
 };
+// Bitweb Params
 
 std::vector<std::pair<fs::path, std::string>> ListDatabases(const fs::path& wallet_dir)
 {
@@ -151,6 +153,11 @@ bool IsSQLiteFile(const fs::path& path)
     }
 
     // Check the application id matches our network magic
+    /*
+    return memcmp(Params().MessageStart().data(), app_id, 4) == 0;
+    */
+
+    // Bitweb Params special migration code from old chain.
     if (memcmp(Params().MessageStart().data(), app_id, 4) == 0) return true;
 
     // Also accept known legacy Bitweb network magics so that wallets from older
@@ -163,6 +170,7 @@ bool IsSQLiteFile(const fs::path& path)
     }
 
     return false;
+    // Bitweb Params
 }
 
 void ReadDatabaseArgs(const ArgsManager& args, DatabaseOptions& options)

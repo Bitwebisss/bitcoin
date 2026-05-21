@@ -1359,6 +1359,7 @@ bool DeploymentEnabled(const ChainstateManager& chainman, DEP dep)
     return DeploymentEnabled(chainman.GetConsensus(), dep);
 }
 
+// Bitweb Params
 // remove BIP30 exepctions - we dont have that blocks sow we skip bip30 tx's
 /** Identifies blocks that overwrote an existing coinbase output in the UTXO set (see BIP30) */
 /*
@@ -1370,5 +1371,6 @@ bool IsBIP30Repeat(const CBlockIndex& block_index);
 /*
 bool IsBIP30Unspendable(const uint256& block_hash, int block_height);
 */
+// Bitweb Params
 
 #endif // BITCOIN_VALIDATION_H

@@ -150,6 +150,7 @@ bool CoinStatsIndex::CustomAppend(const interfaces::BlockInfo& block)
             const auto& tx{block.data->vtx.at(i)};
             const bool is_coinbase{tx->IsCoinBase()};
 
+            // Bitweb Params
             // remove BIP30 exepctions - we dont have that blocks sow we skip bip30 tx's
             // Skip duplicate txid coinbase transactions (BIP30).
             /*
@@ -423,6 +424,7 @@ bool CoinStatsIndex::RevertBlock(const interfaces::BlockInfo& block)
         const auto& tx{block.data->vtx.at(i)};
         const bool is_coinbase{tx->IsCoinBase()};
 
+        // Bitweb Params
         // remove BIP30 exepctions - we dont have that blocks sow we skip bip30 tx's
         /*
         if (is_coinbase && IsBIP30Unspendable(block.hash, block.height)) {

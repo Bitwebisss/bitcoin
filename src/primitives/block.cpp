@@ -66,7 +66,7 @@ uint256 CBlockHeader::GetArgon2idPoWHash() const
     context.m_cost  = 1024;
     context.lanes   = 1;
     context.threads = 1;
-    context.version = ARGON2_VERSION_NUMBER; // = 0x13, РєР°Рє РІ argon2_hash РІРЅСѓС‚СЂРё
+    context.version = ARGON2_VERSION_NUMBER; // = 0x13, как в argon2_hash внутри
 
     // argon2id_hash_raw must not fail for well-formed parameters.
     // Any failure here indicates a programming error or memory exhaustion

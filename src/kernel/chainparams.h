@@ -103,7 +103,7 @@ public:
     /** If this chain is exclusively used for testing */
     bool IsTestChain() const { return m_chain_type != ChainType::MAIN; }
     /** If this chain is exclusively used for regtest testing */
-    bool IsRegTestChain() const { return m_chain_type == ChainType::REGTEST; }
+    bool IsRegTestChain() const { return m_chain_type == ChainType::REGTEST; } // Bitweb Params
     /** If this chain allows time to be mocked */
     bool IsMockableChain() const { return m_is_mockable_chain; }
     uint64_t PruneAfterHeight() const { return nPruneAfterHeight; }
@@ -159,6 +159,7 @@ public:
         std::unordered_map<Consensus::DeploymentPos, VersionBitsParameters> version_bits_parameters{};
         std::unordered_map<Consensus::BuriedDeployment, int> activation_heights{};
         bool fastprune{false};
+        // bool enforce_bip94{false}; // Bitweb Params
     };
 
     static std::unique_ptr<const CChainParams> RegTest(const RegTestOptions& options);

@@ -16,7 +16,6 @@
 #include <string>
 
 namespace kernel {
-
 Context::Context()
 {
     static std::once_flag globals_initialized{};

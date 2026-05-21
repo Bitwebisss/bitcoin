@@ -211,6 +211,7 @@ if(NOT MSVC)
     CXXFLAGS ${ARM_SHANI_CXXFLAGS}
   )
 
+  # Bitweb Params
   # --------------------------------------------------------------------------
   # Check for ARM NEON intrinsics — portable subset (AArch64 + ARMv7+NEON).
   #
