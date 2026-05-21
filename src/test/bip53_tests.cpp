@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
 // BIP-54: 64-byte transaction rejection tests.
-// Adapted from bitcoin-inquisition bip54_tests.cpp (bip54_txsize case).
+// Adapted from bitcoin-inquisition bip53_tests.cpp (bip53_txsize case).
 // Targets the altcoin fork based on Bitcoin Core v30.2 (uses GetArgon2idPoWHash).
 
 #include <boost/test/unit_test.hpp>
@@ -30,7 +30,7 @@
 
 using namespace util::hex_literals;
 
-BOOST_AUTO_TEST_SUITE(bip54_tests)
+BOOST_AUTO_TEST_SUITE(bip53_tests)
 
 // Non-witness serialization size forbidden by BIP-54.
 static constexpr uint32_t INVALID_TX_NONWITNESS_SIZE{64};
@@ -73,7 +73,7 @@ static void MineRegtestBlock(CBlock& block, const Consensus::Params& params)
 //   (e) 65-byte regular tx          → accepted
 // ============================================================================
 
-BOOST_AUTO_TEST_CASE(bip54_check_transaction_direct)
+BOOST_AUTO_TEST_CASE(bip53_check_transaction_direct)
 {
     // Shared fictitious outpoint for all non-coinbase test transactions.
     const COutPoint fictitious_outpoint{
@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE(bip54_check_transaction_direct)
 // would be disproportionate complexity for a rule already tested directly.
 // ============================================================================
 
-BOOST_AUTO_TEST_CASE(bip54_txsize)
+BOOST_AUTO_TEST_CASE(bip53_txsize)
 {
     struct TestCase {
         CTransaction tx;
