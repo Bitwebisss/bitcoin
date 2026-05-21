@@ -227,12 +227,6 @@ if [ "${RUN_TIDY}" = "true" ]; then
   git --no-pager diff
 fi
 
-if [ "${RUN_BENCHMARK}" = "true" ]; then
-  echo "Running benchmarks with -min-time=10000"
-  LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" \
-  "${BASE_BUILD_DIR}/bin/bench_bitweb" -min-time=10000
-fi
-
 if [ "$RUN_FUZZ_TESTS" = "true" ]; then
   # shellcheck disable=SC2086
   LD_LIBRARY_PATH="${DEPENDS_DIR}/${HOST}/lib" \
