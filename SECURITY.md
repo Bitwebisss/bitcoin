@@ -12,9 +12,9 @@ The following keys may be used to communicate sensitive information to developer
 ## GPG Encrypted Reports
 | Name | Fingerprint |
 |------|-------------|
-| mraksoll | 6B05 59FC 9A18 E583 B615 6F9C F1A6 40A5 B462 8369 |
+| mraksoll | 23B3 D882 F805 A5D1 F0A1 2A25 35A7 538B 1C81 6E49 |
 
-Import: `gpg --keyserver hkps://keys.openpgp.org --recv-keys "F1A6 40A5 B462 8369"`
+Import: `gpg --keyserver hkps://keys.openpgp.org --recv-keys "35A7 538B 1C81 6E49"`
 
 ## Based on Bitcoin Core
 Bitweb Core is based on Bitcoin Core.

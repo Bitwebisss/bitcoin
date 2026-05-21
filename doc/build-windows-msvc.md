@@ -25,7 +25,7 @@ Download and install [Git for Windows](https://git-scm.com/downloads/win). Once 
 
 Clone the Bitweb Core repository to a directory. All build scripts and commands will run from this directory.
 ```
-git clone https://github.com/Bitwebisss/bitweb.git
+git clone https://github.com/Bitwebissss/bitweb.git
 ```
 
 

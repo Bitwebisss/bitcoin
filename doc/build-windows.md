@@ -38,7 +38,7 @@ If you want to build the Windows installer using the `deploy` build target, you 
 
 Acquire the source in the usual way:
 
-    git clone https://github.com/Bitwebisss/bitweb.git
+    git clone https://github.com/Bitwebissss/bitweb.git
     cd bitweb
 
 Note that for WSL the Bitweb Core source path MUST be somewhere in the default mount file system, for

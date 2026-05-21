@@ -60,17 +60,17 @@ Release Process
 - Update the versions.
 - Clear the release notes: `cp doc/release-notes-empty-template.md doc/release-notes.md`
 - Prune inputs from the qa-assets repo (See [pruning
-  inputs](https://github.com/Bitwebisss/qa-assets#pruning-inputs)).
+  inputs](https://github.com/Bitwebissss/qa-assets#pruning-inputs)).
 
 #### Before final release
 
 - Ensure the "Needs release note" label is removed from all relevant pull
   requests and issues:
-  https://github.com/Bitwebisss/bitweb/issues?q=label%3A%22Needs+release+note%22
+  https://github.com/Bitwebissss/bitweb/issues?q=label%3A%22Needs+release+note%22
 
 #### Tagging a release (candidate)
 
-To tag the version (or release candidate) in git, use the `make-tag.py` script from [bitweb-maintainer-tools](https://github.com/Bitwebisss/bitweb-maintainer-tools). From the root of the repository run:
+To tag the version (or release candidate) in git, use the `make-tag.py` script from [bitweb-maintainer-tools](https://github.com/Bitwebissss/bitweb-maintainer-tools). From the root of the repository run:
 
     ../bitcoin-maintainer-tools/make-tag.py v(new version, e.g. 25.0)
 
@@ -86,8 +86,8 @@ Install Guix using one of the installation methods detailed in
 Check out the source code in the following directory hierarchy.
 
     cd /path/to/your/toplevel/build
-    git clone https://github.com/Bitwebisss/guix.sigs.git
-    git clone https://github.com/Bitwebisss/bitweb.git
+    git clone https://github.com/Bitwebissss/guix.sigs.git
+    git clone https://github.com/Bitwebissss/bitweb.git
 
 ### Write the release notes
 
@@ -142,7 +142,7 @@ git commit -m "Add attestations by ${SIGNER} for ${VERSION} non-codesigned"
 popd
 ```
 
-Then open a Pull Request to the [guix.sigs repository](https://github.com/Bitwebisss/guix.sigs).
+Then open a Pull Request to the [guix.sigs repository](https://github.com/Bitwebissss/guix.sigs).
 
 ## After 6 or more people have guix-built and their results match
 
@@ -191,15 +191,15 @@ cat "$VERSION"/*/all.SHA256SUMS.asc > SHA256SUMS.asc
 
   - RPC documentation update
 
-      - See https://github.com/Bitwebisss/bitwebcore.net/blob/master/contrib/doc-gen/
+      - See https://github.com/Bitwebissss/bitwebcore.net/blob/master/contrib/doc-gen/
 
 - Update repositories
 
-  - Delete post-EOL [release branches](https://github.com/Bitwebisss/bitweb/branches/all) and create a tag `v${branch_name}-final`.
+  - Delete post-EOL [release branches](https://github.com/Bitwebissss/bitweb/branches/all) and create a tag `v${branch_name}-final`.
 
-  - Delete ["Needs backport" labels](https://github.com/Bitwebisss/bitweb/labels?q=backport) for non-existing branches.
+  - Delete ["Needs backport" labels](https://github.com/Bitwebissss/bitweb/labels?q=backport) for non-existing branches.
 
-  - Create a [new GitHub release](https://github.com/Bitwebisss/bitweb/releases/new) with a link to the archived release notes
+  - Create a [new GitHub release](https://github.com/Bitwebissss/bitweb/releases/new) with a link to the archived release notes
 
 - Announce the release:
 

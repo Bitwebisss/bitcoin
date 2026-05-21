@@ -206,7 +206,7 @@ Setup and Build Example: Arch Linux
 This example lists the steps necessary to setup and build a command line only distribution of the latest changes on Arch Linux:
 
     pacman --sync --needed capnproto cmake boost gcc git libevent make python sqlite
-    git clone https://github.com/Bitwebisss/bitweb.git
+    git clone https://github.com/Bitwebissss/bitweb.git
     cd bitweb/
     cmake -B build
     cmake --build build

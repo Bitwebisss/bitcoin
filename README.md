@@ -25,7 +25,7 @@ Development Process
 -------------------
 
 The `master` branch is regularly built (see `doc/build-*.md` for instructions) and tested, but it is not guaranteed to be
-completely stable. [Tags](https://github.com/Bitwebisss/bitweb/tags) are created
+completely stable. [Tags](https://github.com/Bitwebissss/bitweb/tags) are created
 regularly from release branches to indicate new official, stable release versions of Bitweb Core.
 
 

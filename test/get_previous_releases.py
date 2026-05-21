@@ -25,7 +25,7 @@ import zipfile
 
 TAR = os.getenv('TAR', 'tar')
 
-GITHUB_REPO = "Bitwebisss/bitweb"
+GITHUB_REPO = "Bitwebissss/bitweb"
 
 SHA256_SUMS = {
     "bf1c03ffc0916e80e92e35f48b0c6b71186382c2f44d1c5057864e752ece35d8": {"tag": "v0.30.2", "archive": "bitweb-0.30.2-x86_64-linux-gnu.tar.gz"},

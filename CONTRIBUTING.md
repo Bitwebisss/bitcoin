@@ -30,9 +30,9 @@ Bitcoin Core / Bitweb Core and how to run the unit tests, functional tests, and 
 
 There are many open issues of varying difficulty waiting to be fixed.
 If you're looking for somewhere to start contributing, check out the
-[good first issue](https://github.com/Bitwebisss/bitweb/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
+[good first issue](https://github.com/Bitwebissss/bitweb/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
 list or changes that are
-[up for grabs](https://github.com/Bitwebisss/bitweb/issues?utf8=%E2%9C%93&q=label%3A%22Up+for+grabs%22).
+[up for grabs](https://github.com/Bitwebissss/bitweb/issues?utf8=%E2%9C%93&q=label%3A%22Up+for+grabs%22).
 Some of them might no longer be applicable. So if you are interested, but
 unsure, you might want to leave a comment on the issue first.
 
@@ -70,7 +70,7 @@ To contribute a patch, the workflow is as follows:
   1. Create topic branch
   1. Commit patches
 
-For all other issues and pull requests, the https://github.com/Bitwebisss/bitweb node repository should be used.
+For all other issues and pull requests, the https://github.com/Bitwebissss/bitweb node repository should be used.
 
 As a rule of thumb, everything that only modifies `src/qt` is a GUI-only pull
 request.
@@ -198,7 +198,7 @@ pull request to pull request.
 
 When a pull request conflicts with the target branch, you may be asked to rebase it on top of the current target branch.
 
-    git fetch https://github.com/Bitwebisss/bitweb  # Fetch the latest upstream commit
+    git fetch https://github.com/Bitwebissss/bitweb  # Fetch the latest upstream commit
     git rebase FETCH_HEAD  # Rebuild commits on top of the new base
 
 This project aims to have a clean git history, where code changes are only made in non-merge commits. This simplifies
@@ -398,7 +398,7 @@ Have a look at [an example backport PR](
 https://github.com/bitcoin/bitcoin/pull/16189).
 
 Also see the [backport.py script](
-https://github.com/Bitwebisss/bitweb-maintainer-tools#backport).
+https://github.com/Bitwebissss/bitweb-maintainer-tools#backport).
 
 Copyright
 ---------

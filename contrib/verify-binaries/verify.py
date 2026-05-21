@@ -15,7 +15,7 @@ here, but by default is based upon local GPG trust settings.
 
 The builder keys are available in the guix.sigs repo:
 
-    https://github.com/Bitwebisss/guix.sigs/tree/main/builder-keys
+    https://github.com/Bitwebissss/guix.sigs/tree/main/builder-keys
 
 If a minimum good, trusted signature threshold is met on the sum file, we then
 download the files specified in SHA256SUMS, and check if the hashes of these

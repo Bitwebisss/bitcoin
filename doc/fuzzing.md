@@ -5,11 +5,11 @@
 To quickly get started fuzzing Bitweb Core using [libFuzzer](https://llvm.org/docs/LibFuzzer.html):
 
 ```sh
-$ git clone https://github.com/Bitwebisss/bitweb
+$ git clone https://github.com/Bitwebissss/bitweb
 $ cd bitweb/
 $ cmake --preset=libfuzzer
 # macOS users: If you have problem with this step then make sure to read "macOS hints for
-# libFuzzer" on https://github.com/Bitwebisss/bitweb/blob/master/doc/fuzzing.md#macos-hints-for-libfuzzer
+# libFuzzer" on https://github.com/Bitwebissss/bitweb/blob/master/doc/fuzzing.md#macos-hints-for-libfuzzer
 $ cmake --build build_fuzz
 $ FUZZ=process_message build_fuzz/bin/fuzz
 # abort fuzzing using ctrl-c
@@ -27,7 +27,7 @@ There is also a runner script to execute all fuzz targets. Refer to
 
 ## Fuzzing harnesses and output
 
-[`process_message`](https://github.com/Bitwebisss/bitweb/blob/master/src/test/fuzz/process_message.cpp) is a fuzzing harness for the [`ProcessMessage(...)` function (`net_processing`)](https://github.com/Bitwebisss/bitweb/blob/master/src/net_processing.cpp). The available fuzzing harnesses are found in [`src/test/fuzz/`](https://github.com/Bitwebisss/bitweb/tree/master/src/test/fuzz).
+[`process_message`](https://github.com/Bitwebissss/bitweb/blob/master/src/test/fuzz/process_message.cpp) is a fuzzing harness for the [`ProcessMessage(...)` function (`net_processing`)](https://github.com/Bitwebissss/bitweb/blob/master/src/net_processing.cpp). The available fuzzing harnesses are found in [`src/test/fuzz/`](https://github.com/Bitwebissss/bitweb/tree/master/src/test/fuzz).
 
 The fuzzer will output `NEW` every time it has created a test input that covers new areas of the code under test. For more information on how to interpret the fuzzer output, see the [libFuzzer documentation](https://llvm.org/docs/LibFuzzer.html).
 
@@ -84,12 +84,12 @@ $ FUZZ=address_deserialize build_fuzz/bin/fuzz -runs=1 fuzz_corpora/address_dese
 
 ## Fuzzing corpora
 
-The project's collection of seed corpora is found in the [`Bitwebisss/qa-assets`](https://github.com/Bitwebisss/qa-assets) repo.
+The project's collection of seed corpora is found in the [`Bitwebissss/qa-assets`](https://github.com/Bitwebissss/qa-assets) repo.
 
-To fuzz `process_message` using the [`Bitwebisss/qa-assets`](https://github.com/Bitwebisss/qa-assets) seed corpus:
+To fuzz `process_message` using the [`Bitwebissss/qa-assets`](https://github.com/Bitwebissss/qa-assets) seed corpus:
 
 ```sh
-$ git clone --depth=1 https://github.com/Bitwebisss/qa-assets
+$ git clone --depth=1 https://github.com/Bitwebissss/qa-assets
 $ FUZZ=process_message build_fuzz/bin/fuzz qa-assets/fuzz_corpora/process_message/
 INFO: Seed: 1346407872
 INFO: Loaded 1 modules   (424174 inline 8-bit counters): 424174 [0x55d8a9004ab8, 0x55d8a906c3a6),
@@ -212,7 +212,7 @@ Read the [libFuzzer documentation](https://llvm.org/docs/LibFuzzer.html) for mor
 To quickly get started fuzzing Bitweb Core using [afl++](https://github.com/AFLplusplus/AFLplusplus):
 
 ```sh
-$ git clone https://github.com/Bitwebisss/bitweb
+$ git clone https://github.com/Bitwebissss/bitweb
 $ cd bitweb/
 $ git clone https://github.com/AFLplusplus/AFLplusplus
 $ make -C AFLplusplus/ source-only
@@ -243,7 +243,7 @@ Read the [afl++ documentation](https://github.com/AFLplusplus/AFLplusplus) for m
 To quickly get started fuzzing Bitweb Core using [Honggfuzz](https://github.com/google/honggfuzz):
 
 ```sh
-$ git clone https://github.com/Bitwebisss/bitweb
+$ git clone https://github.com/Bitwebissss/bitweb
 $ cd bitweb/
 $ git clone https://github.com/google/honggfuzz
 $ cd honggfuzz/

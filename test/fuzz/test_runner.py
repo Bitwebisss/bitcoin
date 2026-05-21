@@ -149,7 +149,7 @@ def main():
                     " ".join(test_list_missing_corpus)
                 )
             )
-            logging.info("Please consider adding a fuzz corpus at https://github.com/Bitwebisss/qa-assets")
+            logging.info("Please consider adding a fuzz corpus at https://github.com/Bitwebissss/qa-assets")
 
     print("Check if using libFuzzer ... ", end='')
     help_output = subprocess.run(

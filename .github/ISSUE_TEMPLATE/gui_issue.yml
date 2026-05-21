@@ -6,7 +6,7 @@ body:
   id: acknowledgement
   attributes:
     label: Issues, reports or feature requests related to the GUI.
-    description: https://github.com/Bitwebisss/bitweb/issues/
+    description: https://github.com/Bitwebissss/bitweb/issues/
     options:
       - label: I still think this issue should be opened here
         required: true

@@ -71,7 +71,7 @@ Now that all the required dependencies are installed, let's clone the Bitweb Cor
 All build scripts and commands will run from this directory.
 
 ``` bash
-git clone https://github.com/Bitwebisss/bitweb.git
+git clone https://github.com/Bitwebissss/bitweb.git
 ```
 
 ### 5. Install Optional Dependencies
