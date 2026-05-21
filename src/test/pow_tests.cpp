@@ -1422,8 +1422,8 @@ BOOST_AUTO_TEST_CASE(lwma3_timestamp_alternating_attack)
     int alt_idx = 0;
     int64_t cur_ts = static_cast<int64_t>(blocks[L].nTime);
 
-    auto fill_stable = [&](int from, int count) {
-        for (int i = from; i < from + count; i++) {
+    auto fill_stable = [&](int64_t from, int64_t count) {
+        for (int64_t i = from; i < from + count; i++) {
             cur_ts += T;
             blocks[i].pprev      = &blocks[i - 1];
             blocks[i].nHeight    = i;
@@ -1433,8 +1433,8 @@ BOOST_AUTO_TEST_CASE(lwma3_timestamp_alternating_attack)
         }
     };
 
-    auto fill_alternating = [&](int from, int count) {
-        for (int i = from; i < from + count; i++, alt_idx++) {
+    auto fill_alternating = [&](int64_t from, int64_t count) {
+        for (int64_t i = from; i < from + count; i++, alt_idx++) {
             // Even index: 600s (max future timestamp); odd: 1s (min timestamp).
             const int64_t spacing = (alt_idx % 2 == 0) ? 600 : 1;
             cur_ts += spacing;
