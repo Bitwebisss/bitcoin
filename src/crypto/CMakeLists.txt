@@ -20,6 +20,7 @@ add_library(bitcoin_crypto STATIC EXCLUDE_FROM_ALL
   sha512.cpp
   siphash.cpp
   ../support/cleanse.cpp
+  # Bitweb Params
   # Argon2id proof-of-work
   #   ref.cpp    — pure-C++ reference; always compiled; exports fill_segment_ref()
   #                (used as safe default on all platforms, including i686 w/o SSE2)
@@ -33,12 +34,6 @@ add_library(bitcoin_crypto STATIC EXCLUDE_FROM_ALL
   argon2d/argon2_opt.cpp
   argon2d/blake2/blake2b.cpp
 )
-
-# Suppress -Wtype-limits in argon2 core — ARGON2_MAX_MEMORY comparisons are
-# intentionally kept for correctness on 32-bit; always-false on 64-bit is expected.
-#set_property(SOURCE argon2d/argon2_core.cpp PROPERTY
-#  COMPILE_OPTIONS $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wno-type-limits>
-#)
 
 target_link_libraries(bitcoin_crypto
   PRIVATE
@@ -77,6 +72,7 @@ if(HAVE_ARM_SHANI)
   )
 endif()
 
+# Bitweb Params
 # Argon2id SSE2 baseline (x86).
 # Compiled separately so -msse2 applies only to this translation unit.
 # On i686 without SSE2, HAVE_ARGON2_SSE2 is false; opt.cpp falls back to
