@@ -215,7 +215,6 @@ BOOST_AUTO_TEST_CASE(lwma3_stable_hashrate)
 {
     const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
     const auto& consensus  = chainParams->GetConsensus();
-    const int64_t N        = consensus.lwmaAveragingWindow; // 576
     const int64_t T        = consensus.nPowTargetSpacing;   // 300
     const unsigned int genesisBits = chainParams->GenesisBlock().nBits;
     const arith_uint256 powLimit   = UintToArith256(consensus.powLimit);
@@ -245,7 +244,6 @@ BOOST_AUTO_TEST_CASE(lwma3_powlimit_cap)
 {
     const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
     const auto& consensus  = chainParams->GetConsensus();
-    const int64_t N        = consensus.lwmaAveragingWindow; // 576
     const int64_t T        = consensus.nPowTargetSpacing;   // 300
     const unsigned int genesisBits  = chainParams->GenesisBlock().nBits;
     const unsigned int powLimitBits = UintToArith256(consensus.powLimit).GetCompact();
@@ -275,7 +273,6 @@ BOOST_AUTO_TEST_CASE(lwma3_6T_solvetime_cap)
 {
     const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
     const auto& consensus  = chainParams->GetConsensus();
-    const int64_t N        = consensus.lwmaAveragingWindow; // 576
     const int64_t T        = consensus.nPowTargetSpacing;   // 300
     const unsigned int genesisBits = chainParams->GenesisBlock().nBits;
 
@@ -301,7 +298,6 @@ BOOST_AUTO_TEST_CASE(lwma3_double_hashrate)
 {
     const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
     const auto& consensus  = chainParams->GetConsensus();
-    const int64_t N        = consensus.lwmaAveragingWindow; // 576
     const int64_t T        = consensus.nPowTargetSpacing;   // 300
     const unsigned int genesisBits = chainParams->GenesisBlock().nBits;
     const arith_uint256 powLimit   = UintToArith256(consensus.powLimit);
@@ -418,7 +414,6 @@ BOOST_AUTO_TEST_CASE(lwma3_testnet_runs_lwma)
         // Pre-condition: LWMA must be the active path on testnets.
         BOOST_REQUIRE(!consensus.fPowNoRetargeting);
 
-        const int64_t N        = consensus.lwmaAveragingWindow;
         const int64_t T        = consensus.nPowTargetSpacing;
         const unsigned int genesisBits  = chainParams->GenesisBlock().nBits;
         const unsigned int powLimitBits = UintToArith256(consensus.powLimit).GetCompact();
@@ -465,7 +460,6 @@ BOOST_AUTO_TEST_CASE(lwma3_duplicate_timestamps)
 {
     const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
     const auto& consensus  = chainParams->GetConsensus();
-    const int64_t N        = consensus.lwmaAveragingWindow; // 576
     const unsigned int genesisBits = chainParams->GenesisBlock().nBits;
     const arith_uint256 powLimit   = UintToArith256(consensus.powLimit);
 
