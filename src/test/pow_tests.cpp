@@ -106,10 +106,10 @@ BOOST_AUTO_TEST_CASE(get_next_work_upper_limit_actual)
 //   k = N*(N+1)*T/2          = 49 852 800
 //   genesisBits              = 0x1f0fffff  (== powLimit compact)
 //   powLimit                 = 0x000fffff00..00
-//   Bootstrap threshold L    = N+59424 = 60000
-//     height <= L  → bootstrap returns genesis nBits unchanged
-//     height >  L  → first real LWMA at height N+59425 = 60001
-//                    requires chain length >= N+59426 = 60002
+//   Bootstrap threshold L    = 58500 (fixed, network-independent)
+//     height <  L  → bootstrap returns genesis nBits unchanged
+//     height >= L  → first real LWMA at height L = 58500
+//                    requires chain length >= L+1 = 58501
 //
 // ── Why does the first LWMA result differ from genesisBits by 1 LSB? ──────
 //
@@ -191,12 +191,12 @@ BOOST_AUTO_TEST_CASE(lwma3_bootstrap)
     const int64_t T        = consensus.nPowTargetSpacing;   // 300
     const unsigned int genesisBits = chainParams->GenesisBlock().nBits; // 0x1f0fffff
 
-    // L = N+59424 = 60000 is the last height that still takes the bootstrap path.
-    const int L = static_cast<int>(N + 59424);
-    auto blocks = BuildChain(L + 1, genesisBits, 1775999888, T);
+    // height < L=58500 is bootstrap; last bootstrap pindexLast is at height L-1=58499.
+    const int L = 58500;
+    auto blocks = BuildChain(L, genesisBits, 1775999888, T); // heights 0..L-1
 
-    // Boundary check: height == L must still return genesis nBits.
-    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blocks[L], nullptr, consensus), genesisBits);
+    // Boundary check: height L-1 = 58499 is the last bootstrap block.
+    BOOST_CHECK_EQUAL(GetNextWorkRequired(&blocks[L - 1], nullptr, consensus), genesisBits);
 
     // Interior heights must also return genesis nBits unchanged.
     BOOST_CHECK_EQUAL(GetNextWorkRequired(&blocks[1],     nullptr, consensus), genesisBits);
@@ -205,8 +205,7 @@ BOOST_AUTO_TEST_CASE(lwma3_bootstrap)
 
 // ---------------------------------------------------------------------------
 // Test 2: First real LWMA-3 computation.
-//   pindexLast at height L+1 = N+59425 = 60001 (first height above bootstrap
-//   threshold L = N+59424 = 60000).
+//   pindexLast at height L = 58500 (first height that passes the bootstrap guard).
 //   All N=576 window blocks carry genesisBits and ideal spacing T.
 //   Expected result: 0x1f0ffffeU - one compact LSB below genesisBits.
 //   This is caused by the systematic truncation in (target / N / k) × N
@@ -221,8 +220,8 @@ BOOST_AUTO_TEST_CASE(lwma3_stable_hashrate)
     const unsigned int genesisBits = chainParams->GenesisBlock().nBits;
     const arith_uint256 powLimit   = UintToArith256(consensus.powLimit);
 
-    // Chain length N+59426 = 60002: heights 0..60001, pindexLast = blocks[60001].
-    const int lwma_height = static_cast<int>(N + 59425); // 60001
+    // Chain length L+1 = 58501: heights 0..58500, pindexLast = blocks[58500].
+    const int lwma_height = 58500; // L = 58500, first LWMA block
     auto blocks = BuildChain(lwma_height + 1, genesisBits, 1775999888, T);
 
     const unsigned int expected_nbits = 0x1f0ffffeU;
@@ -252,7 +251,7 @@ BOOST_AUTO_TEST_CASE(lwma3_powlimit_cap)
     const unsigned int powLimitBits = UintToArith256(consensus.powLimit).GetCompact();
     const arith_uint256 powLimit    = UintToArith256(consensus.powLimit);
 
-    const int lwma_height = static_cast<int>(N + 59425);
+    const int lwma_height = 58500; // L = 58500
     auto blocks = BuildChain(lwma_height + 1, genesisBits, 1775999888, 6 * T);
 
     const unsigned int expected_nbits = 0x1f0fffffU;
@@ -280,7 +279,7 @@ BOOST_AUTO_TEST_CASE(lwma3_6T_solvetime_cap)
     const int64_t T        = consensus.nPowTargetSpacing;   // 300
     const unsigned int genesisBits = chainParams->GenesisBlock().nBits;
 
-    const int lwma_height = static_cast<int>(N + 59425);
+    const int lwma_height = 58500; // L = 58500
     auto blocks_6T   = BuildChain(lwma_height + 1, genesisBits, 1775999888, 6 * T);
     auto blocks_100T = BuildChain(lwma_height + 1, genesisBits, 1775999888, 100 * T);
 
@@ -307,7 +306,7 @@ BOOST_AUTO_TEST_CASE(lwma3_double_hashrate)
     const unsigned int genesisBits = chainParams->GenesisBlock().nBits;
     const arith_uint256 powLimit   = UintToArith256(consensus.powLimit);
 
-    const int lwma_height = static_cast<int>(N + 59425);
+    const int lwma_height = 58500; // L = 58500
     auto blocks = BuildChain(lwma_height + 1, genesisBits, 1775999888, T / 2);
 
     const unsigned int expected_nbits = 0x1f07ffffU;
@@ -342,12 +341,12 @@ BOOST_AUTO_TEST_CASE(lwma3_mixed_solvetimes_determinism)
     const unsigned int genesisBits = chainParams->GenesisBlock().nBits;
     const arith_uint256 powLimit   = UintToArith256(consensus.powLimit);
 
-    // Build chain length N+59426 = 60002 (pindexLast = blocks[60001]).
-    // Blocks 0..59425: spacing T  (anchor; blocks[59425].nTime is prevTs).
-    // Blocks 59426..59426+HALF-1 (first HALF=288): spacing 2T  - slow miners.
-    // Blocks 59426+HALF..60001  (second HALF=288): spacing T/2 - fast miners.
+    // Build chain length L+1 = 58501 (pindexLast = blocks[58500]).
+    // Blocks 0..58212: spacing T  (anchor; blocks[58212].nTime is prevTs).
+    // Blocks 58213..58213+HALF-1 (first HALF=288): spacing 2T  - slow miners.
+    // Blocks 58213+HALF..58500  (second HALF=288): spacing T/2 - fast miners.
     const int HALF      = static_cast<int>(N / 2); // 288
-    const int chain_len = static_cast<int>(N + 59426); // 60002
+    const int chain_len = 58501; // L + 1
     std::vector<CBlockIndex> blocks(chain_len);
 
     int64_t ts = 1775999888;
@@ -359,9 +358,9 @@ BOOST_AUTO_TEST_CASE(lwma3_mixed_solvetimes_determinism)
         blocks[i].nChainWork = i ? blocks[i - 1].nChainWork + GetBlockProof(blocks[i - 1])
                                  : arith_uint256(0);
         // Advance the timestamp for the next block.
-        if      (i < 59426)             ts += T;
-        else if (i < 59426 + HALF)      ts += 2 * T;
-        else                     ts += T / 2;
+        if      (i < 58213)             ts += T;       // heights 0..58212 bootstrap
+        else if (i < 58213 + HALF)      ts += 2 * T;  // heights 58213..58500 slow
+        else                            ts += T / 2;   // heights 58357..58500 fast
     }
 
     // 0x1f0e0d51 verified independently by Python arith_uint256 simulation.
@@ -425,7 +424,7 @@ BOOST_AUTO_TEST_CASE(lwma3_testnet_runs_lwma)
         const unsigned int powLimitBits = UintToArith256(consensus.powLimit).GetCompact();
         const arith_uint256 powLimit    = UintToArith256(consensus.powLimit);
 
-        const int lwma_height = static_cast<int>(N + 59425);
+        const int lwma_height = 58500; // L = 58500 for all chains
         auto blocks = BuildChain(lwma_height + 1, genesisBits, 1761999888, T);
 
         // Past bootstrap threshold: LWMA runs and result differs from powLimit
@@ -440,10 +439,10 @@ BOOST_AUTO_TEST_CASE(lwma3_testnet_runs_lwma)
         BOOST_CHECK(resultTarget > arith_uint256(0));
 
         // Bootstrap path must still work on testnets:
-        // height <= L = N+59424 returns genesis nBits unchanged.
-        const int L = static_cast<int>(N + 59424);
-        auto bootstrap_blocks = BuildChain(L + 1, genesisBits, 1761999888, T);
-        unsigned int bootstrap_result = GetNextWorkRequired(&bootstrap_blocks[L], nullptr, consensus);
+        // height < L = 58500 returns genesis nBits unchanged.
+        const int L = 58500;
+        auto bootstrap_blocks = BuildChain(L, genesisBits, 1761999888, T);
+        unsigned int bootstrap_result = GetNextWorkRequired(&bootstrap_blocks[L - 1], nullptr, consensus);
         BOOST_CHECK_EQUAL(bootstrap_result, genesisBits);
     };
 
@@ -471,9 +470,9 @@ BOOST_AUTO_TEST_CASE(lwma3_duplicate_timestamps)
     const arith_uint256 powLimit   = UintToArith256(consensus.powLimit);
 
     // spacing = 0 → every block has the same nTime = t0.
-    auto blocks = BuildChain(static_cast<int>(N + 59426), genesisBits, 1775999888, 0);
+    auto blocks = BuildChain(58501, genesisBits, 1775999888, 0); // L+1 blocks
 
-    unsigned int result = GetNextWorkRequired(&blocks[N + 59425], nullptr, consensus);
+    unsigned int result = GetNextWorkRequired(&blocks[58500], nullptr, consensus);
     arith_uint256 resultTarget;
     resultTarget.SetCompact(result);
 
@@ -520,7 +519,7 @@ BOOST_AUTO_TEST_CASE(lwma3_live_stabilization_2000_blocks)
     const arith_uint256 powLimit   = UintToArith256(consensus.powLimit);
 
     // L = last bootstrap height (60000); first live block is at height L+1.
-    const int L     = static_cast<int>(N + 59424); // 60000
+    const int L     = 58500; // bootstrap end: height < L returns powLimit
     const int LIVE  = 2000;
     const int TOTAL = L + 1 + LIVE;               // 62001
 
@@ -598,7 +597,7 @@ BOOST_AUTO_TEST_CASE(lwma3_live_hashrate_drop_and_recovery)
     const arith_uint256 powLimit    = UintToArith256(consensus.powLimit);
     const unsigned int powLimitBits = powLimit.GetCompact();
 
-    const int L     = static_cast<int>(N + 59424); // 60000
+    const int L     = 58500; // bootstrap end: height < L returns powLimit
     const int TOTAL = L + 1 + static_cast<int>(4 * N); // 62305
 
     std::vector<CBlockIndex> blocks(TOTAL);
@@ -699,7 +698,7 @@ BOOST_AUTO_TEST_CASE(lwma3_live_hashrate_spike_and_recovery)
     const unsigned int genesisBits = chainParams->GenesisBlock().nBits;
     const arith_uint256 powLimit   = UintToArith256(consensus.powLimit);
 
-    const int L     = static_cast<int>(N + 59424);
+    const int L     = 58500;
     const int TOTAL = L + 1 + static_cast<int>(4 * N);
 
     std::vector<CBlockIndex> blocks(TOTAL);
@@ -798,7 +797,7 @@ BOOST_AUTO_TEST_CASE(lwma3_live_powlimit_cap_propagation)
     const arith_uint256 powLimit    = UintToArith256(consensus.powLimit);
     const unsigned int powLimitBits = powLimit.GetCompact();
 
-    const int L     = static_cast<int>(N + 59424);
+    const int L     = 58500;
     const int TOTAL = L + 1 + static_cast<int>(2 * N);
 
     std::vector<CBlockIndex> blocks(TOTAL);
@@ -877,7 +876,7 @@ BOOST_AUTO_TEST_CASE(lwma3_live_6T_cap_symmetry_propagation)
     const arith_uint256 powLimit    = UintToArith256(consensus.powLimit);
     const unsigned int powLimitBits = powLimit.GetCompact();
 
-    const int L     = static_cast<int>(N + 59424);
+    const int L     = 58500;
     const int TOTAL = L + 1 + static_cast<int>(2 * N);
 
     // Build bootstrap + stable + drop for a given drop spacing; return last nBits.
@@ -943,7 +942,7 @@ BOOST_AUTO_TEST_CASE(lwma3_live_consecutive_spike_then_drop)
     const unsigned int genesisBits = chainParams->GenesisBlock().nBits;
     const arith_uint256 powLimit   = UintToArith256(consensus.powLimit);
 
-    const int L     = static_cast<int>(N + 59424);
+    const int L     = 58500;
     const int TOTAL = L + 1 + static_cast<int>(4 * N);
 
     std::vector<CBlockIndex> blocks(TOTAL);
@@ -1047,7 +1046,7 @@ BOOST_AUTO_TEST_CASE(lwma3_live_monotone_during_sustained_change)
     const unsigned int genesisBits = chainParams->GenesisBlock().nBits;
     const arith_uint256 powLimit   = UintToArith256(consensus.powLimit);
 
-    const int L     = static_cast<int>(N + 59424);
+    const int L     = 58500;
     const int TOTAL = L + 1 + static_cast<int>(3 * N);
 
     std::vector<CBlockIndex> blocks(TOTAL);
@@ -1161,7 +1160,7 @@ BOOST_AUTO_TEST_CASE(lwma3_timestamp_drop_attack)
     const int64_t FTL = 600; // seconds
     BOOST_REQUIRE_EQUAL(FTL, 2 * T); // contract: FTL must equal 2T for this test
 
-    const int L     = static_cast<int>(N + 59424); // 60000
+    const int L     = 58500; // bootstrap end: height < L returns powLimit
     const int TOTAL = L + 1 + static_cast<int>(4 * N);
 
     std::vector<CBlockIndex> blocks(TOTAL);
@@ -1284,7 +1283,7 @@ BOOST_AUTO_TEST_CASE(lwma3_timestamp_rise_attack)
     const unsigned int genesisBits = chainParams->GenesisBlock().nBits;
     const arith_uint256 powLimit   = UintToArith256(consensus.powLimit);
 
-    const int L     = static_cast<int>(N + 59424);
+    const int L     = 58500;
     const int TOTAL = L + 1 + static_cast<int>(4 * N);
 
     std::vector<CBlockIndex> blocks(TOTAL);
@@ -1403,7 +1402,7 @@ BOOST_AUTO_TEST_CASE(lwma3_timestamp_alternating_attack)
     const arith_uint256 powLimit    = UintToArith256(consensus.powLimit);
     const unsigned int powLimitBits = powLimit.GetCompact();
 
-    const int L     = static_cast<int>(N + 59424);
+    const int L     = 58500;
     const int TOTAL = L + 1 + static_cast<int>(3 * N);
 
     std::vector<CBlockIndex> blocks(TOTAL);
@@ -1548,7 +1547,7 @@ BOOST_AUTO_TEST_CASE(lwma3_timestamp_drop_attack_high_difficulty)
     const int64_t FTL = 600;
     BOOST_REQUIRE_EQUAL(FTL, 2 * T);
 
-    const int L     = static_cast<int>(N + 59424); // 60000
+    const int L     = 58500; // bootstrap end: height < L returns powLimit
     const int SEED_WINDOWS   = 3;
     const int ATTACK_WINDOWS = 3;
     const int TOTAL = L + 1 + (SEED_WINDOWS + ATTACK_WINDOWS) * static_cast<int>(N);

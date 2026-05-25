@@ -136,7 +136,7 @@ unsigned int Lwma3CalculateNextWorkRequired(const CBlockIndex* pindexLast, const
     const int64_t N = params.lwmaAveragingWindow;
 
     // Low diff blocks for diff initiation and airdrop.
-    const int64_t L = N + 59424; // 60000 in total.
+    const int64_t L = 58500;
 
     // Define a k that will be used to get a proper average after weighting the solvetimes.
     const int64_t k = N * (N + 1) * T / 2;
@@ -144,9 +144,9 @@ unsigned int Lwma3CalculateNextWorkRequired(const CBlockIndex* pindexLast, const
     const int64_t height = pindexLast->nHeight;
     const arith_uint256 powLimit = UintToArith256(params.powLimit);
 
-    // Bootstrap: give away first L=60000 blocks at minimum difficulty (powLimit).
+    // Bootstrap: give away first L=58500 blocks at minimum difficulty (powLimit).
     // Extended from original LWMA-1 (height < N) to cover airdrop period.
-    if (height <= (EnableFuzzDeterminism() ? N + 1 : L)) {
+    if (height < (EnableFuzzDeterminism() ? N + 1 : L)) {
         return powLimit.GetCompact();
     }
 
@@ -250,7 +250,7 @@ bool PermittedDifficultyTransition(const Consensus::Params& params,
                                    uint32_t new_nbits)
 {
     const int64_t N = params.lwmaAveragingWindow;
-    const int64_t L = N + 59424;
+    const int64_t L = 58500;
     if (height <= (EnableFuzzDeterminism() ? N + 1 : L)) {
         return new_nbits == UintToArith256(params.powLimit).GetCompact();
     }
