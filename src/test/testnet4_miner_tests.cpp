@@ -162,7 +162,6 @@ BOOST_AUTO_TEST_CASE(testnet4_lwma3_stable_hashrate)
 {
     const auto chainParams = CreateChainParams(*m_node.args, ChainType::TESTNET4);
     const auto& consensus  = chainParams->GetConsensus();
-    const int64_t N        = consensus.lwmaAveragingWindow; // 288
     const int64_t T        = consensus.nPowTargetSpacing;   // 300
     const unsigned int genesisBits = chainParams->GenesisBlock().nBits;
     const arith_uint256 powLimit   = UintToArith256(consensus.powLimit);
@@ -187,7 +186,6 @@ BOOST_AUTO_TEST_CASE(testnet4_lwma3_no_drift)
 {
     const auto chainParams = CreateChainParams(*m_node.args, ChainType::TESTNET4);
     const auto& consensus  = chainParams->GetConsensus();
-    const int64_t N        = consensus.lwmaAveragingWindow; // 288
     const int64_t T        = consensus.nPowTargetSpacing;   // 300
     const unsigned int genesisBits = chainParams->GenesisBlock().nBits;
 
@@ -213,7 +211,6 @@ BOOST_AUTO_TEST_CASE(testnet4_lwma3_powlimit_cap)
 {
     const auto chainParams = CreateChainParams(*m_node.args, ChainType::TESTNET4);
     const auto& consensus  = chainParams->GetConsensus();
-    const int64_t N        = consensus.lwmaAveragingWindow; // 288
     const int64_t T        = consensus.nPowTargetSpacing;   // 300
     const unsigned int genesisBits  = chainParams->GenesisBlock().nBits;
     const unsigned int powLimitBits = UintToArith256(consensus.powLimit).GetCompact();
@@ -234,7 +231,6 @@ BOOST_AUTO_TEST_CASE(testnet4_lwma3_double_hashrate)
 {
     const auto chainParams = CreateChainParams(*m_node.args, ChainType::TESTNET4);
     const auto& consensus  = chainParams->GetConsensus();
-    const int64_t N        = consensus.lwmaAveragingWindow; // 288
     const int64_t T        = consensus.nPowTargetSpacing;   // 300
     const unsigned int genesisBits = chainParams->GenesisBlock().nBits;
     const arith_uint256 powLimit   = UintToArith256(consensus.powLimit);
@@ -259,7 +255,6 @@ BOOST_AUTO_TEST_CASE(testnet4_lwma3_monotone_difficulty)
 {
     const auto chainParams = CreateChainParams(*m_node.args, ChainType::TESTNET4);
     const auto& consensus  = chainParams->GetConsensus();
-    const int64_t N = consensus.lwmaAveragingWindow; // 288
     const int64_t T = consensus.nPowTargetSpacing;   // 300
     const unsigned int genesisBits = chainParams->GenesisBlock().nBits;
     const int lwma_height = 58500; // L = 58500
