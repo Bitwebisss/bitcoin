@@ -136,7 +136,7 @@ unsigned int Lwma3CalculateNextWorkRequired(const CBlockIndex* pindexLast, const
     const int64_t N = params.lwmaAveragingWindow;
 
     // Low diff blocks for diff initiation and airdrop.
-    const int64_t L = 58500;
+    const int64_t L = 580;
 
     // Define a k that will be used to get a proper average after weighting the solvetimes.
     const int64_t k = N * (N + 1) * T / 2;
@@ -250,7 +250,7 @@ bool PermittedDifficultyTransition(const Consensus::Params& params,
                                    uint32_t new_nbits)
 {
     const int64_t N = params.lwmaAveragingWindow;
-    const int64_t L = 58500;
+    const int64_t L = 580;
     if (height <= (EnableFuzzDeterminism() ? N + 1 : L)) {
         return new_nbits == UintToArith256(params.powLimit).GetCompact();
     }

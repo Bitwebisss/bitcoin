@@ -395,7 +395,7 @@ void Chainstate::MaybeUpdateMempoolForReorg(
                 const auto mempool_spend_height{m_chain.Tip()->nHeight + 1};
 
                 if (coin.IsCoinBase()) {
-                    static constexpr int EXT_MATURITY_START = 60000;
+                    static constexpr int EXT_MATURITY_START = 600;
                     static constexpr int EXT_MATURITY_END   = EXT_MATURITY_START + EXT_COINBASE_MATURITY;
 
                     if (coin.nHeight >= EXT_MATURITY_START && coin.nHeight < EXT_MATURITY_END) {
