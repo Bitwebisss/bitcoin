@@ -338,11 +338,13 @@ BOOST_AUTO_TEST_CASE(lwma3_mixed_solvetimes_determinism)
     const arith_uint256 powLimit   = UintToArith256(consensus.powLimit);
 
     // Build chain length L+1 = 58501 (pindexLast = blocks[58500]).
-    // Blocks 0..58212: spacing T  (anchor; blocks[58212].nTime is prevTs).
-    // Blocks 58213..58213+HALF-1 (first HALF=288): spacing 2T  - slow miners.
-    // Blocks 58213+HALF..58500  (second HALF=288): spacing T/2 - fast miners.
-    const int HALF      = static_cast<int>(N / 2); // 288
-    const int chain_len = 58501; // L + 1
+    // LWMA window = blocks[L-N+1 .. L] = blocks[57925 .. 58500].
+    // Advance for i=57924 (block before window): T   → j=1 solvetime = T.
+    // Advances for i=57925..58212 (first HALF=288):  2T → j=2..289 solvetime = 2T.
+    // Advances for i=58213..58499 (second HALF=287): T/2 → j=290..576 solvetime = T/2.
+    const int HALF        = static_cast<int>(N / 2);         // 288
+    const int window_start = static_cast<int>(58500 - N + 1); // L-N+1 = 57925
+    const int chain_len   = 58501; // L + 1
     std::vector<CBlockIndex> blocks(chain_len);
 
     int64_t ts = 1775999888;
@@ -354,9 +356,9 @@ BOOST_AUTO_TEST_CASE(lwma3_mixed_solvetimes_determinism)
         blocks[i].nChainWork = i ? blocks[i - 1].nChainWork + GetBlockProof(blocks[i - 1])
                                  : arith_uint256(0);
         // Advance the timestamp for the next block.
-        if      (i < 58213)             ts += T;       // heights 0..58212 bootstrap
-        else if (i < 58213 + HALF)      ts += 2 * T;  // heights 58213..58500 slow
-        else                            ts += T / 2;   // heights 58357..58500 fast
+        if      (i < window_start)           ts += T;      // anchor before window
+        else if (i < window_start + HALF)    ts += 2 * T;  // slow first half of window
+        else                                 ts += T / 2;   // fast second half of window
     }
 
     // 0x1f0e0d51 verified independently by Python arith_uint256 simulation.
