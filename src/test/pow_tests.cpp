@@ -612,7 +612,8 @@ BOOST_AUTO_TEST_CASE(lwma3_live_hashrate_drop_and_recovery)
     // cur_ts is captured by reference and advanced by `spacing` per block.
     int64_t cur_ts = static_cast<int64_t>(blocks[L].nTime);
     auto fill_phase = [&](int from, int count, int64_t spacing) {
-        for (int i = from; i < from + count; i++) {
+        for (int j = 0; j < count; j++) {
+            const int i = from + j;
             cur_ts += spacing;
             blocks[i].pprev      = &blocks[i - 1];
             blocks[i].nHeight    = i;
@@ -710,7 +711,8 @@ BOOST_AUTO_TEST_CASE(lwma3_live_hashrate_spike_and_recovery)
 
     int64_t cur_ts = static_cast<int64_t>(blocks[L].nTime);
     auto fill_phase = [&](int from, int count, int64_t spacing) {
-        for (int i = from; i < from + count; i++) {
+        for (int j = 0; j < count; j++) {
+            const int i = from + j;
             cur_ts += spacing;
             blocks[i].pprev      = &blocks[i - 1];
             blocks[i].nHeight    = i;
@@ -809,7 +811,8 @@ BOOST_AUTO_TEST_CASE(lwma3_live_powlimit_cap_propagation)
 
     int64_t cur_ts = static_cast<int64_t>(blocks[L].nTime);
     auto fill_phase = [&](int from, int count, int64_t spacing) {
-        for (int i = from; i < from + count; i++) {
+        for (int j = 0; j < count; j++) {
+            const int i = from + j;
             cur_ts += spacing;
             blocks[i].pprev      = &blocks[i - 1];
             blocks[i].nHeight    = i;
@@ -888,7 +891,8 @@ BOOST_AUTO_TEST_CASE(lwma3_live_6T_cap_symmetry_propagation)
         }
         int64_t ts = static_cast<int64_t>(blks[L].nTime);
         auto fill = [&](int from, int count, int64_t spacing) {
-            for (int i = from; i < from + count; i++) {
+            for (int j = 0; j < count; j++) {
+                const int i = from + j;
                 ts += spacing;
                 blks[i].pprev      = &blks[i - 1];
                 blks[i].nHeight    = i;
@@ -954,7 +958,8 @@ BOOST_AUTO_TEST_CASE(lwma3_live_consecutive_spike_then_drop)
 
     int64_t cur_ts = static_cast<int64_t>(blocks[L].nTime);
     auto fill_phase = [&](int from, int count, int64_t spacing) {
-        for (int i = from; i < from + count; i++) {
+        for (int j = 0; j < count; j++) {
+            const int i = from + j;
             cur_ts += spacing;
             blocks[i].pprev      = &blocks[i - 1];
             blocks[i].nHeight    = i;
@@ -1058,7 +1063,8 @@ BOOST_AUTO_TEST_CASE(lwma3_live_monotone_during_sustained_change)
 
     int64_t cur_ts = static_cast<int64_t>(blocks[L].nTime);
     auto fill_phase = [&](int from, int count, int64_t spacing) {
-        for (int i = from; i < from + count; i++) {
+        for (int j = 0; j < count; j++) {
+            const int i = from + j;
             cur_ts += spacing;
             blocks[i].pprev      = &blocks[i - 1];
             blocks[i].nHeight    = i;
@@ -1172,7 +1178,8 @@ BOOST_AUTO_TEST_CASE(lwma3_timestamp_drop_attack)
 
     int64_t cur_ts = static_cast<int64_t>(blocks[L].nTime);
     auto fill_phase = [&](int from, int count, int64_t spacing) {
-        for (int i = from; i < from + count; i++) {
+        for (int j = 0; j < count; j++) {
+            const int i = from + j;
             cur_ts += spacing;
             blocks[i].pprev      = &blocks[i - 1];
             blocks[i].nHeight    = i;
@@ -1295,7 +1302,8 @@ BOOST_AUTO_TEST_CASE(lwma3_timestamp_rise_attack)
 
     int64_t cur_ts = static_cast<int64_t>(blocks[L].nTime);
     auto fill_phase = [&](int from, int count, int64_t spacing) {
-        for (int i = from; i < from + count; i++) {
+        for (int j = 0; j < count; j++) {
+            const int i = from + j;
             cur_ts += spacing;
             blocks[i].pprev      = &blocks[i - 1];
             blocks[i].nHeight    = i;
@@ -1418,26 +1426,28 @@ BOOST_AUTO_TEST_CASE(lwma3_timestamp_alternating_attack)
     int64_t cur_ts = static_cast<int64_t>(blocks[L].nTime);
 
     auto fill_stable = [&](int64_t from, int64_t count) {
-        for (int64_t i = from; i < from + count; i++) {
+        for (int64_t j = 0; j < count; j++) {
+            const int64_t idx = from + j;
             cur_ts += T;
-            blocks[i].pprev      = &blocks[i - 1];
-            blocks[i].nHeight    = i;
-            blocks[i].nTime      = static_cast<uint32_t>(cur_ts);
-            blocks[i].nBits      = GetNextWorkRequired(&blocks[i - 1], nullptr, consensus);
-            blocks[i].nChainWork = blocks[i-1].nChainWork + GetBlockProof(blocks[i-1]);
+            blocks[idx].pprev      = &blocks[idx - 1];
+            blocks[idx].nHeight    = idx;
+            blocks[idx].nTime      = static_cast<uint32_t>(cur_ts);
+            blocks[idx].nBits      = GetNextWorkRequired(&blocks[idx - 1], nullptr, consensus);
+            blocks[idx].nChainWork = blocks[idx-1].nChainWork + GetBlockProof(blocks[idx-1]);
         }
     };
 
     auto fill_alternating = [&](int64_t from, int64_t count) {
-        for (int64_t i = from; i < from + count; i++, alt_idx++) {
+        for (int64_t j = 0; j < count; j++, alt_idx++) {
+            const int64_t idx = from + j;
             // Even index: 600s (max future timestamp); odd: 1s (min timestamp).
             const int64_t spacing = (alt_idx % 2 == 0) ? 600 : 1;
             cur_ts += spacing;
-            blocks[i].pprev      = &blocks[i - 1];
-            blocks[i].nHeight    = i;
-            blocks[i].nTime      = static_cast<uint32_t>(cur_ts);
-            blocks[i].nBits      = GetNextWorkRequired(&blocks[i - 1], nullptr, consensus);
-            blocks[i].nChainWork = blocks[i-1].nChainWork + GetBlockProof(blocks[i-1]);
+            blocks[idx].pprev      = &blocks[idx - 1];
+            blocks[idx].nHeight    = idx;
+            blocks[idx].nTime      = static_cast<uint32_t>(cur_ts);
+            blocks[idx].nBits      = GetNextWorkRequired(&blocks[idx - 1], nullptr, consensus);
+            blocks[idx].nChainWork = blocks[idx-1].nChainWork + GetBlockProof(blocks[idx-1]);
         }
     };
 
@@ -1562,7 +1572,8 @@ BOOST_AUTO_TEST_CASE(lwma3_timestamp_drop_attack_high_difficulty)
 
     int64_t cur_ts = static_cast<int64_t>(blocks[L].nTime);
     auto fill_phase = [&](int from, int count, int64_t spacing) {
-        for (int i = from; i < from + count; i++) {
+        for (int j = 0; j < count; j++) {
+            const int i = from + j;
             cur_ts += spacing;
             blocks[i].pprev      = &blocks[i - 1];
             blocks[i].nHeight    = i;
