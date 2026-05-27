@@ -19,7 +19,7 @@ static const int64_t MAX_BLOCK_SIGOPS_COST = 80000;
 static const int COINBASE_MATURITY = 100;
 
 //Remove me after ext period end.
-static const int EXT_COINBASE_MATURITY = 400;  // Bitweb Params
+static const int EXT_COINBASE_MATURITY = 9300;  // Bitweb Params
 
 static const int WITNESS_SCALE_FACTOR = 4;
 
