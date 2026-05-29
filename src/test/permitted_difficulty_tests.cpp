@@ -23,7 +23,7 @@ BOOST_FIXTURE_TEST_SUITE(permitted_difficulty_tests, BasicTestingSetup)
 //   if (height <= L)  →  return new_nbits == powLimit.GetCompact()
 //   else              →  return true
 //
-// Where L = 58500 (fixed constant, same for all networks).
+// Where L = 59000 (fixed constant, same for all networks).
 // ---------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(bootstrap_main)
@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(bootstrap_main)
     const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
     const Consensus::Params& p = chainParams->GetConsensus();
 
-    const int64_t  L            = 58500;
+    const int64_t  L            = 59000;
     const uint32_t genesis_bits = UintToArith256(p.powLimit).GetCompact();
 
     // Bootstrap interior: only genesis_bits accepted
@@ -58,14 +58,14 @@ BOOST_AUTO_TEST_CASE(bootstrap_main)
 
 BOOST_AUTO_TEST_CASE(bootstrap_testnet4)
 {
-    // TESTNET4 uses N=288; L=58500 is fixed and identical across all networks.
+    // TESTNET4 uses N=288; L=59000 is fixed and identical across all networks.
     // This test verifies that TESTNET4 enforces the same bootstrap boundary.
     const auto chainParams = CreateChainParams(*m_node.args, ChainType::TESTNET4);
     const Consensus::Params& p = chainParams->GetConsensus();
 
     BOOST_REQUIRE_EQUAL(p.lwmaAveragingWindow, 288); // catch accidental N changes
 
-    const int64_t  L            = 58500;
+    const int64_t  L            = 59000;
     const uint32_t genesis_bits = UintToArith256(p.powLimit).GetCompact();
 
     BOOST_CHECK( PermittedDifficultyTransition(p,     1, 0, genesis_bits));
@@ -76,14 +76,14 @@ BOOST_AUTO_TEST_CASE(bootstrap_testnet4)
 
 BOOST_AUTO_TEST_CASE(bootstrap_signet_different_powlimit)
 {
-    // SIGNET and MAIN share L=58500 but have different powLimits.
+    // SIGNET and MAIN share L=59000 but have different powLimits.
     // This verifies that each network rejects the other's genesis_bits
     // inside the bootstrap zone.
     const auto signetParams = CreateChainParams(*m_node.args, ChainType::SIGNET);
     const auto mainParams   = CreateChainParams(*m_node.args, ChainType::MAIN);
 
     const Consensus::Params& ps = signetParams->GetConsensus();
-    const int64_t  L            = 58500;
+    const int64_t  L            = 59000;
 
     const uint32_t signet_bits = UintToArith256(ps.powLimit).GetCompact();
     const uint32_t main_bits   = UintToArith256(mainParams->GetConsensus().powLimit).GetCompact();
@@ -101,14 +101,14 @@ BOOST_AUTO_TEST_CASE(bootstrap_signet_different_powlimit)
 
 BOOST_AUTO_TEST_CASE(bootstrap_regtest)
 {
-    // REGTEST: fPowNoRetargeting=true. L=58500 same as all networks.
+    // REGTEST: fPowNoRetargeting=true. L=59000 same as all networks.
     // nBits never changes - always powLimit.GetCompact().
     const auto chainParams = CreateChainParams(*m_node.args, ChainType::REGTEST);
     const Consensus::Params& p = chainParams->GetConsensus();
 
     BOOST_CHECK(p.fPowNoRetargeting);
 
-    const int64_t  L            = 58500;
+    const int64_t  L            = 59000;
     const uint32_t genesis_bits = UintToArith256(p.powLimit).GetCompact();
 
     BOOST_CHECK( PermittedDifficultyTransition(p,     1, 0, genesis_bits));
