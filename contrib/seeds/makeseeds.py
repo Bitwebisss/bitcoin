@@ -191,12 +191,12 @@ def parse_args():
 def main():
     args = parse_args()
 
-    print(f'Loading asmap database "{args.asmap}"…', end='', file=sys.stderr, flush=True)
+    print(f'Loading asmap database "{args.asmap}"â€¦', end='', file=sys.stderr, flush=True)
     with open(args.asmap, 'rb') as f:
         asmap = ASMap.from_binary(f.read())
     print('Done.', file=sys.stderr)
 
-    print('Loading and parsing DNS seeds…', end='', file=sys.stderr, flush=True)
+    print('Loading and parsing DNS seedsâ€¦', end='', file=sys.stderr, flush=True)
     with open(args.seeds, 'r', encoding='utf8') as f:
         lines = f.readlines()
     ips = [parseline(line) for line in lines]
