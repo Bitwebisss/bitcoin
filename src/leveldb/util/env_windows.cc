@@ -81,7 +81,10 @@ class ScopedHandle {
 
   ScopedHandle& operator=(const ScopedHandle&) = delete;
 
-  ScopedHandle& operator=(ScopedHandle&& rhs) = delete;
+  ScopedHandle& operator=(ScopedHandle&& rhs) noexcept {
+    if (this != &rhs) handle_ = rhs.Release();
+    return *this;
+  }
 
   bool Close() {
     if (!is_valid()) {
@@ -686,7 +689,7 @@ class WindowsEnv : public Env {
   // Instances are constructed on the thread calling Schedule() and used on the
   // background thread.
   //
-  // This structure is thread-safe because it is immutable.
+  // This structure is thread-safe beacuse it is immutable.
   struct BackgroundWorkItem {
     explicit BackgroundWorkItem(void (*function)(void* arg), void* arg)
         : function(function), arg(arg) {}
