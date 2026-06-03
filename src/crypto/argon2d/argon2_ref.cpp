@@ -194,14 +194,14 @@ void fill_segment_ref(const argon2_instance_t *instance,
  *
  * On x86, fill_segment() and Argon2AutoDetectImpl() live in opt.cpp.
  *
- * On non-x86 (ARM, RISC-V, MIPS, …) this block provides both entry points.
+ * On non-x86 (ARM, RISC-V, MIPS, ...) this block provides both entry points.
  * The function pointer s_fill_segment defaults to fill_segment_ref and is
  * upgraded to fill_segment_neon when ENABLE_ARGON2_NEON is defined and the
  * caller passes a use_implementation value with bit 0x10 (USE_NEON) set.
  *
- * USE_NEON (0x10) is separate from the x86 bits (0x01–0x08).  Passing
+ * USE_NEON (0x10) is separate from the x86 bits (0x01-0x08).  Passing
  * USE_ALL (0x1F after adding USE_NEON) from context.cpp is safe: on x86
- * opt.cpp never checks bit 0x10; on ARM ref.cpp never checks bits 0x01–0x08.
+ * opt.cpp never checks bit 0x10; on ARM ref.cpp never checks bits 0x01-0x08.
  * ------------------------------------------------------------------------- */
 #if !defined(HAVE_GETCPUID)
 

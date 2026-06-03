@@ -220,7 +220,7 @@ enum UseImplementation : uint8_t {
     USE_AVX2   = 1 << 2, /* 0x04 - x86: AVX2 (Haswell+)               */
     USE_AVX512 = 1 << 3, /* 0x08 - x86: AVX-512F (Skylake-X+)         */
     USE_NEON   = 1 << 4, /* 0x10 - ARM: NEON (AArch64 / ARMv7+NEON)   */
-    /* Bits 0x01–0x08 are only tested on x86 (opt.cpp / HAVE_GETCPUID).
+    /* Bits 0x01-0x08 are only tested on x86 (opt.cpp / HAVE_GETCPUID).
      * Bit 0x10 is only tested on non-x86 (ref.cpp / !HAVE_GETCPUID).
      * Passing USE_ALL on any architecture is therefore always safe. */
     USE_ALL    = USE_SSE2 | USE_SSSE3 | USE_AVX2 | USE_AVX512 | USE_NEON,
