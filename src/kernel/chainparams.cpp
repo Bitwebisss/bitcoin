@@ -94,7 +94,7 @@ public:
             uint256{"0000000000000000000f14c35b2d841e986ab5441de8c585d5ffe55ea1e395ad"}, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS);
         */
         consensus.BIP34Height = 1; // Active from the start
-        consensus.BIP34Hash = uint256{};
+        consensus.BIP34Hash = uint256{"06ae146146168b6a9d844df251b9b0eaafbdb1173a9cf29f18014e256d62fb27"};
         consensus.BIP65Height = 1; // Active from the start
         consensus.BIP66Height = 1; // Active from the start
         consensus.CSVHeight = 1; // Active from the start
@@ -121,8 +121,8 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].threshold = 3024; // 75%
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].period = 4032;
 
-        consensus.nMinimumChainWork = uint256{};
-        consensus.defaultAssumeValid = uint256{};
+        consensus.nMinimumChainWork = uint256S("00000000000000000000000000000000000000000000000000000000158b68cf"); //59782
+        consensus.defaultAssumeValid = uint256S("b8b609a39fd140217348701382f0b61d2e98a0357eff03177a544f6a24803ab7"); //59782
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -167,18 +167,25 @@ public:
         checkpointData = {
             {
                 { 0, uint256{"111692c1b9b390c407ab74d7f924d4fa0f7589974ab61af96392feca11f209e6"}},
+                { 59782, uint256{"b8b609a39fd140217348701382f0b61d2e98a0357eff03177a544f6a24803ab7"}},
             }
         };
         // Checkpoints restored
 
         m_assumeutxo_data = {
+            {
+                .height           = 59782,
+                .hash_serialized  = AssumeutxoHash{uint256{"12d31e874fa1f6fb698aabd4121d7f67c794f01b6e14d25368bd6ff6b30bba21"}},
+                .m_chain_tx_count = 59864,
+                .blockhash        = consteval_ctor(uint256{"b8b609a39fd140217348701382f0b61d2e98a0357eff03177a544f6a24803ab7"}),
+            }
         };
 
         chainTxData = ChainTxData{
-            // Data from RPC: getchaintxstats 4096 00000000000000000000611fd22f2df7c8fbd0688745c3a6c3bb5109cc2a12cb
-            .nTime    = 0,
-            .tx_count = 0,
-            .dTxRate  = 0,
+            // Data from RPC: getchaintxstats 4096 b8b609a39fd140217348701382f0b61d2e98a0357eff03177a544f6a24803ab7
+            .nTime    = 1780502775,
+            .tx_count = 59864,
+            .dTxRate  = 0.01615854484121918,
         };
     }
 };

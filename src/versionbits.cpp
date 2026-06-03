@@ -324,7 +324,7 @@ private:
     std::array<ThresholdConditionCache, Consensus::MAX_VERSION_BITS_DEPLOYMENTS>& m_caches;
     int m_bit;
     int period{4032}; /* Bitweb Params*/
-    int threshold{3024}; // 90% threshold used in BIP 341 /* Bitweb Params*/
+    int threshold{3024}; // 75% threshold used in BIP 341 /* Bitweb Params*/
 
 public:
     explicit WarningBitsConditionChecker(const CChainParams& chainparams, std::array<ThresholdConditionCache, Consensus::MAX_VERSION_BITS_DEPLOYMENTS>& caches, int bit)
