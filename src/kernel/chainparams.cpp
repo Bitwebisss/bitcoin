@@ -121,17 +121,17 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].threshold = 3024; // 75%
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].period = 4032;
 
-        consensus.nMinimumChainWork = uint256("00000000000000000000000000000000000000000000000000000000158b68cf"); //59782
-        consensus.defaultAssumeValid = uint256("b8b609a39fd140217348701382f0b61d2e98a0357eff03177a544f6a24803ab7"); //59782
+        consensus.nMinimumChainWork = uint256{};
+        consensus.defaultAssumeValid = uint256{};
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
          * a large 32-bit integer with any alignment.
          */
-        pchMessageStart[0] = 0xfe;
+        pchMessageStart[0] = 0x33;
         pchMessageStart[1] = 0xae;
-        pchMessageStart[2] = 0xd5;
+        pchMessageStart[2] = 0x22;
         pchMessageStart[3] = 0xca;
         nDefaultPort = 26333;
         nPruneAfterHeight = 100000;
@@ -148,7 +148,8 @@ public:
         // This is fine at runtime as we'll fall back to using them as an addrfetch if they don't support the
         // service bits we want, but we should get them updated to support all service bits wanted by any
         // release ASAP to avoid it where possible.
-        vSeeds.emplace_back("seed10.bitwebcore.net.");
+        vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
+        vSeeds.clear();
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,33); // E
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,30); // D
@@ -167,25 +168,18 @@ public:
         checkpointData = {
             {
                 { 0, uint256{"111692c1b9b390c407ab74d7f924d4fa0f7589974ab61af96392feca11f209e6"}},
-                { 59782, uint256{"b8b609a39fd140217348701382f0b61d2e98a0357eff03177a544f6a24803ab7"}},
             }
         };
         // Checkpoints restored
 
         m_assumeutxo_data = {
-            {
-                .height           = 59782,
-                .hash_serialized  = AssumeutxoHash{uint256{"12d31e874fa1f6fb698aabd4121d7f67c794f01b6e14d25368bd6ff6b30bba21"}},
-                .m_chain_tx_count = 59864,
-                .blockhash        = consteval_ctor(uint256{"b8b609a39fd140217348701382f0b61d2e98a0357eff03177a544f6a24803ab7"}),
-            }
         };
 
         chainTxData = ChainTxData{
             // Data from RPC: getchaintxstats 4096 b8b609a39fd140217348701382f0b61d2e98a0357eff03177a544f6a24803ab7
-            .nTime    = 1780502775,
-            .tx_count = 59864,
-            .dTxRate  = 0.01615854484121918,
+            .nTime    = 0,
+            .tx_count = 0,
+            .dTxRate  = 0,
         };
     }
 };
@@ -254,7 +248,16 @@ public:
         vFixedSeeds.clear();
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
-        vSeeds.emplace_back("testnetseed.bitwebcore.net.");
+        vSeeds.emplace_back("testnet3seed.bitwebcore.net.");
+        vSeeds.emplace_back("testnet3seed1.bitwebcore.net.");
+        vSeeds.emplace_back("testnet3seed2.bitwebcore.net.");
+        vSeeds.emplace_back("testnet3seed3.bitwebcore.net.");
+        vSeeds.emplace_back("testnet3seed4.bitwebcore.net.");
+        vSeeds.emplace_back("testnet3seed5.bitwebcore.net.");
+        vSeeds.emplace_back("testnet3seed6.bitwebcore.net.");
+        vSeeds.emplace_back("bitwebtest3seed.dpowcore.org.");
+        vSeeds.emplace_back("bitwebtest3seed1.dpowcore.org.");
+
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);
@@ -357,6 +360,15 @@ public:
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
         vSeeds.emplace_back("testnet4seed.bitwebcore.net.");
+        vSeeds.emplace_back("testnet4seed1.bitwebcore.net.");
+        vSeeds.emplace_back("testnet4seed2.bitwebcore.net.");
+        vSeeds.emplace_back("testnet4seed3.bitwebcore.net.");
+        vSeeds.emplace_back("testnet4seed4.bitwebcore.net.");
+        vSeeds.emplace_back("testnet4seed5.bitwebcore.net.");
+        vSeeds.emplace_back("testnet4seed6.bitwebcore.net.");
+        vSeeds.emplace_back("bitwebtest4seed.dpowcore.org.");
+        vSeeds.emplace_back("bitwebtest4seed1.dpowcore.org.");
+
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);
@@ -405,6 +417,15 @@ public:
             bin = "51210289344323689631739c2da6c9c1a31c442289e8dc0b00fd60d7bc041c967522b351ae"_hex_v_u8;
             vFixedSeeds = std::vector<uint8_t>(std::begin(chainparams_seed_signet), std::end(chainparams_seed_signet));
             vSeeds.emplace_back("signetseed.bitwebcore.net.");
+            vSeeds.emplace_back("signetseed.bitwebcore.net.");
+            vSeeds.emplace_back("signetseed1.bitwebcore.net.");
+            vSeeds.emplace_back("signetseed2.bitwebcore.net.");
+            vSeeds.emplace_back("signetseed3.bitwebcore.net.");
+            vSeeds.emplace_back("signetseed4.bitwebcore.net.");
+            vSeeds.emplace_back("signetseed5.bitwebcore.net.");
+            vSeeds.emplace_back("signetseed6.bitwebcore.net.");
+            vSeeds.emplace_back("bitwebsignetseed.dpowcore.org.");
+            vSeeds.emplace_back("bitwebsignetseed1.dpowcore.org.");
 
             consensus.nMinimumChainWork = uint256{};
             consensus.defaultAssumeValid = uint256{};

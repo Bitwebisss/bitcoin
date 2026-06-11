@@ -52,7 +52,7 @@ and is also an effective way to request assistance if and when you need it.
 Communication Channels
 ----------------------
 
-Most communication about Bitweb Core development happens on discord https://discord.gg/jQdttwgsJa or telegram https://t.me/bitweb_en .
+Most communication about Bitweb Core development happens on discord https://discord.gg/uC6wEVu6FR or telegram https://t.me/bitweb_en .
 
 Discussion about codebase improvements happens in GitHub issues and pull
 requests.

@@ -39,9 +39,9 @@ jobs:
     steps:
       - id: runners
         run: |
-          if [[ "${REPO_USE_CIRRUS_RUNNERS}" == "${{ github.repository }}" ]]; then
-            echo "provider=cirrus" >> "$GITHUB_OUTPUT"
-            echo "::notice title=Runner Selection::Using Cirrus Runners"
+          if [[ "${REPO_USE_WARP_RUNNERS}" == "${{ github.repository }}" ]]; then
+            echo "provider=warp" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Runner Selection::Using Warp Runners"
           else
             echo "provider=gha" >> "$GITHUB_OUTPUT"
             echo "::notice title=Runner Selection::Using GitHub-hosted runners"
